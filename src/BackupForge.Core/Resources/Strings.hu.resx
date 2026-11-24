@@ -348,4 +348,43 @@
   <data name="report.guard" xml:space="preserve">
     <value>törlési biztosíték kioldott: {0}</value>
   </data>
+  <data name="restic.summary" xml:space="preserve">
+    <value>snapshot {0} · {1} új, {2} módosult fájl · +{3} a tárolóban</value>
+  </data>
+  <data name="restic.no_repo" xml:space="preserve">
+    <value>a tároló nem létezik a megadott helyen — hozd létre (bf repo init {0}), vagy javítsd a helyet</value>
+  </data>
+  <data name="restic.wrong_password" xml:space="preserve">
+    <value>rossz tárolójelszó ({0} titok)</value>
+  </data>
+  <data name="restic.locked" xml:space="preserve">
+    <value>a tárolót egy másik folyamat zárolja: {0}</value>
+  </data>
+  <data name="restic.binary_bad" xml:space="preserve">
+    <value>a restic.exe hiányzik, sérült vagy módosított ({0})</value>
+  </data>
+  <data name="restic.partial" xml:space="preserve">
+    <value>{0} fájl nem volt olvasható</value>
+  </data>
+  <data name="restic.failed" xml:space="preserve">
+    <value>a restic {0} kóddal állt le: {1}</value>
+  </data>
+  <data name="restic.check_ok" xml:space="preserve">
+    <value>ellenőrzés rendben ({0} beolvasva)</value>
+  </data>
+  <data name="restic.check_failed" xml:space="preserve">
+    <value>az ellenőrzés {0} hibát talált</value>
+  </data>
+  <data name="restic.forget" xml:space="preserve">
+    <value>forget: {0} snapshot törölve, {1} megtartva; prune kész</value>
+  </data>
+  <data name="restic.append_only" xml:space="preserve">
+    <value>append-only szerver: a forget/prune a szerver oldalán fut</value>
+  </data>
+  <data name="restic.missing_secret" xml:space="preserve">
+    <value>a(z) {0} titok nincs beállítva</value>
+  </data>
+  <data name="restic.restore" xml:space="preserve">
+    <value>{0} fájl visszaállítva ({1}) ide: {2}</value>
+  </data>
 </root>

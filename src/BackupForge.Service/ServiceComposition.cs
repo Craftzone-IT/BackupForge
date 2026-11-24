@@ -4,6 +4,7 @@ using BackupForge.Core.Logging;
 using BackupForge.Core.Notifications;
 using BackupForge.Core.Status;
 using BackupForge.Engine.Files;
+using BackupForge.Engine.Restic;
 using BackupForge.Service.Components;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +20,8 @@ public sealed class Platform
     public IMailSender Mail { get; init; } = new MailKitSender();
     public FileEngineOptions FileEngine { get; init; } = new();
     public HttpMessageHandler? HttpHandler { get; init; }
+    public ResticBinary Restic { get; init; } = ResticBinary.Default();
+    public IProcessRunner Processes { get; init; } = new SystemProcessRunner();
     public Func<DataPaths, ISecretStore> Secrets { get; init; } = _ => new InMemorySecretStore();
 
     public static Platform Current()
@@ -41,16 +44,20 @@ public static class ServiceComposition
     {
     }
 
-    public static IReadOnlyList<IJobEngine> Engines(Platform platform)
+    public static IReadOnlyList<IJobEngine> Engines(Platform platform, SecretMasker masker)
     {
         if (TestEngine.Enabled) return [new TestEngine()];
-        return [new FileJobEngine(platform.FileSystem, platform.Connector, platform.Vss, platform.FileEngine)];
+        return
+        [
+            new FileJobEngine(platform.FileSystem, platform.Connector, platform.Vss, platform.FileEngine),
+            new ResticEngine(platform.Restic, platform.Processes, masker),
+        ];
     }
 
     public static ServiceRuntime CreateRuntime(DataPaths paths, ILoggerFactory loggers, IClock clock, SecretMasker masker, ServiceOptions? options = null, Platform? platform = null)
     {
         platform ??= Platform.Current();
-        var engines = Engines(platform);
+        var engines = Engines(platform, masker);
         var rt = new ServiceRuntime(paths, loggers, clock, engines, platform.Secrets(paths), masker, options);
         Attach(rt, platform, engines);
         return rt;
@@ -62,6 +69,9 @@ public static class ServiceComposition
         var notifier = new Notifier(platform.Mail, platform.Events);
         var probe = new TargetProbe(platform.FileSystem, platform.Connector);
         rt.AddComponent(new LifecycleEvents(platform.Events, platform.Vss));
+        var restic = new ResticComponent(platform.Restic, platform.Processes, platform.Events);
+        rt.AddComponent(restic);
+        rt.Restic = restic;
         rt.AddComponent(probe);
         rt.AddComponent(notifier);
         var reporter = new WeeklyReporter(notifier);
@@ -79,6 +89,12 @@ public static class ServiceComposition
             Target = probe.Get,
             Versions = job => files?.VersionsInfo(rt.ConfigStore.Current, job),
             Notifications = notifier.Status,
+            ResticJob = job => new BackupForge.Core.Status.ResticJobStatus
+            {
+                LastSnapshot = rt.History.GetValue(ResticState.LastSnapshotKey(job.Id)),
+                Snapshots = int.TryParse(rt.History.GetValue(ResticState.SnapshotCountKey(job.Id)), out var n) ? n : null,
+            },
+            Repo = _ => new BackupForge.Core.Status.RepoStatus { ResticVersion = rt.History.GetValue(ResticState.VersionKey) },
         };
     }
 }

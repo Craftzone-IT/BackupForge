@@ -26,7 +26,27 @@ def get(url):
     with urllib.request.urlopen(req, timeout=120) as r:
         return r.read()
 
+def fetch_linux(v):
+    """Test helper for the Linux CI: the official linux_amd64 build, verified against the release's SHA256SUMS only."""
+    import bz2
+    name = f"restic_{v['version']}_linux_amd64.bz2"
+    url = v['url'].rsplit('/', 1)[0] + '/' + name
+    data = get(url)
+    sha = hashlib.sha256(data).hexdigest()
+    sums = {l.split()[1].lstrip('*'): l.split()[0].lower() for l in get(v['sums_url']).decode().splitlines() if len(l.split()) == 2}
+    if sums.get(name) != sha:
+        print(f'ERROR: {name} sha256 {sha} does not match SHA256SUMS ({sums.get(name)})')
+        return 1
+    out = os.path.join(ROOT, 'third_party', 'restic', 'restic')
+    with open(out, 'wb') as f:
+        f.write(bz2.decompress(data))
+    os.chmod(out, 0o755)
+    print(f'written {out} (verified against SHA256SUMS)')
+    return 0
+
 def main():
+    if '--linux' in sys.argv:
+        return fetch_linux(read_version())
     out = os.path.join(ROOT, 'third_party', 'restic', 'restic.exe')
     if '--out' in sys.argv:
         out = sys.argv[sys.argv.index('--out') + 1]

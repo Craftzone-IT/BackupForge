@@ -13,6 +13,7 @@ namespace BackupForge.Service;
 public sealed class ServiceIpcHandler
 {
     private readonly ServiceRuntime _rt;
+    public ServiceRuntime Runtime => _rt;
     private readonly Dictionary<string, Func<IpcRequest, IpcConnection, CancellationToken, Task<JsonNode?>>> _ops = new(StringComparer.Ordinal);
 
     public ServiceIpcHandler(ServiceRuntime runtime)

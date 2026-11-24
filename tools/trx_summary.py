@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Print failed tests (name, message, first stack line) from all .trx files under a folder — short CI output."""
 import glob, os, sys
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 import xml.etree.ElementTree as ET
 
 ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}

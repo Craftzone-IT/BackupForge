@@ -3,6 +3,9 @@
     <ProjectReference Include="..\BackupForge.Core\BackupForge.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\..\third_party\restic\VERSION" LogicalName="restic.VERSION" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="BackupForge.Engine.Restic.Tests" />
   </ItemGroup>
 </Project>

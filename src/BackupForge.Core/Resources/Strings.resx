@@ -348,4 +348,43 @@
   <data name="report.guard" xml:space="preserve">
     <value>delete guard tripped: {0}</value>
   </data>
+  <data name="restic.summary" xml:space="preserve">
+    <value>snapshot {0} · {1} new, {2} changed · +{3} in the repository</value>
+  </data>
+  <data name="restic.no_repo" xml:space="preserve">
+    <value>the repository does not exist at the configured location — create it (bf repo init {0}) or fix the location</value>
+  </data>
+  <data name="restic.wrong_password" xml:space="preserve">
+    <value>wrong repository password (secret {0})</value>
+  </data>
+  <data name="restic.locked" xml:space="preserve">
+    <value>the repository is locked by another process: {0}</value>
+  </data>
+  <data name="restic.binary_bad" xml:space="preserve">
+    <value>restic.exe is missing, damaged or modified ({0})</value>
+  </data>
+  <data name="restic.partial" xml:space="preserve">
+    <value>{0} file(s) could not be read</value>
+  </data>
+  <data name="restic.failed" xml:space="preserve">
+    <value>restic exited with code {0}: {1}</value>
+  </data>
+  <data name="restic.check_ok" xml:space="preserve">
+    <value>check ok (read {0})</value>
+  </data>
+  <data name="restic.check_failed" xml:space="preserve">
+    <value>check found {0} error(s)</value>
+  </data>
+  <data name="restic.forget" xml:space="preserve">
+    <value>forget: {0} snapshot(s) removed, {1} kept; prune done</value>
+  </data>
+  <data name="restic.append_only" xml:space="preserve">
+    <value>append-only server: forget/prune runs on the server side</value>
+  </data>
+  <data name="restic.missing_secret" xml:space="preserve">
+    <value>secret {0} is not set</value>
+  </data>
+  <data name="restic.restore" xml:space="preserve">
+    <value>restored {0} file(s), {1} to {2}</value>
+  </data>
 </root>

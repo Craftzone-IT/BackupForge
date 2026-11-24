@@ -16,6 +16,10 @@
     <ProjectReference Include="..\BackupForge.Ipc\BackupForge.Ipc.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\third_party\restic\restic.exe" Link="restic.exe" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\third_party\restic\restic.exe')" />
+    <None Include="..\..\third_party\restic\LICENSE" Link="restic-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="BackupForge.Service.Tests" />
     <InternalsVisibleTo Include="BackupForge.Integration.Tests" />
   </ItemGroup>
