@@ -61,6 +61,17 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
 - **F4 — FOLYAMATBAN (2026-11-24)**: kész: `src/BackupForge.Engine.Restic` — `ResticBinary` (a `third_party/restic/VERSION` beágyazva, SHA-256 ellenőrzés; `BACKUPFORGE_RESTIC` = ellenőrizetlen fejlesztői felülírás), `ResticRunner` (titok csak env-ben: `RESTIC_REPOSITORY`, `RESTIC_PASSWORD`, `env_refs`), `ResticParser` (valódi 0.20.0 kimenetek a `tests/BackupForge.Engine.Restic.Tests/fixtures`-ben, útvonalak `/data`-ra cserélve), `ResticEngine` (backup + kilépési kódok 0/3/10/11/12/130, saját elavult zár → `restic unlock` + egy újrapróba, megszakításnál is unlock, forget --prune `--group-by host,tags`, check `--read-data-subset`, restore új mappába), `ResticClient` (init csak kifejezett kérésre, snapshots, ls, restore, version), `ResticComponent` (indulási hash- és verzió-ellenőrzés, `repo.*` IPC), `RestoreIpc` (`restore.run` a soron át, `Restore_<időbélyeg>` alá). Tesztek: 18 (fixture + valódi restic: init/backup/snapshots/ls/restore/forget/check, nincs tároló → nem hoz létre, rossz jelszó, exit 3, megszakítás). A Linux-CI a hivatalos linux_amd64 restic-kel (SHA256SUMS-szal ellenőrizve) futtatja a valódi restic-teszteket, a Windows-CI a rögzített `restic.exe`-vel — mindkettőn zöldek. `restic.exe` + `restic-LICENSE.txt` a szolgáltatás kimenetébe másolódik.
 - **F5 — FOLYAMATBAN (2026-11-24)**: kész: `src/BackupForge.Engine.Sql` — `ISqlSession` / `SqlClientSession` (Microsoft.Data.SqlClient, Windows-auth = a folyamat identitása → a szolgáltatásnál `NT SERVICE\BackupForge`), `SqlPlanning` (adatbázis-választás, tömörítés `auto` (restic követi → nincs; Express → nincs), eredmény-összesítés (felhasználói db hiba → failed, csak rendszer-db → warning), FULL recovery figyelmeztetés (msdb `type='L'` 24 órán belül, `ignore_full_recovery`), `keep_local` takarítás (csak a saját névmintájú `.bak`-ok), T-SQL (`QUOTENAME`-szerű idézés), `GrantScript`), `SqlEngine` (szabad hely előellenőrzés, BACKUP → VERIFYONLY, sikertelen / nem ellenőrzött `.bak` törlése, CHECKDB), `IStagingPermissions` (+ `Windows/StagingAcl`). Szolgáltatás: `SqlSupport` (láncvég-takarítás: az `@staging:`-et utolsóként fogyasztó feladat sikere után; `sql` státuszblokk; `sql.discover`). CLI: `bf sql grant <jobId> [--login] [--yes]` helyben, a rendszergazda saját loginjával. `docs/SQL-PERMISSIONS.md`. Tesztek: Engine.Sql 15 (hamis munkamenet), Integration: LocalDB-n SQL → restic lánc + CHECKDB (csak ha a runneren van LocalDB). Hátra: CI-eredmény (LocalDB elérhető-e a runneren), MANUAL-TESTS.
 
+- **F6 — KÉSZ helyben, a CI-ben build + ViewModel-tesztek (2026-11-24)**.
+  - `src/BackupForge.Gui.Core` (net10.0, CommunityToolkit.Mvvm, WPF nélkül → Linuxon tesztelhető): `MainViewModel` (konfig + státusz + titok-lista betöltése, közös Mentés a szolgáltatás validálásával, mezőszintű hibák `ErrorsFor`), `OverviewViewModel` / `JobCardViewModel` (kártyák, haladás az IPC-eseményekből, Futtatás / Megszakítás / tömeges törlés egyszeri jóváhagyása, figyelmeztető sáv), `JobsViewModel` / `JobEditViewModel` (szerkesztő típusonként, ütemezés-előnézet, próbafuttatás; veszteségmentes oda-vissza alakítás tesztelve), `TargetsViewModel` (célok, restic-tárolók, jelszó csak írható, „Kapcsolat tesztelése” a szolgáltatás nevében, **új tároló varázsló**: 32 karakteres generált jelszó → `secrets.set` → egyszer megmutatott helyreállítási lap (nyomtatható) → mentés → csak megerősítés után `repo.init`), `SqlViewModel` (felderítés, „Jogosultságok beállítása” a GUI-ban, a rendszergazda saját loginjával, a T-SQL előbb megjelenik), `HistoryViewModel`, `RestoreViewModel` (pont → böngészés → cél → visszaállítás, eredeti hely csak megerősítéssel), `NotificationsViewModel`, `SettingsViewModel` (export / import, hiányzó titkok listája). Szövegek: `Resources/UiStrings(.hu).resx`.
+  - `src/BackupForge.Gui` (WPF, `requireAdministrator` manifest): `MainWindow.xaml` 8 füllel (SPEC 11.2), `WpfDialogs` (üzenetek, mappa-/fájlválasztó, nyomtatható szövegablak), `{l:Loc kulcs}` markup-extension. A jelszómezők `PasswordBox`-ok, a kód-mögöttes rész közvetlenül `secrets.set`-be küldi és törli őket.
+  - Visszaállítás (SPEC 13.): `Engine.Files/FileRestore.cs` — `FileRestoreEngine` (pontok: aktuális tükör + Versions-időbélyegek; új mappába `Restore_<időbélyeg>`, nem üres célba nem; eredeti helyre a felülírt fájlok `<forrás>_RestoreBackup_<időbélyeg>`-be; `..` tiltva), restic: `ResticEngine` restore-ja; IPC: `restore.versions` / `restore.browse` / `restore.run` (a soron át, `restore` futásként az előzményben). CLI: `bf restore`.
+  - Tesztek: Gui 12 (hamis IPC-klienssel), Engine.Files +2 (visszaállítás). Kézi lista: `docs/MANUAL-TESTS.md` C. pont.
+- **F7 — KÉSZ helyben, CI-ellenőrzés alatt (2026-11-24)**.
+  - `installer/BackupForge.iss` (Inno Setup 6, hu + en): admin, x64, Windows 10 / Server 2016+, licenc (`installer/license.txt` = MIT + restic BSD-2), programmappa, Start menü, opcionális PATH; telepítés után a `BackupForge.Service.exe --setup-install [--config] [--secrets]` segéd (konfig validálása és a helyére tétele, titkok importja a DPAPI-s `secrets.dat`-ba — a forrásfájlt nem törli, figyelmeztet —, ProgramData ACL, eseményforrás; napló: `C:\ProgramData\BackupForge\setup.log`), majd `sc create … start= delayed-auto`, `sc sidtype … unrestricted`, `sc failure … restart/60000 ×3, reset 86400`, indítás. Frissítés: a szolgáltatás leáll, a konfig / előzmények maradnak. Eltávolítás: kérdés „Megtartod a beállításokat?” (csendesen `/PURGE` kell a törléshez), `--setup-uninstall` (árva VSS, eseményforrás, `--purge` → csak a `ProgramData\BackupForge`), `sc delete`. Csendes: `/VERYSILENT /SUPPRESSMSGBOXES /CONFIG="…" [/SECRETS="…"]`.
+  - `SetupHelper` (`src/BackupForge.Service/SetupHelper.cs`) + teszt.
+  - CI (Windows): self-contained single-file publikálás (szolgáltatás, `bf`, GUI) → ISCC (ha nincs a runneren: `choco install innosetup`) → **füstteszt** `installer/smoke-test.ps1` (UTF-8 BOM): csendes telepítés konfiggal → a szolgáltatás fut, SID-típus UNRESTRICTED → `bf status` → `bf run docs --wait` → `status.json` létrejött → csendes eltávolítás → a szolgáltatás eltűnt, a célmappa érintetlen, a beállítások megmaradtak → artifact `installer`. Kiadás: `.github/workflows/release.yml` (`v*` tag → teszt, publikálás, telepítő, füstteszt, GitHub Release) — a taget a user hozza létre.
+  - `LICENSE` (MIT, SPEC 18.2 alapértelmezés), `docs/EVENT-IDS.md`, `docs/MANUAL-TESTS.md`.
+
 ## Eltérések a spec-től (F0)
 - **Ág**: az AGENT-RUN `main`-t ír, de ez a munkamenet a környezet előírása szerint a `claude/blissful-goldberg-vlt55t` ágra pusholhat (más ágra nem). Minden fázis ide megy; a `main`-be olvasztás (PR) a user dolga.
 - `config.json`-ban az ismeretlen mező hiba (nem csendben eldobott) — egy elgépelt kulcs (pl. `enabeld`) ne kapcsoljon ki csendben semmit.
@@ -93,20 +104,53 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
 - A `versions.size_gb` mindig `null` (a méret bejárása drága; a riport a mappák számát és a legrégebbit mutatja).
 - `heartbeat_url`: sikeres futás után és óránként `GET <url>`, hibás futás után `GET <url>/fail`.
 
+## Eltérések a spec-től (F5)
+- Becsült mentési méret (szabadhely-ellenőrzés): az adatbázis utolsó teljes mentésének mérete az msdb-ből, ha nincs: a lefoglalt adatfájl-méret (felülbecslés). A „használt lapok” lekérdezéséhez db-szintű jog kellene.
+- A staging-ACL-hez a példány alapértelmezett virtuális fiókja (`NT SERVICE\MSSQLSERVER` / `NT SERVICE\MSSQL$<NÉV>`), ha a `sys.dm_server_services` nem olvasható (ehhez `VIEW SERVER STATE` kellene — nem adjuk meg).
+- „Jogosultságok beállítása”: a szkriptet a GUI / `bf sql grant` a rendszergazda saját identitásával futtatja (a szolgáltatás LocalSystem, nem tudná az admin hitelesítését használni); `sql.grant` IPC-művelet ezért nincs.
+- `keep_local` takarítás: lánc nélkül az SQL-futás után, lánccal az `@staging:`-et utolsóként fogyasztó feladat sikeres vége után; csak a `<db>_yyyyMMdd_HHmmss.bak` mintájú fájlok, csak a feladat saját staging-mappájának gyökerében.
+- Sikertelen BACKUP / VERIFYONLY után a félkész `.bak` törlődik (ne tűnjön mentésnek).
+- `checkdb` csak felhasználói adatbázisokra (a SPEC szerint), saját `checkdb` futásként; eredménye a kv-ben (`last_checkdb`, `last_checkdb_ok` a státuszban).
+
+## Eltérések a spec-től (F6)
+- A GUI ViewModel-jei külön projektben (`BackupForge.Gui.Core`) vannak, hogy a tesztek Linuxon is fussanak.
+- Fájlmentés-visszaállításnál a „pont” vagy az aktuális tükör, vagy egy Versions-időbélyeg mappa tartalma (az adott futáskor felülírt / törölt fájlok) — nem teljes „állapot X időpontban” rekonstrukció.
+- A Próbafuttatás a MENTETT konfigurációval fut (a szolgáltatás oldalán); nem mentett változásnál a GUI rákérdez.
+- A GUI egyszerű, mezőkből álló szerkesztő (nincs külön lépésenkénti varázsló a feladatokhoz); az ütemezés szöveges előnézete élőben frissül.
+
+## Eltérések a spec-től (F7)
+- Az eseménynapló-forrást és az ACL-eket a telepítő a szolgáltatás exe `--setup-install` parancsával állítja be (egy kódút a csendes és az interaktív telepítéshez, tesztelhető).
+- Kiadásnál a verzió csak numerikus lehet (`v1.2.3`), mert az Inno `VersionInfoVersion` ezt követeli.
+- Frissítéskor a konfigséma-migráció: a v1-ben egyetlen séma van; régebbi / ismeretlen sémánál a fájl `config.json.bak.premigrate` néven megmarad és figyelmeztetés kerül a `setup.log`-ba.
+
 ## Következő lépés
-- **F5 befejezése**: a CI zöldre (Windows: a VSS-es fájlteszt és az SMB-teszt diagnosztikája a „Failed tests (summary)” lépésben, a job legvégén); LocalDB-teszt eredménye. Utána **F6** (WPF GUI, visszaállítás Versions-ből), **F7** (Inno Setup).
+- **A CI zöldre hozása az utolsó commitra** (Windows-job: integrációs tesztek, publikálás, telepítő, füstteszt). Hibánál a job utolsó lépése („Failed tests (summary)”) röviden kiírja a bukott teszteket; a telepítő-lépések hibája a „Publish” / „Installer” / „smoke test” lépés naplójában.
+- Ismert nyitott CI-pontok az utolsó ellenőrzött futásból: (1) `WindowsPlatformTests.Files_job_with_vss_copies_locked_file…` — VSS-sel a fájlfeladat `failed` volt (azóta: üzenet az assertben + VSS-újrapróbálás); (2) `Smb_target_with_own_credentials` — „error 86” a helyi felhasználóval loopback SMB-n (azóta: `localhost`, `/y`, diagnosztika). Ha a runneren ez nem oldható meg, a teszt a `docs/MANUAL-TESTS.md` B.6 pontjára vált (platformfeltétellel, nem törölve).
+- Utána: a kézi tesztlista (`docs/MANUAL-TESTS.md`) egy tiszta VM-en — ez a user / pilot feladata; a 16. pont elfogadási feltételei ott zárulnak le.
+- F8 (BackupPulse-integráció) külön repóban, a chat írja a CR-t.
 - **(korábbi F2-terv, kész)**: fájlmentés-motor (`BackupForge.Engine.Files`: bejárás + terv, mirror/update, size_mtime ± 2 mp / ± 1 óra, kis-/nagybetűs átnevezés, `.bfpart` másolás, Versions + megőrzés, törlési biztosíték, kizárások, dry-run, párhuzamos másolás, újrapróbálás), VSS (`BackupForge.Windows`), hálózati célok (WNet) + DPAPI `secrets.dat`, e-mail (MailKit, azonnali + helyreállás + összevonás), eseménynapló, belső watchdog.
 
 ## Döntésre vár (user)
-- Licenc: MIT (SPEC 18.2 alapértelmezés) — `LICENSE` fájl az F7-ben kerül a repóba.
+- **Ág**: minden munka a `claude/blissful-goldberg-vlt55t` ágon van (a környezet csak ide engedett pusholni) — a `main`-be olvasztás (PR) a user döntése.
+- Licenc: MIT (SPEC 18.2 alapértelmezés) — a `LICENSE` a repó gyökerében.
+- Végleges név: maradt a BackupForge (SPEC 18.1; átnevezés: namespace + telepítő AppId/név + dokumentáció).
+- Kódaláírás: nincs (SPEC 18.3) — a telepítő és az exe-k aláíratlanok.
+- .NET 10 és Windows Server 2016: a telepítő `MinVersion=10.0.14393` (Server 2016); a .NET 10 támogatási mátrixát a pilot előtt ellenőrizni kell (ha a 2016 kiesik, `MinVersion` emelése).
 - restic-verzió: **0.20.0** (2026-11-19, a legfrissebb stabil; biztonsági javításokat tartalmaz). Ha konzervatívabb kell: 0.19.1.
 
 ## CI-ben / kézzel ellenőrizendő
-- (még nincs)
+- Windows-runneren (CI): VSS (alacsony szintű teszt zöld; a VSS-es fájlfeladat-teszt vizsgálat alatt), DPAPI, eseménynapló, > 260 karakteres utak, telepített szolgáltatás valódi fájlfeladattal, restic.exe-vel minden restic-teszt, LocalDB-s SQL → restic lánc (csak ha a runneren van LocalDB — a „SQL Server LocalDB” CI-lépés kimenete mutatja), telepítő-füstteszt.
+- Kézzel (`docs/MANUAL-TESTS.md`): GUI-folyamatok, SMB-hitelesítés valódi NAS-on, hálózati cél megszakadása, szolgáltatás- és gép-újraindítás futás közben, e-mailek Outlookban, SQL Express jogosultságai (ha a CI-ban nem volt LocalDB), telepítés / frissítés / eltávolítás tiszta VM-en.
 
 ## Ismert buktatók
 - A konténerből a `github.com` (más repók, release-letöltés) nem érhető el → a restic forrását / dokumentációját a Go-proxyból lehet letölteni (`https://proxy.golang.org/github.com/restic/restic/@v/v0.20.0.zip`), a Windows-binárist csak a CI tölti le.
 - `dotnet` helyben: `~/.dotnet` (dotnet-install.sh, 10.0 csatorna); `export PATH=$HOME/.dotnet:$PATH`.
+- Helyi restic a valódi restic-tesztekhez: a Go-proxyból letöltött forrásból `GOTOOLCHAIN=auto go build ./cmd/restic` (go1.26 kell; a Go-eszközláncot a proxy adja), majd `BACKUPFORGE_RESTIC=<út> dotnet test`. A CI-ban a `tools/fetch_restic.py` (Windows: rögzített hash; Linux `--linux`: a hivatalos SHA256SUMS szerint) tölti le; `BF_REQUIRE_RESTIC=1` mellett a hiányzó bináris hiba, nem kihagyás.
+- MailKit 5.0 API-ja eltér (SendAsync) → 4.18.2 maradt.
+- `JsonValue.GetValue<long>()` kivételt dob, ha a csomópont `int` → a GUI-ban `J.L()` / `J.D()` tűrő olvasók; `async void` eseménykezelőben a kivétel az egész folyamatot leállítja → try/catch.
+- Egy futó CI-t a következő push megszakít (`cancel-in-progress`) — hibakeresésnél a push előtt érdemes megvárni az eredményt.
+- A Windows-CI hosszú (a 10 000 fájlos teszt ~1–2 perc): a `--blame-hang-timeout 6m` megállítja a beragadt tesztet.
+- A WNet loopback (`\\localhost\share`) helyi felhasználóval a runneren 86-os hibát adhat (lásd Következő lépés).
 
 ## Nyitott kérdések
 - Lásd SPEC 18. (név, licenc, kódaláírás, .NET 10 + Server 2016, GUI-keretrendszer, ügyfél-nézet, FFS/Cobian-importáló). Mindegyikhez van alapértelmezés, ezekkel lehet haladni.
