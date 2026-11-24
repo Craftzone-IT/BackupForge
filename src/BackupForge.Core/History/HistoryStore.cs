@@ -233,9 +233,17 @@ public sealed class HistoryStore : IKeyValueStore
     /// <summary>A run that did not execute (still running / chain broken / disabled): start = end.</summary>
     public long RecordSkipped(string jobId, string kind, string trigger, string? chainRunId, DateTimeOffset atUtc, string summary)
     {
-        var id = StartRun(jobId, kind, trigger, chainRunId, atUtc);
-        FinishRun(id, atUtc, new RunOutcome { Result = RunResults.Skipped, Summary = summary });
-        return id;
+        // one statement, so a reader never sees the row without its result
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "INSERT INTO runs (job_id, chain_run_id, kind, trigger, started_at, ended_at, result, summary) VALUES ($j, $c, $k, $t, $s, $s, 'skipped', $sum); SELECT last_insert_rowid();";
+        cmd.Parameters.AddWithValue("$j", jobId);
+        cmd.Parameters.AddWithValue("$c", (object?)chainRunId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$k", kind);
+        cmd.Parameters.AddWithValue("$t", trigger);
+        cmd.Parameters.AddWithValue("$s", Ms(atUtc));
+        cmd.Parameters.AddWithValue("$sum", summary);
+        return (long)cmd.ExecuteScalar()!;
     }
 
     /// <summary>Runs without an end (service crashed / machine rebooted) become interrupted. Returns their ids.</summary>

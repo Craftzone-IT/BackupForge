@@ -248,6 +248,16 @@ public class ConfigValidatorTests
         Assert.True(V(c).IsValid, V(c).ToString());
     }
 
+    [Fact]
+    public void Several_sources_need_distinct_folder_names()
+    {
+        var c = ConfigFixtures.Minimal();
+        c.Jobs[0].Sources = [new SourceConfig { Path = @"D:\Data" }, new SourceConfig { Path = @"E:\data" }];
+        AssertError(c, "sources.leaf_duplicate", "jobs[0].sources[1].path");
+        c.Jobs[0].Sources[1].Path = @"E:\Other";
+        Assert.True(V(c).IsValid, V(c).ToString());
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(101)]

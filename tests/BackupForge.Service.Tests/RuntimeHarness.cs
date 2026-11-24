@@ -2,6 +2,7 @@ using BackupForge.Core.Abstractions;
 using BackupForge.Core.Config;
 using BackupForge.Core.Execution;
 using BackupForge.Core.Logging;
+using BackupForge.Core.Notifications;
 using BackupForge.Ipc;
 using BackupForge.TestKit;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -26,12 +27,31 @@ public sealed class RuntimeHarness : IAsyncDisposable
         if (config is not null) AtomicFile.Write(Paths.ConfigFile, ConfigJson.ToUtf8(config));
     }
 
-    public async Task<RuntimeHarness> StartAsync(IEnumerable<IJobEngine>? engines = null)
+    public FakeMailSender Mail { get; } = new();
+    public MemoryEventSink Events { get; } = new();
+    public SecretMasker Masker { get; } = new();
+
+    public async Task<RuntimeHarness> StartAsync(IEnumerable<IJobEngine>? engines = null, bool components = true)
     {
-        Runtime = new ServiceRuntime(Paths, NullLoggerFactory.Instance, Clock, engines ?? [Engine], Secrets, new SecretMasker(),
+        var list = (engines ?? [Engine]).ToList();
+        Runtime = new ServiceRuntime(Paths, NullLoggerFactory.Instance, Clock, list, Secrets, Masker,
             new ServiceOptions { PipeName = Pipe, CatchUpDelay = TimeSpan.FromMinutes(2) });
+        if (components)
+            ServiceComposition.Attach(Runtime, new Platform { Mail = Mail, Events = Events }, list);
         await Runtime.StartAsync(CancellationToken.None);
         return this;
+    }
+
+    /// <summary>Ticks until the notifier's outbox is empty (or the attempts are used up).</summary>
+    public async Task FlushMailAsync()
+    {
+        for (var i = 0; i < 50; i++)
+        {
+            Runtime.Tick();
+            await Runtime.Notifier!.Sending;
+            if (Runtime.Notifier.PendingCount == 0) return;
+            await Task.Delay(10);
+        }
     }
 
     public Task<IpcClient> Connect() => IpcClient.ConnectAsync(Pipe, TimeSpan.FromSeconds(5));
@@ -49,5 +69,20 @@ public sealed class RuntimeHarness : IAsyncDisposable
     {
         if (Runtime is not null) await Runtime.StopAsync();
         Dir.Dispose();
+    }
+}
+
+public sealed class FakeMailSender : IMailSender
+{
+    public List<MailMessage> Sent { get; } = [];
+    public int FailNext { get; set; }
+    public int Attempts { get; private set; }
+
+    public Task SendAsync(EmailSettings settings, string? password, MailMessage message, CancellationToken ct)
+    {
+        Attempts++;
+        if (FailNext > 0) { FailNext--; throw new IOException("smtp connection refused"); }
+        lock (Sent) Sent.Add(message);
+        return Task.CompletedTask;
     }
 }

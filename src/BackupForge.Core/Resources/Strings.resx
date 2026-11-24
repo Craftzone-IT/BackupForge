@@ -189,4 +189,61 @@
   <data name="size.tb" xml:space="preserve">
     <value>{0:0.##} TB</value>
   </data>
+  <data name="mail.failure" xml:space="preserve">
+    <value>ERROR</value>
+  </data>
+  <data name="mail.warning" xml:space="preserve">
+    <value>WARNING</value>
+  </data>
+  <data name="mail.recovery" xml:space="preserve">
+    <value>RECOVERED</value>
+  </data>
+  <data name="mail.stale" xml:space="preserve">
+    <value>NO RECENT BACKUP</value>
+  </data>
+  <data name="mail.config" xml:space="preserve">
+    <value>CONFIGURATION ERROR</value>
+  </data>
+  <data name="mail.test" xml:space="preserve">
+    <value>TEST</value>
+  </data>
+  <data name="mail.stale_text" xml:space="preserve">
+    <value>{0}: no successful backup for {1:0} hours (expected every {2:0.#} h)</value>
+  </data>
+  <data name="mail.config_text" xml:space="preserve">
+    <value>config.json is invalid, the service keeps running with the last valid configuration: {0}</value>
+  </data>
+  <data name="mail.test_text" xml:space="preserve">
+    <value>This is a test message from BackupForge on {0}.</value>
+  </data>
+  <data name="mail.job" xml:space="preserve">
+    <value>Job</value>
+  </data>
+  <data name="mail.result" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="mail.start" xml:space="preserve">
+    <value>Started</value>
+  </data>
+  <data name="mail.duration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="mail.summary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="mail.errors" xml:space="preserve">
+    <value>First errors</value>
+  </data>
+  <data name="mail.more_errors" xml:space="preserve">
+    <value>… and {0} more</value>
+  </data>
+  <data name="mail.log" xml:space="preserve">
+    <value>Run log on the server</value>
+  </data>
+  <data name="mail.trigger" xml:space="preserve">
+    <value>Trigger</value>
+  </data>
+  <data name="sources.leaf_duplicate" xml:space="preserve">
+    <value>With several sources every source folder name must be unique (they become subfolders of the mirror): '{0}'</value>
+  </data>
 </root>

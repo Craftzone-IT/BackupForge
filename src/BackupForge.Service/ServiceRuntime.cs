@@ -145,6 +145,8 @@ public sealed class ServiceRuntime : IAsyncDisposable
     }
 
     public StatusProviders StatusProviders { get; set; } = new();
+    public Components.Notifier? Notifier { get; set; }
+    public Components.TargetProbe? TargetProbe { get; set; }
 
     public StatusDocument BuildStatus() => StatusBuilder.Build(new StatusInputs
     {

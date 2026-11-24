@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Diagnostics.EventLog" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     <ProjectReference Include="..\BackupForge.Core\BackupForge.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

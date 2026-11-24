@@ -20,19 +20,30 @@ public class WindowsServiceTests
     }
 
     [WindowsAdminFact]
-    public async Task Installed_service_runs_job_and_stops_cleanly()
+    public Task Installed_service_runs_job_and_stops_cleanly() => RunInstalled(testEngine: true);
+
+    [WindowsAdminFact]
+    public Task Installed_service_runs_real_files_job_as_localsystem() => RunInstalled(testEngine: false);
+
+    private async Task RunInstalled(bool testEngine)
     {
         var name = "BackupForgeIT" + Guid.NewGuid().ToString("N")[..6];
         using var dir = new TempDir();
-        var paths = new DataPaths(dir.Path);
+        var paths = new DataPaths(Path.Combine(dir.Path, "data"));
         paths.EnsureCreated();
-        AtomicFile.Write(paths.ConfigFile, ConfigJson.ToUtf8(TestConfigs.Jobs(1)));
+        var src = Path.Combine(dir.Path, "src");
+        Directory.CreateDirectory(src);
+        File.WriteAllText(Path.Combine(src, "doc.txt"), "hello");
+        var cfg = TestConfigs.Jobs(1);
+        cfg.Targets[0].Path = Path.Combine(dir.Path, "target");
+        cfg.Jobs[0].Sources[0].Path = src;
+        AtomicFile.Write(paths.ConfigFile, ConfigJson.ToUtf8(cfg));
         var pipe = "bf-svc-" + Guid.NewGuid().ToString("N")[..8];
         var exe = Path.Combine(ServiceProcess.BinDir, "BackupForge.Service.exe");
         Assert.True(File.Exists(exe), exe);
         try
         {
-            var bin = $"\"{exe}\" --data \"{paths.Root}\" --pipe {pipe} --test-engine";
+            var bin = $"\"{exe}\" --data \"{paths.Root}\" --pipe {pipe}" + (testEngine ? " --test-engine" : "");
             var create = Sc("create", name, "binPath=", bin, "start=", "demand");
             Assert.Contains("SUCCESS", create, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("SUCCESS", Sc("start", name), StringComparison.OrdinalIgnoreCase);
@@ -43,6 +54,7 @@ public class WindowsServiceTests
                 var r = await c.CallAsync(IpcOps.JobRun, new System.Text.Json.Nodes.JsonObject { ["job_id"] = "j1", ["wait"] = true });
                 Assert.Equal(RunResults.Ok, r!["result"]!.ToString());
             }
+            if (!testEngine) Assert.Equal("hello", File.ReadAllText(Path.Combine(dir.Path, "target", "d1", "doc.txt")));
 
             Sc("stop", name);
             var deadline = DateTime.UtcNow.AddSeconds(60);

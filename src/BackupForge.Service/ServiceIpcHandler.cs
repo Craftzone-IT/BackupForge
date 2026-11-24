@@ -111,6 +111,25 @@ public sealed class ServiceIpcHandler
             foreach (var l in text) arr.Add(l);
             return Task.FromResult<JsonNode?>(new JsonObject { ["path"] = path, ["lines"] = arr });
         });
+        Register(IpcOps.NotifyTest, async (_, _, ct) =>
+        {
+            if (_rt.Notifier is null) throw new IpcException(IpcErrorCodes.Rejected, "notifications are not available");
+            try { await _rt.Notifier.SendTestAsync(ct).ConfigureAwait(false); }
+            catch (InvalidOperationException ex) { throw new IpcException(IpcErrorCodes.Rejected, ex.Message); }
+            return new JsonObject { ["sent"] = true };
+        });
+        Register(IpcOps.TargetTest, (req, _, _) =>
+        {
+            var id = req.Required("target_id");
+            var t = _rt.ConfigStore.Current.FindTarget(id) ?? throw new IpcException(IpcErrorCodes.NotFound, $"unknown target '{id}'");
+            if (_rt.TargetProbe is null) throw new IpcException(IpcErrorCodes.Rejected, "not available");
+            var st = _rt.TargetProbe.Probe(t);
+            return Task.FromResult<JsonNode?>(new JsonObject
+            {
+                ["target_id"] = id, ["path"] = st.Path, ["online"] = st.Online, ["free_gb"] = st.FreeGb, ["size_gb"] = st.SizeGb, ["error"] = st.Error,
+                ["account"] = Environment.UserName,
+            });
+        });
         Register(IpcOps.EventsSubscribe, (_, conn, _) =>
         {
             conn.Subscribed = true;

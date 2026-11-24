@@ -189,4 +189,61 @@
   <data name="size.tb" xml:space="preserve">
     <value>{0:0.##} TB</value>
   </data>
+  <data name="mail.failure" xml:space="preserve">
+    <value>HIBA</value>
+  </data>
+  <data name="mail.warning" xml:space="preserve">
+    <value>FIGYELMEZTETÉS</value>
+  </data>
+  <data name="mail.recovery" xml:space="preserve">
+    <value>HELYREÁLLT</value>
+  </data>
+  <data name="mail.stale" xml:space="preserve">
+    <value>NINCS FRISS MENTÉS</value>
+  </data>
+  <data name="mail.config" xml:space="preserve">
+    <value>KONFIGURÁCIÓS HIBA</value>
+  </data>
+  <data name="mail.test" xml:space="preserve">
+    <value>TESZT</value>
+  </data>
+  <data name="mail.stale_text" xml:space="preserve">
+    <value>{0}: {1:0} órája nincs sikeres mentés (várt gyakoriság: {2:0.#} óra)</value>
+  </data>
+  <data name="mail.config_text" xml:space="preserve">
+    <value>a config.json hibás, a szolgáltatás az utolsó érvényes konfigurációval fut tovább: {0}</value>
+  </data>
+  <data name="mail.test_text" xml:space="preserve">
+    <value>Ez egy tesztüzenet a(z) {0} BackupForge-ból.</value>
+  </data>
+  <data name="mail.job" xml:space="preserve">
+    <value>Feladat</value>
+  </data>
+  <data name="mail.result" xml:space="preserve">
+    <value>Eredmény</value>
+  </data>
+  <data name="mail.start" xml:space="preserve">
+    <value>Kezdés</value>
+  </data>
+  <data name="mail.duration" xml:space="preserve">
+    <value>Időtartam</value>
+  </data>
+  <data name="mail.summary" xml:space="preserve">
+    <value>Összesítő</value>
+  </data>
+  <data name="mail.errors" xml:space="preserve">
+    <value>Az első hibák</value>
+  </data>
+  <data name="mail.more_errors" xml:space="preserve">
+    <value>… és még {0}</value>
+  </data>
+  <data name="mail.log" xml:space="preserve">
+    <value>A futásnapló a gépen</value>
+  </data>
+  <data name="mail.trigger" xml:space="preserve">
+    <value>Indítás</value>
+  </data>
+  <data name="sources.leaf_duplicate" xml:space="preserve">
+    <value>Több forrásnál a forrásmappák neve nem ismétlődhet (a tükörben almappák lesznek): '{0}'</value>
+  </data>
 </root>

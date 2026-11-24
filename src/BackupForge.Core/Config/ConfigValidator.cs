@@ -216,10 +216,19 @@ public static partial class ConfigValidator
         if (dup.JobId is not null) Err($"{p}.target", "target.shared", dup.JobId);
         mirrorTargets.Add((mirror, j.Id));
 
+        var leaves = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         for (var k = 0; k < j.Sources.Count; k++)
         {
             var src = j.Sources[k].Path;
-            if (string.IsNullOrWhiteSpace(src) || src.StartsWith(StagingPrefix, StringComparison.Ordinal)) continue;
+            if (string.IsNullOrWhiteSpace(src)) continue;
+            if (j.Sources.Count > 1)
+            {
+                var leaf = PathUtil.Normalize(src).TrimEnd('\\');
+                leaf = leaf[(leaf.LastIndexOf('\\') + 1)..].Replace(":", "", StringComparison.Ordinal);
+                if (src.StartsWith(StagingPrefix, StringComparison.Ordinal)) leaf = src[StagingPrefix.Length..];
+                if (!leaves.Add(leaf)) Err($"{p}.sources[{k}].path", "sources.leaf_duplicate", leaf);
+            }
+            if (src.StartsWith(StagingPrefix, StringComparison.Ordinal)) continue;
             if (PathUtil.Overlaps(src, mirror)) Err($"{p}.sources[{k}].path", "path.nested", src, mirror);
         }
 
