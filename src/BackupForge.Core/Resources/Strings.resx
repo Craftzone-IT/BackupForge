@@ -99,4 +99,46 @@
   <data name="source.staging_only_restic_files" xml:space="preserve">
     <value>@staging sources are allowed only in files and restic jobs</value>
   </data>
+  <data name="sched.every_h" xml:space="preserve">
+    <value>every {0} h</value>
+  </data>
+  <data name="sched.every_min" xml:space="preserve">
+    <value>every {0} min</value>
+  </data>
+  <data name="sched.from" xml:space="preserve">
+    <value> from {0}</value>
+  </data>
+  <data name="sched.window" xml:space="preserve">
+    <value> (between {0} and {1})</value>
+  </data>
+  <data name="sched.daily" xml:space="preserve">
+    <value>daily at {0}</value>
+  </data>
+  <data name="sched.days" xml:space="preserve">
+    <value>{0} at {1}</value>
+  </data>
+  <data name="sched.weekly" xml:space="preserve">
+    <value>weekly on {0} at {1}</value>
+  </data>
+  <data name="sched.monthly" xml:space="preserve">
+    <value>monthly on day {0} at {1}</value>
+  </data>
+  <data name="sched.monthly_last" xml:space="preserve">
+    <value>monthly on the last day at {0}</value>
+  </data>
+  <data name="sched.chained" xml:space="preserve">
+    <value>chained: after {0}</value>
+  </data>
+  <data name="sched.chained_none" xml:space="preserve">
+    <value>chained (no job triggers it)</value>
+  </data>
+  <data name="sched.manual" xml:space="preserve">
+    <value>manual only</value>
+  </data>
+  <data name="day.short" xml:space="preserve">
+    <value>Sun,Mon,Tue,Wed,Thu,Fri,Sat</value>
+  </data>
+  <data name="day.long" xml:space="preserve">
+    <value>Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday</value>
+  </data>
 </root>

@@ -99,4 +99,46 @@
   <data name="source.staging_only_restic_files" xml:space="preserve">
     <value>@staging forrás csak fájl- és restic-feladatban adható meg</value>
   </data>
+  <data name="sched.every_h" xml:space="preserve">
+    <value>{0} óránként</value>
+  </data>
+  <data name="sched.every_min" xml:space="preserve">
+    <value>{0} percenként</value>
+  </data>
+  <data name="sched.from" xml:space="preserve">
+    <value> {0}-{1}</value>
+  </data>
+  <data name="sched.window" xml:space="preserve">
+    <value> ({0} és {1} között)</value>
+  </data>
+  <data name="sched.daily" xml:space="preserve">
+    <value>naponta {0}</value>
+  </data>
+  <data name="sched.days" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="sched.weekly" xml:space="preserve">
+    <value>hetente, {0} {1}</value>
+  </data>
+  <data name="sched.monthly" xml:space="preserve">
+    <value>havonta, {0}. napon {1}</value>
+  </data>
+  <data name="sched.monthly_last" xml:space="preserve">
+    <value>havonta, az utolsó napon {0}</value>
+  </data>
+  <data name="sched.chained" xml:space="preserve">
+    <value>láncban: {0} után</value>
+  </data>
+  <data name="sched.chained_none" xml:space="preserve">
+    <value>láncban (egy feladat sem indítja)</value>
+  </data>
+  <data name="sched.manual" xml:space="preserve">
+    <value>csak kézzel</value>
+  </data>
+  <data name="day.short" xml:space="preserve">
+    <value>V,H,K,Sze,Cs,P,Szo</value>
+  </data>
+  <data name="day.long" xml:space="preserve">
+    <value>vasárnap,hétfő,kedd,szerda,csütörtök,péntek,szombat</value>
+  </data>
 </root>

@@ -39,6 +39,17 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
   - CI: `.github/workflows/ci.yml` — `linux` (build + teszt) és `windows` (build + minden teszt), `concurrency` + `cancel-in-progress`.
   - Tesztek: 120 (Core) + 3 füstteszt; `dotnet test BackupForge.slnx` zöld helyben (Linux).
 
+- **F1 — KÉSZ (2026-11-24)** (a Windows-szolgáltatás integrációs tesztje a CI Windows-runnerén fut).
+  - Ütemező: `Core/Scheduling/ScheduleCalculator` (`Next` / `Previous`, interval / daily / weekly / monthly; DST: nem létező helyi idő → a váltás utáni első perc, ismétlődő óra → csak egyszer, az első előfordulás), `ExpectedInterval` (SPEC 4. szabályai, chained = a legnagyobb indító), `ScheduleText` (hu/en, magyar -tól/-től illesztéssel), `TimeSpec` (ÓÓ:pp, napok, „weekly Sun 03:00”-féle ismétlődések).
+  - Végrehajtás: `Core/Execution` — `JobCoordinator` (sor, `max_parallel_jobs`, erőforrászárak `ResourceLocks` (célmappa / restic-tároló / SQL-példány), egy feladat egyszerre egyszer, ütemezett ütközés → `skipped (still running)`, letiltott automatikus futás → `skipped (disabled)`, időkorlát → `failed: timeout`, megszakítás → `interrupted`, leállítás 60 mp türelmi idővel, láncok `chain_run_id`-vel, hibánál `skipped (chain: <id> failed)`, dry-run nem indít láncot), `JobScheduler` (esedékesség, catch-up induláskor egyszer, 2 perc késleltetéssel — csak ha a feladatot már korábban is ismerte (`seen:<kulcs>` a kv-ben) és az utolsó esedékesség óta nem indult; restic forget/prune + check és SQL CHECKDB bejegyzések is), `IJobEngine` / `RunOutcome` / `JobRunContext`, `FileRunLog` (`logs\jobs\<job>\<run>.log`, maszkolva) + megőrzés, `DataPaths` (`BACKUPFORGE_DATA` felülírja).
+  - Előzmények: `Core/History/HistoryStore` (SQLite, WAL; a SPEC 9.1 táblái + `kv` állapot-tábla; időpontok Unix ms UTC-ben). Induláskor a befejezetlen futások `interrupted`-ek.
+  - Konfig: `ConfigStore` (betöltés + validálás, hibás fájlnál az utolsó érvényes marad és a hiba a státuszba kerül; mentés atomikusan, `config.json.bak.1..10`; minden változás `config_changes` + `ConfigDiff` összefoglaló, letiltás → `disabled_since`), `AtomicFile`.
+  - Státusz-modell (az F3 előkészítése): `Core/Status/StatusDocument` (a szerződés mezői) + `StatusBuilder` (+ `Watchdog.IsStale`, `LocationDisplay`).
+  - IPC: `src/BackupForge.Ipc` — sorvégjeles JSON a named pipe-on (`IpcServer` / `IpcClient`, protokollverzió minden kérésben, szerver-push események `events.subscribe` után). Windowson a pipe ACL-je SYSTEM + Administrators. Linuxon (Unix socket) is működik → a tesztek ott is futnak.
+  - Szolgáltatás: `src/BackupForge.Service` — `ServiceRuntime` (host-független mag; `IServiceComponent` bővítési pont a későbbi fázisoknak), `ServiceIpcHandler` (status/config/secrets/job/history/log műveletek), `Worker` (5 mp-es tick), `Program` (`AddWindowsService`, leállítási időkorlát 75 mp, fájlnapló; kapcsolók: `--data`, `--pipe`, `--test-engine`), `TestEngine` (csak `--test-engine` / `BACKUPFORGE_TEST_ENGINE=1` mellett).
+  - CLI: `src/BackupForge.Cli/BfCli` (`bf status [--json]`, `jobs`, `run [--dry-run] [--allow-mass-delete] [--wait]`, `cancel`, `history`, `log`, `config validate|reload|export|import`, `secret set`, …; kilépési kódok a SPEC szerint).
+  - Tesztek: Core 162 (ütemező + DST, koordinátor, ütemező/catch-up, előzmények), `BackupForge.Service.Tests` 11 (in-process runtime + valódi pipe + CLI), `BackupForge.Integration.Tests`: a szolgáltatás valódi folyamatként + `bf` folyamat (Linuxon is), Windowson `sc create` → indítás → futtatás → leállítás → törlés (`WindowsAdminFact`).
+
 ## Eltérések a spec-től (F0)
 - **Ág**: az AGENT-RUN `main`-t ír, de ez a munkamenet a környezet előírása szerint a `claude/blissful-goldberg-vlt55t` ágra pusholhat (más ágra nem). Minden fázis ide megy; a `main`-be olvasztás (PR) a user dolga.
 - `config.json`-ban az ismeretlen mező hiba (nem csendben eldobott) — egy elgépelt kulcs (pl. `enabeld`) ne kapcsoljon ki csendben semmit.
@@ -47,9 +58,16 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
 - Hosszú útvonalak: a .NET (Core) Windowson magától `\\?\`-es útra vált, ezért a kód nem tesz elé előtagot; a > 260 karakteres teszt a Windows-runneren fut (F2).
 - `BackupForge.Windows` `net10.0` célú (nem `net10.0-windows`), `[SupportedOSPlatform("windows")]`-szal, hogy a solution Linuxon is egyben forduljon; a hívó oldalon `OperatingSystem.IsWindows()` őrzi.
 
+## Eltérések a spec-től (F1)
+- `interval` ütemezés: a `start` egy folytonos sorozat horgonya (06:15 + 4 óra → 10:15, …, 22:15, 02:15), nem naponta újrakezdődő; a 1440-et osztó intervallumoknál ez minden nap ugyanazt az időpontsort adja. A `window` [from, to) — ha from > to, éjfélen átnyúlik.
+- Catch-up csak akkor, ha a szolgáltatás a feladatot az elmulasztott esedékesség előtt már ismerte (különben egy új feladat a mentés után azonnal elindulna).
+- Kézi futtatás futó / sorban álló feladatra: azonnali elutasítás (az előzménybe nem kerül), csak az automatikus (ütemezett / catch-up / lánc) ütközés kerül `skipped`-ként az előzménybe.
+- Letiltott feladat: automatikusan nem fut (`skipped (disabled)`, ha lánc indítaná), kézzel futtatható.
+- A restic-karbantartás (forget/prune, check) a koordinátorban `repo:<id>` azonosítójú munkaként fut, az előzményben is így látszik.
+- `history.db`: + `kv` tábla (delete guard jóváhagyás, `seen:*`, `disabled_since:*`, riport-időpontok), `notifications.fingerprint`, `sql_db_results.recovery_model`, `vss_snapshots.set_id`.
+
 ## Következő lépés
-- **F1** (SPEC 17.): szolgáltatás-host, ütemező (DST-tesztekkel), feladatsor + zárak + láncok teszt-motorral, `history.db`, IPC alap (named pipe), CLI alap.
-- A restic-hash rögzítése: az első Windows-CI futás „Fetch restic” lépésének kimenetéből (`zip_sha256`, `exe_sha256`) → `third_party/restic/VERSION`, utána a lépés ne legyen `continue-on-error`.
+- **F2** (SPEC 17.): fájlmentés-motor (`BackupForge.Engine.Files`: bejárás + terv, mirror/update, size_mtime ± 2 mp / ± 1 óra, kis-/nagybetűs átnevezés, `.bfpart` másolás, Versions + megőrzés, törlési biztosíték, kizárások, dry-run, párhuzamos másolás, újrapróbálás), VSS (`BackupForge.Windows`), hálózati célok (WNet) + DPAPI `secrets.dat`, e-mail (MailKit, azonnali + helyreállás + összevonás), eseménynapló, belső watchdog.
 
 ## Döntésre vár (user)
 - Licenc: MIT (SPEC 18.2 alapértelmezés) — `LICENSE` fájl az F7-ben kerül a repóba.
