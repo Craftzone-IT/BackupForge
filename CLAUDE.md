@@ -27,19 +27,40 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
 - PowerShell-szkriptek (ha lesznek, pl. telepítő-segéd): UTF-8 **BOM-mal** (PS 5.1 különben rosszul olvassa az ékezeteket).
 
 ## Állapot
-- **2026-11-24 — F0 előtt.** A repó csak dokumentációt tartalmaz: SPEC v1, STATUS-CONTRACT, DECISIONS, BUSINESS. Kód még nincs.
+- **F0 — KÉSZ (2026-11-24)** (a CI-eredmény a push után: lásd lent / a commit-történetet).
+  - Solution: `BackupForge.slnx` (a .NET 10 SDK alapformátuma), `global.json` (10.0.100, `rollForward: latestFeature`), központi csomagverziók: `Directory.Packages.props`, közös beállítások: `Directory.Build.props` (nullable, `EnableWindowsTargeting` → a WPF is fordul Linuxon), `src/Directory.Build.props` (warnings as errors).
+  - Projektek a SPEC 3. pontja szerint (`src/`: Core, Engine.Files, Engine.Restic, Engine.Sql, Windows, Ipc, Service, Cli (`bf`), Gui (WPF, `BackupForge.exe`); `tests/`: Core.Tests, Engine.Files.Tests, Engine.Restic.Tests, Integration.Tests + **`BackupForge.TestKit`** (közös: `TempDir`, `WindowsOnlyFact`/`WindowsOnlyTheory`/`WindowsAdminFact`).
+  - `Core/Config`: `BackupConfig` (a teljes `config.json` modell, snake_case, `ConfigJson` source-generátorral; ismeretlen mező → `ConfigFormatException` a JSON-úttal), `ConfigValidator` (mezőszintű `ValidationError(path, code, args)`, üzenet `Texts`-ből hu/en), `JobPaths` (tükör- és Versions-útvonal).
+  - `Core/Abstractions`: `IClock` (+ `ManualClock`), `IFileSystem` (+ `PhysicalFileSystem`), `IProcessRunner` (+ `SystemProcessRunner`, titok csak env-ben), `ISecretStore` (+ `InMemorySecretStore`), `PathUtil` (Windows-stílusú útvonalak OS-függetlenül).
+  - `Core/Logging`: `SecretMasker` (ismert titkok + URL-jelszó + `password=` minták), `FileLoggerProvider` (napi forgatás `<prefix>-yyyyMMdd.log`, megőrzés napokban, csak a saját mintájú fájlokat törli).
+  - `Core/Resources`: `Strings.resx` (en) + `Strings.hu.resx`; új szöveg: `python3 tools/resx.py src/BackupForge.Core/Resources <kulcs> "<en>" "<hu>"` (vagy `--batch <tsv>`).
+  - `schema/config.schema.json` (Draft 2020-12, strukturális) + `schema/examples/config.example.json` (a SPEC példája). Teszt: a példa és a szerializált modell is megfelel a sémának (JsonSchema.Net).
+  - `third_party/restic/VERSION` (0.20.0, a hash-ek a CI első futásából rögzítendők) + `LICENSE` (BSD-2); `tools/fetch_restic.py` (letöltés + ellenőrzés a hivatalos `SHA256SUMS` és a rögzített hash ellen).
+  - CI: `.github/workflows/ci.yml` — `linux` (build + teszt) és `windows` (build + minden teszt), `concurrency` + `cancel-in-progress`.
+  - Tesztek: 120 (Core) + 3 füstteszt; `dotnet test BackupForge.slnx` zöld helyben (Linux).
+
+## Eltérések a spec-től (F0)
+- **Ág**: az AGENT-RUN `main`-t ír, de ez a munkamenet a környezet előírása szerint a `claude/blissful-goldberg-vlt55t` ágra pusholhat (más ágra nem). Minden fázis ide megy; a `main`-be olvasztás (PR) a user dolga.
+- `config.json`-ban az ismeretlen mező hiba (nem csendben eldobott) — egy elgépelt kulcs (pl. `enabeld`) ne kapcsoljon ki csendben semmit.
+- A `versioning.folder` nem lehet a tükörmappán belül (a célgyökérbe mentő feladatnál sem relatív név): a tükör különben a saját Versions mappáját törölné / verziózná. Célgyökérbe mentésnél tehát abszolút, a tükrön kívüli út kell.
+- Azonosítók (job / target / repo): `^[a-z0-9][a-z0-9_-]{0,63}$` (útvonalban és restic-tagben is szerepelnek).
+- Hosszú útvonalak: a .NET (Core) Windowson magától `\\?\`-es útra vált, ezért a kód nem tesz elé előtagot; a > 260 karakteres teszt a Windows-runneren fut (F2).
+- `BackupForge.Windows` `net10.0` célú (nem `net10.0-windows`), `[SupportedOSPlatform("windows")]`-szal, hogy a solution Linuxon is egyben forduljon; a hívó oldalon `OperatingSystem.IsWindows()` őrzi.
 
 ## Következő lépés
-- **F0** (SPEC 17.): solution-szerkezet, CI (Linux + Windows-runner), `Core` konfigmodell + validálás + `schema/config.schema.json`, naplózás, absztrakciók. Utána F1.
+- **F1** (SPEC 17.): szolgáltatás-host, ütemező (DST-tesztekkel), feladatsor + zárak + láncok teszt-motorral, `history.db`, IPC alap (named pipe), CLI alap.
+- A restic-hash rögzítése: az első Windows-CI futás „Fetch restic” lépésének kimenetéből (`zip_sha256`, `exe_sha256`) → `third_party/restic/VERSION`, utána a lépés ne legyen `continue-on-error`.
 
 ## Döntésre vár (user)
-- (még nincs)
+- Licenc: MIT (SPEC 18.2 alapértelmezés) — `LICENSE` fájl az F7-ben kerül a repóba.
+- restic-verzió: **0.20.0** (2026-11-19, a legfrissebb stabil; biztonsági javításokat tartalmaz). Ha konzervatívabb kell: 0.19.1.
 
 ## CI-ben / kézzel ellenőrizendő
 - (még nincs)
 
 ## Ismert buktatók
-- (még nincs)
+- A konténerből a `github.com` (más repók, release-letöltés) nem érhető el → a restic forrását / dokumentációját a Go-proxyból lehet letölteni (`https://proxy.golang.org/github.com/restic/restic/@v/v0.20.0.zip`), a Windows-binárist csak a CI tölti le.
+- `dotnet` helyben: `~/.dotnet` (dotnet-install.sh, 10.0 csatorna); `export PATH=$HOME/.dotnet:$PATH`.
 
 ## Nyitott kérdések
 - Lásd SPEC 18. (név, licenc, kódaláírás, .NET 10 + Server 2016, GUI-keretrendszer, ügyfél-nézet, FFS/Cobian-importáló). Mindegyikhez van alapértelmezés, ezekkel lehet haladni.

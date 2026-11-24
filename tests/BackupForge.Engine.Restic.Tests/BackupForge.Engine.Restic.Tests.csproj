@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BackupForge.Engine.Restic\BackupForge.Engine.Restic.csproj" />
+    <ProjectReference Include="..\BackupForge.TestKit\BackupForge.TestKit.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fixtures\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

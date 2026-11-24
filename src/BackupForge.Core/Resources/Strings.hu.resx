@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="schema.unsupported" xml:space="preserve">
+    <value>Nem támogatott konfigséma: {0} (várt: {1})</value>
+  </data>
+  <data name="format.invalid" xml:space="preserve">
+    <value>Érvénytelen JSON: {0}</value>
+  </data>
+  <data name="required" xml:space="preserve">
+    <value>Kötelező mező</value>
+  </data>
+  <data name="id.invalid" xml:space="preserve">
+    <value>Érvénytelen azonosító: '{0}' (megengedett: a-z, 0-9, '-', '_', legfeljebb 64 karakter)</value>
+  </data>
+  <data name="id.duplicate" xml:space="preserve">
+    <value>Ismétlődő azonosító: '{0}'</value>
+  </data>
+  <data name="value.invalid" xml:space="preserve">
+    <value>Érvénytelen érték: '{0}' (lehetséges: {1})</value>
+  </data>
+  <data name="range" xml:space="preserve">
+    <value>Az érték ({0}) a megengedett tartományon kívül esik ({1}–{2})</value>
+  </data>
+  <data name="ref.target" xml:space="preserve">
+    <value>Ismeretlen cél: '{0}'</value>
+  </data>
+  <data name="ref.repo" xml:space="preserve">
+    <value>Ismeretlen restic-tároló: '{0}'</value>
+  </data>
+  <data name="ref.job" xml:space="preserve">
+    <value>Ismeretlen feladat: '{0}'</value>
+  </data>
+  <data name="ref.secret" xml:space="preserve">
+    <value>A(z) '{0}' titok nincs beállítva</value>
+  </data>
+  <data name="chain.cycle" xml:space="preserve">
+    <value>Körkörös lánc: {0}</value>
+  </data>
+  <data name="staging.not_sql" xml:space="preserve">
+    <value>A @staging:{0} csak SQL-feladatra mutathat</value>
+  </data>
+  <data name="target.shared" xml:space="preserve">
+    <value>Ugyanerre a célmappára a(z) '{0}' feladat is ír</value>
+  </data>
+  <data name="path.nested" xml:space="preserve">
+    <value>A forrás és a cél nem lehet egymásban ({0} ↔ {1})</value>
+  </data>
+  <data name="path.not_absolute" xml:space="preserve">
+    <value>Abszolút útvonal kell: '{0}'</value>
+  </data>
+  <data name="path.smb_unc" xml:space="preserve">
+    <value>SMB-célhoz UNC-útvonal kell (\\szerver\megosztás): '{0}'</value>
+  </data>
+  <data name="path.versions_inside" xml:space="preserve">
+    <value>A Versions mappa nem lehet a forrásban vagy a tükörmappában: '{0}'</value>
+  </data>
+  <data name="time.invalid" xml:space="preserve">
+    <value>Érvénytelen időpont: '{0}' (ÓÓ:pp)</value>
+  </data>
+  <data name="day.invalid" xml:space="preserve">
+    <value>Érvénytelen nap: '{0}' (Mon … Sun)</value>
+  </data>
+  <data name="recurrence.invalid" xml:space="preserve">
+    <value>Érvénytelen ütemezés: '{0}' (pl. 'weekly Sun 03:00', 'daily 02:00', 'monthly 1 04:00')</value>
+  </data>
+  <data name="percent.invalid" xml:space="preserve">
+    <value>Érvénytelen százalék: '{0}' (pl. '5%')</value>
+  </data>
+  <data name="versioning.folder_required" xml:space="preserve">
+    <value>Ha a feladat a célgyökérbe ment (üres subdir), a versioning.folder megadása kötelező</value>
+  </data>
+  <data name="block.required" xml:space="preserve">
+    <value>A(z) '{0}' blokk kötelező a(z) {1} típusú feladatnál</value>
+  </data>
+  <data name="sources.empty" xml:space="preserve">
+    <value>Legalább egy forrás kell</value>
+  </data>
+  <data name="sql.selected_empty" xml:space="preserve">
+    <value>'selected' módban az include lista nem lehet üres</value>
+  </data>
+  <data name="email.address_invalid" xml:space="preserve">
+    <value>Érvénytelen e-mail-cím: '{0}'</value>
+  </data>
+  <data name="url.invalid" xml:space="preserve">
+    <value>Érvénytelen URL: '{0}' (http/https)</value>
+  </data>
+  <data name="source.staging_only_restic_files" xml:space="preserve">
+    <value>@staging forrás csak fájl- és restic-feladatban adható meg</value>
+  </data>
+</root>

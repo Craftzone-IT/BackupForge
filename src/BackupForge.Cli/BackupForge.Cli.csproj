@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>bf</AssemblyName>
+    <RootNamespace>BackupForge.Cli</RootNamespace>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BackupForge.Core\BackupForge.Core.csproj" />
+    <ProjectReference Include="..\BackupForge.Ipc\BackupForge.Ipc.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="BackupForge.Service.Tests" />
+    <InternalsVisibleTo Include="BackupForge.Integration.Tests" />
+  </ItemGroup>
+</Project>

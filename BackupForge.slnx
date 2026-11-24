@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BackupForge.Cli/BackupForge.Cli.csproj" />
+    <Project Path="src/BackupForge.Core/BackupForge.Core.csproj" />
+    <Project Path="src/BackupForge.Engine.Files/BackupForge.Engine.Files.csproj" />
+    <Project Path="src/BackupForge.Engine.Restic/BackupForge.Engine.Restic.csproj" />
+    <Project Path="src/BackupForge.Engine.Sql/BackupForge.Engine.Sql.csproj" />
+    <Project Path="src/BackupForge.Gui/BackupForge.Gui.csproj" />
+    <Project Path="src/BackupForge.Ipc/BackupForge.Ipc.csproj" />
+    <Project Path="src/BackupForge.Service/BackupForge.Service.csproj" />
+    <Project Path="src/BackupForge.Windows/BackupForge.Windows.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BackupForge.Core.Tests/BackupForge.Core.Tests.csproj" />
+    <Project Path="tests/BackupForge.Engine.Files.Tests/BackupForge.Engine.Files.Tests.csproj" />
+    <Project Path="tests/BackupForge.Engine.Restic.Tests/BackupForge.Engine.Restic.Tests.csproj" />
+    <Project Path="tests/BackupForge.Integration.Tests/BackupForge.Integration.Tests.csproj" />
+    <Project Path="tests/BackupForge.TestKit/BackupForge.TestKit.csproj" />
+  </Folder>
+</Solution>

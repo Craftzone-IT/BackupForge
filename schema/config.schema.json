@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://backupforge.example.com/schema/config.schema.json",
+  "title": "BackupForge config.json (schema 1)",
+  "description": "Structural schema. Semantic rules (references, cycles, overlapping paths, secrets) are checked by ConfigValidator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "instance_name", "jobs"],
+  "properties": {
+    "schema": { "const": 1 },
+    "instance_name": { "type": "string", "minLength": 1 },
+    "language": { "enum": ["hu", "en"] },
+    "general": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "max_parallel_jobs": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "history_retention_days": { "type": "integer", "minimum": 7, "maximum": 3650 },
+        "log_retention_days": { "type": "integer", "minimum": 1, "maximum": 3650 }
+      }
+    },
+    "targets": { "type": "array", "items": { "$ref": "#/$defs/target" } },
+    "restic_repos": { "type": "array", "items": { "$ref": "#/$defs/resticRepo" } },
+    "jobs": { "type": "array", "items": { "$ref": "#/$defs/job" } },
+    "notifications": { "$ref": "#/$defs/notifications" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$" },
+    "hm": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+    "day": { "enum": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] },
+    "recurrence": { "type": ["string", "null"], "pattern": "^((daily [0-9]{2}:[0-9]{2})|((weekly )?(Mon|Tue|Wed|Thu|Fri|Sat|Sun) [0-9]{2}:[0-9]{2})|(monthly ([1-9]|1[0-9]|2[0-8]|last) [0-9]{2}:[0-9]{2}))$" },
+    "secretRef": { "type": ["string", "null"], "minLength": 1 },
+    "vss": { "enum": ["never", "when_available", "required"] },
+    "target": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "type", "path"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "enum": ["local", "smb"] },
+        "path": { "type": "string", "minLength": 1 },
+        "username": { "type": ["string", "null"] },
+        "password_ref": { "$ref": "#/$defs/secretRef" },
+        "min_free_gb": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "resticRepo": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "location", "password_ref"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "location": { "type": "string", "minLength": 1 },
+        "password_ref": { "type": "string", "minLength": 1 },
+        "env_refs": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+        "append_only_server": { "type": "boolean" },
+        "retention": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "keep_last": { "type": ["integer", "null"], "minimum": 0 },
+            "keep_daily": { "type": ["integer", "null"], "minimum": 0 },
+            "keep_weekly": { "type": ["integer", "null"], "minimum": 0 },
+            "keep_monthly": { "type": ["integer", "null"], "minimum": 0 },
+            "keep_yearly": { "type": ["integer", "null"], "minimum": 0 }
+          }
+        },
+        "maintenance": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "forget_prune": { "$ref": "#/$defs/recurrence" },
+            "check": { "$ref": "#/$defs/recurrence" },
+            "check_read_data_subset": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?%$" }
+          }
+        }
+      }
+    },
+    "schedule": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["interval", "daily", "weekly", "monthly", "chained", "manual"] },
+        "every_min": { "type": ["integer", "null"], "minimum": 5 },
+        "start": { "oneOf": [{ "$ref": "#/$defs/hm" }, { "type": "null" }] },
+        "window": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "object", "additionalProperties": false, "required": ["from", "to"],
+              "properties": { "from": { "$ref": "#/$defs/hm" }, "to": { "$ref": "#/$defs/hm" } } }
+          ]
+        },
+        "times": { "type": "array", "items": { "$ref": "#/$defs/hm" } },
+        "days": { "type": "array", "items": { "$ref": "#/$defs/day" } },
+        "day": { "oneOf": [{ "$ref": "#/$defs/day" }, { "type": "null" }] },
+        "time": { "oneOf": [{ "$ref": "#/$defs/hm" }, { "type": "null" }] },
+        "day_of_month": { "oneOf": [{ "type": "integer", "minimum": 1, "maximum": 28 }, { "const": "last" }, { "type": "null" }] }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "interval" } } }, "then": { "required": ["every_min"] } },
+        { "if": { "properties": { "kind": { "const": "daily" } } }, "then": { "required": ["times"] } },
+        { "if": { "properties": { "kind": { "const": "weekly" } } }, "then": { "required": ["day", "time"] } },
+        { "if": { "properties": { "kind": { "const": "monthly" } } }, "then": { "required": ["day_of_month", "time"] } }
+      ]
+    },
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["path"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "excludes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "files": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["mirror", "update"] },
+        "versioning": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "folder": { "type": ["string", "null"] },
+            "keep_days": { "type": "integer", "minimum": 0 },
+            "max_versions_per_file": { "type": ["integer", "null"], "minimum": 1 }
+          }
+        },
+        "vss": { "$ref": "#/$defs/vss" },
+        "delete_guard_pct": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "delete_guard_min_files": { "type": "integer", "minimum": 0 },
+        "compare": { "enum": ["size_mtime", "content"] },
+        "parallelism": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "throttle_mbps": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "cloud_files": { "enum": ["skip", "fail"] },
+        "use_default_excludes": { "type": "boolean" }
+      }
+    },
+    "restic": {
+      "type": "object", "additionalProperties": false, "required": ["repo_id"],
+      "properties": {
+        "repo_id": { "$ref": "#/$defs/id" },
+        "vss": { "$ref": "#/$defs/vss" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "sql": {
+      "type": "object", "additionalProperties": false, "required": ["instance"],
+      "properties": {
+        "instance": { "type": "string", "minLength": 1 },
+        "auth": { "enum": ["windows", "sql"] },
+        "username": { "type": ["string", "null"] },
+        "login_ref": { "$ref": "#/$defs/secretRef" },
+        "databases": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "mode": { "enum": ["all_user", "selected"] },
+            "include": { "type": "array", "items": { "type": "string" } },
+            "exclude": { "type": "array", "items": { "type": "string" } },
+            "include_system": { "type": "boolean" }
+          }
+        },
+        "verify": { "type": "boolean" },
+        "copy_only": { "type": "boolean" },
+        "compression": { "enum": ["auto", "on", "off"] },
+        "keep_local": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "checkdb": { "$ref": "#/$defs/recurrence" },
+        "staging_path": { "type": ["string", "null"] },
+        "ignore_full_recovery": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "job": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "type", "schedule"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["files", "restic", "sql"] },
+        "enabled": { "type": "boolean" },
+        "schedule": { "$ref": "#/$defs/schedule" },
+        "sources": { "type": "array", "items": { "$ref": "#/$defs/source" } },
+        "target": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "object", "additionalProperties": false, "required": ["target_id"],
+              "properties": { "target_id": { "$ref": "#/$defs/id" }, "subdir": { "type": "string" } } }
+          ]
+        },
+        "files": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/files" }] },
+        "restic": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/restic" }] },
+        "sql": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sql" }] },
+        "expected_interval_h": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "notify": { "type": "string" },
+        "on_success": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "catch_up": { "type": "boolean" },
+        "timeout_min": { "type": ["integer", "null"], "minimum": 1 }
+      }
+    },
+    "notifications": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "email": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "smtp_host": { "type": "string" },
+            "smtp_port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+            "security": { "enum": ["none", "starttls", "ssl"] },
+            "username": { "type": ["string", "null"] },
+            "password_ref": { "$ref": "#/$defs/secretRef" },
+            "from": { "type": "string" },
+            "to": { "type": "array", "items": { "type": "string" } },
+            "on_failure": { "type": "boolean" },
+            "on_warning": { "type": "boolean" },
+            "on_recovery": { "type": "boolean" },
+            "weekly_report": { "$ref": "#/$defs/recurrence" }
+          }
+        },
+        "event_log": { "type": "boolean" },
+        "heartbeat_url": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
