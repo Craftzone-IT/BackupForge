@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+artifacts/
+publish/
+installer/Output/
+third_party/restic/*.exe
+third_party/restic/*.zip
