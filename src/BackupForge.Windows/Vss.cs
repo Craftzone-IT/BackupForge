@@ -25,12 +25,24 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
     /// <summary>Upper bound for one VSS async step (writers can hang); when_available then continues without VSS.</summary>
     public static TimeSpan AsyncLimit { get; set; } = TimeSpan.FromMinutes(3);
 
+    /// <summary>Gathering writer metadata timed out and the snapshot was taken without writer involvement (crash-consistent).</summary>
+    public static event Action<string>? WritersSkipped;
+
     public ISnapshotSession Create(IReadOnlyCollection<string> paths, CancellationToken ct)
     {
-        return CreateOnce(paths, ct);
+        try
+        {
+            return CreateOnce(paths, withWriters: true, ct);
+        }
+        catch (VssException ex) when (ex.Message.StartsWith("GatherWriterMetadata", StringComparison.Ordinal))
+        {
+            // a hung writer must not block the backup: a fresh requester without writer metadata (crash-consistent snapshot)
+            WritersSkipped?.Invoke(ex.Message);
+            return CreateOnce(paths, withWriters: false, ct);
+        }
     }
 
-    private ISnapshotSession CreateOnce(IReadOnlyCollection<string> paths, CancellationToken ct)
+    private ISnapshotSession CreateOnce(IReadOnlyCollection<string> paths, bool withWriters, CancellationToken ct)
     {
         EnsureComSecurity();
         var volumes = paths.Select(VolumeOf).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
@@ -41,8 +53,11 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
             Check(bc.InitializeForBackup(null), "InitializeForBackup");
             Check(bc.SetContext(VSS_CTX_BACKUP), "SetContext");
             Check(bc.SetBackupState(false, false, VSS_BT_COPY, false), "SetBackupState");
-            Wait(bc.GatherWriterMetadata(out var gather), gather, "GatherWriterMetadata", ct);
-            bc.FreeWriterMetadata();
+            if (withWriters)
+            {
+                Wait(bc.GatherWriterMetadata(out var gather), gather, "GatherWriterMetadata", ct, TimeSpan.FromSeconds(90));
+                bc.FreeWriterMetadata();
+            }
             Check(bc.StartSnapshotSet(out var setId), "StartSnapshotSet");
             session.SetId = setId;
             var ids = new List<(Guid Id, string Volume)>();
@@ -144,11 +159,11 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
         if (hr < 0) throw new VssException($"{what} failed: 0x{hr:X8} {VssException.Describe(hr)}", hr);
     }
 
-    private static void Wait(int hr, IVssAsync? op, string what, CancellationToken ct)
+    private static void Wait(int hr, IVssAsync? op, string what, CancellationToken ct, TimeSpan? limit = null)
     {
         Check(hr, what);
         if (op is null) return;
-        var deadline = DateTime.UtcNow + AsyncLimit;
+        var deadline = DateTime.UtcNow + (limit ?? AsyncLimit);
         try
         {
             while (true)
@@ -157,7 +172,7 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
                 if (DateTime.UtcNow > deadline)
                 {
                     op.Cancel();
-                    throw new VssException($"{what} did not finish within {AsyncLimit.TotalMinutes:0} minutes", unchecked((int)0x80042314));
+                    throw new VssException($"{what} did not finish within {(limit ?? AsyncLimit).TotalSeconds:0} s", unchecked((int)0x80042314));
                 }
                 Check(op.Wait(1000), what + " (wait)");
                 Check(op.QueryStatus(out var status, IntPtr.Zero), what + " (status)");
