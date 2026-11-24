@@ -147,11 +147,17 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
     {
         Check(hr, what);
         if (op is null) return;
+        var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(10);
         try
         {
             while (true)
             {
                 ct.ThrowIfCancellationRequested();
+                if (DateTime.UtcNow > deadline)
+                {
+                    op.Cancel();
+                    throw new VssException($"{what} did not finish within 10 minutes", unchecked((int)0x80042314));
+                }
                 Check(op.Wait(1000), what + " (wait)");
                 Check(op.QueryStatus(out var status, IntPtr.Zero), what + " (status)");
                 if (status == 0x0004230A) return;           // VSS_S_ASYNC_FINISHED

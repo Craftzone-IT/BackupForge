@@ -7,6 +7,7 @@ using BackupForge.TestKit;
 namespace BackupForge.Integration.Tests;
 
 /// <summary>Installs the real exe as a Windows service (LocalSystem) on the CI runner, runs a job, removes it.</summary>
+[Collection("vss")] // VSS allows one snapshot set at a time per machine: these tests must not overlap
 public class WindowsServiceTests
 {
     private static string Sc(params string[] args)
@@ -52,7 +53,7 @@ public class WindowsServiceTests
 
             await using (var c = await IpcClient.ConnectAsync(pipe))
             {
-                var r = await c.CallAsync(IpcOps.JobRun, new System.Text.Json.Nodes.JsonObject { ["job_id"] = "j1", ["wait"] = true });
+                var r = await c.CallAsync(IpcOps.JobRun, new System.Text.Json.Nodes.JsonObject { ["job_id"] = "j1", ["wait"] = true }).WaitAsync(TimeSpan.FromMinutes(4));
                 Assert.Equal(RunResults.Ok, r!["result"]!.ToString());
             }
             if (!testEngine) Assert.Equal("hello", File.ReadAllText(Path.Combine(dir.Path, "target", "d1", "doc.txt")));

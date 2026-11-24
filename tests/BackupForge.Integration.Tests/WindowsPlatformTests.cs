@@ -9,6 +9,7 @@ using BackupForge.Windows;
 
 namespace BackupForge.Integration.Tests;
 
+[Collection("vss")] // VSS allows one snapshot set at a time per machine: these tests must not overlap
 public class WindowsPlatformTests
 {
     [WindowsOnlyFact]
@@ -37,7 +38,8 @@ public class WindowsPlatformTests
         using var locker = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         Assert.Throws<IOException>(() => File.ReadAllText(file));
         var vss = new VssSnapshotProvider();
-        using var session = vss.Create([d.Path], CancellationToken.None);
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(4));
+        using var session = vss.Create([d.Path], cts.Token);
         var inSnapshot = session.Translate(file);
         Assert.StartsWith(@"\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy", inSnapshot, StringComparison.OrdinalIgnoreCase);
         Assert.Equal("database content", File.ReadAllText(inSnapshot));
@@ -177,6 +179,7 @@ public class WindowsPlatformTests
             Secrets = new InMemorySecretStore(), Paths = new DataPaths(d.Sub("data")),
         };
         await Task.Delay(1100); // distinct Versions stamp per run
-        return await engine.RunAsync(ctx, CancellationToken.None);
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(4));
+        return await engine.RunAsync(ctx, cts.Token).WaitAsync(TimeSpan.FromMinutes(5));
     }
 }
