@@ -38,3 +38,14 @@ public sealed class DataPaths
         Directory.CreateDirectory(StagingRoot);
     }
 }
+
+/// <summary>Where an SQL job writes its .bak files (SPEC 8.3): &lt;staging_path or ProgramData\staging&gt;\&lt;jobId&gt;.</summary>
+public static class StagingPaths
+{
+    public static string For(Config.BackupConfig config, DataPaths paths, string sqlJobId)
+    {
+        var job = config.FindJob(sqlJobId);
+        var root = job?.Sql?.StagingPath is { Length: > 0 } custom ? custom : paths.StagingRoot;
+        return Path.Combine(root, sqlJobId);
+    }
+}

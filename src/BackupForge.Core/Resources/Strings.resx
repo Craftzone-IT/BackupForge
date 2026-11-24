@@ -141,4 +141,52 @@
   <data name="day.long" xml:space="preserve">
     <value>Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday</value>
   </data>
+  <data name="files.summary" xml:space="preserve">
+    <value>{0} copied, {1} versioned, {2} deleted · {3}</value>
+  </data>
+  <data name="files.summary_skipped" xml:space="preserve">
+    <value>, {0} skipped</value>
+  </data>
+  <data name="files.dryrun" xml:space="preserve">
+    <value>dry-run: {0} to copy ({3}), {1} to version, {2} to delete</value>
+  </data>
+  <data name="files.guard" xml:space="preserve">
+    <value>delete guard: {0} files ({1:0.#}%) would be deleted — nothing deleted; approve once in the GUI or run with --allow-mass-delete</value>
+  </data>
+  <data name="files.source_missing" xml:space="preserve">
+    <value>source not reachable: {0}</value>
+  </data>
+  <data name="files.source_empty" xml:space="preserve">
+    <value>source is empty: {0} — an empty source is never mirrored</value>
+  </data>
+  <data name="files.target_unreachable" xml:space="preserve">
+    <value>target not reachable: {0}</value>
+  </data>
+  <data name="files.vss_failed" xml:space="preserve">
+    <value>VSS snapshot failed ({0}) — copied without VSS</value>
+  </data>
+  <data name="files.vss_required" xml:space="preserve">
+    <value>VSS snapshot failed ({0}) and vss = required</value>
+  </data>
+  <data name="files.too_many_errors" xml:space="preserve">
+    <value>{0} of {1} files could not be copied</value>
+  </data>
+  <data name="files.cloud_failed" xml:space="preserve">
+    <value>cloud-only (OneDrive) files present and cloud_files = fail: {0}</value>
+  </data>
+  <data name="size.b" xml:space="preserve">
+    <value>{0} B</value>
+  </data>
+  <data name="size.kb" xml:space="preserve">
+    <value>{0:0.#} KB</value>
+  </data>
+  <data name="size.mb" xml:space="preserve">
+    <value>{0:0.#} MB</value>
+  </data>
+  <data name="size.gb" xml:space="preserve">
+    <value>{0:0.#} GB</value>
+  </data>
+  <data name="size.tb" xml:space="preserve">
+    <value>{0:0.##} TB</value>
+  </data>
 </root>

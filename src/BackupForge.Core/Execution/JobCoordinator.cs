@@ -247,6 +247,9 @@ public sealed class JobCoordinator : IAsyncDisposable
                     Clock = _clock,
                     Secrets = _secrets,
                     Paths = _paths,
+                    State = _history,
+                    VssSnapshotCreated = (id, set) => _history.AddVssSnapshot(_clock.UtcNow, a.RunId, id, set),
+                    VssSnapshotDeleted = id => _history.MarkVssDeleted(id, _clock.UtcNow),
                 };
                 try
                 {

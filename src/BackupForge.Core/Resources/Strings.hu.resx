@@ -141,4 +141,52 @@
   <data name="day.long" xml:space="preserve">
     <value>vasárnap,hétfő,kedd,szerda,csütörtök,péntek,szombat</value>
   </data>
+  <data name="files.summary" xml:space="preserve">
+    <value>{0} másolva, {1} verziózva, {2} törölve · {3}</value>
+  </data>
+  <data name="files.summary_skipped" xml:space="preserve">
+    <value>, {0} kihagyva</value>
+  </data>
+  <data name="files.dryrun" xml:space="preserve">
+    <value>próbafuttatás: {0} másolandó ({3}), {1} verziózandó, {2} törlendő</value>
+  </data>
+  <data name="files.guard" xml:space="preserve">
+    <value>törlési biztosíték: {0} fájl ({1:0.#}%) törlődne — semmi sem törlődött; egyszeri jóváhagyás a GUI-ban vagy --allow-mass-delete</value>
+  </data>
+  <data name="files.source_missing" xml:space="preserve">
+    <value>a forrás nem elérhető: {0}</value>
+  </data>
+  <data name="files.source_empty" xml:space="preserve">
+    <value>a forrás üres: {0} — üres forrást soha nem tükrözünk</value>
+  </data>
+  <data name="files.target_unreachable" xml:space="preserve">
+    <value>a cél nem elérhető: {0}</value>
+  </data>
+  <data name="files.vss_failed" xml:space="preserve">
+    <value>a VSS-pillanatkép nem készült el ({0}) — VSS nélkül mentve</value>
+  </data>
+  <data name="files.vss_required" xml:space="preserve">
+    <value>a VSS-pillanatkép nem készült el ({0}), és vss = required</value>
+  </data>
+  <data name="files.too_many_errors" xml:space="preserve">
+    <value>{1} fájlból {0} nem volt másolható</value>
+  </data>
+  <data name="files.cloud_failed" xml:space="preserve">
+    <value>csak felhőben lévő (OneDrive) fájlok vannak, és cloud_files = fail: {0}</value>
+  </data>
+  <data name="size.b" xml:space="preserve">
+    <value>{0} B</value>
+  </data>
+  <data name="size.kb" xml:space="preserve">
+    <value>{0:0.#} KB</value>
+  </data>
+  <data name="size.mb" xml:space="preserve">
+    <value>{0:0.#} MB</value>
+  </data>
+  <data name="size.gb" xml:space="preserve">
+    <value>{0:0.#} GB</value>
+  </data>
+  <data name="size.tb" xml:space="preserve">
+    <value>{0:0.##} TB</value>
+  </data>
 </root>

@@ -147,6 +147,11 @@ public sealed class JobRunContext
     public required Abstractions.IClock Clock { get; init; }
     public required Abstractions.ISecretStore Secrets { get; init; }
     public required DataPaths Paths { get; init; }
+    /// <summary>Persistent engine state (delete-guard approval etc.).</summary>
+    public Abstractions.IKeyValueStore State { get; init; } = new Abstractions.MemoryKeyValueStore();
+    /// <summary>Records a VSS snapshot id for orphan cleanup (null outside the service).</summary>
+    public Action<string, string?>? VssSnapshotCreated { get; init; }
+    public Action<string>? VssSnapshotDeleted { get; init; }
     public RunOptions Options => Request.Options;
 }
 

@@ -1,3 +1,4 @@
+using BackupForge.Core.Abstractions;
 using BackupForge.Core.Execution;
 using Microsoft.Data.Sqlite;
 
@@ -32,7 +33,7 @@ public sealed record ConfigChange(long Id, DateTimeOffset At, string By, string 
 public sealed record NotificationRecord(long Id, DateTimeOffset At, string Kind, string? JobId, string? Result, string Status, string? Error);
 
 /// <summary>history.db (SQLite, SPEC 9.1). Thread-safe; every call uses its own pooled connection.</summary>
-public sealed class HistoryStore
+public sealed class HistoryStore : IKeyValueStore
 {
     private const int SchemaVersion = 1;
     private readonly string _connectionString;
