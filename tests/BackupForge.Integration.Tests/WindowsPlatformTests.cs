@@ -124,6 +124,7 @@ public class WindowsPlatformTests
         {
             var created = Run("net", "user", user, password, "/add", "/y");
             Assert.True(created.Code == 0, "net user: " + created.Output);
+            Run("icacls", d.Path, "/grant", $"{Environment.MachineName}\\{user}:(OI)(CI)M");
             var shared = Run("powershell", "-NoProfile", "-Command", $"New-SmbShare -Name {share} -Path '{d.Path}' -FullAccess '{Environment.MachineName}\\{user}' | Out-Null");
             Assert.True(shared.Code == 0, "New-SmbShare: " + shared.Output);
             var unc = $@"\\localhost\{share}";

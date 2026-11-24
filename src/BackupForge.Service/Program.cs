@@ -13,6 +13,7 @@ if (Arg("--data") is { } dataDir) Environment.SetEnvironmentVariable(DataPaths.D
 if (Arg("--pipe") is { } pipe) Environment.SetEnvironmentVariable(BackupForge.Ipc.IpcProtocol.PipeEnvVar, pipe);
 if (args.Contains("--test-engine")) Environment.SetEnvironmentVariable(TestEngine.EnvVar, "1");
 
+if (OperatingSystem.IsWindows()) BackupForge.Windows.VssSnapshotProvider.InitializeComSecurity(); // before any other COM use
 var paths = DataPaths.Default();
 if (args.Length > 0 && args[0] is "--setup-install" or "--setup-uninstall") return SetupHelper.Run(args, paths, Console.Out);
 paths.EnsureCreated();

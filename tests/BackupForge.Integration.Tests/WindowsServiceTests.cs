@@ -38,6 +38,7 @@ public class WindowsServiceTests
         var cfg = TestConfigs.Jobs(1);
         cfg.Targets[0].Path = Path.Combine(dir.Path, "target");
         cfg.Jobs[0].Sources[0].Path = src;
+        cfg.Jobs[0].Files!.Vss = VssModes.Never; // the service path is tested here; VSS has its own tests (one snapshot set at a time)
         AtomicFile.Write(paths.ConfigFile, ConfigJson.ToUtf8(cfg));
         var pipe = "bf-svc-" + Guid.NewGuid().ToString("N")[..8];
         var exe = Path.Combine(ServiceProcess.BinDir, "BackupForge.Service.exe");

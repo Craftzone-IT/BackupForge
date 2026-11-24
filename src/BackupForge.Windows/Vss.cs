@@ -22,6 +22,9 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
 
     public bool IsSupported => Environment.IsPrivilegedProcess;
 
+    /// <summary>Upper bound for one VSS async step (writers can hang); when_available then continues without VSS.</summary>
+    public static TimeSpan AsyncLimit { get; set; } = TimeSpan.FromMinutes(3);
+
     public ISnapshotSession Create(IReadOnlyCollection<string> paths, CancellationToken ct)
     {
         // another backup (or our previous set being released) may still be in progress: wait and retry a few times
@@ -124,6 +127,12 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
         return s.EndsWith('\\') ? s : s + "\\";
     }
 
+    /// <summary>
+    /// Must run before anything else in the process touches COM (service Main, test module initializer): VSS writers call
+    /// back into the requester, which fails (GatherWriterMetadata never completes) with the default COM security.
+    /// </summary>
+    public static void InitializeComSecurity() => EnsureComSecurity();
+
     private static void EnsureComSecurity()
     {
         lock (InitLock)
@@ -147,7 +156,7 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
     {
         Check(hr, what);
         if (op is null) return;
-        var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(10);
+        var deadline = DateTime.UtcNow + AsyncLimit;
         try
         {
             while (true)
@@ -156,7 +165,7 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
                 if (DateTime.UtcNow > deadline)
                 {
                     op.Cancel();
-                    throw new VssException($"{what} did not finish within 10 minutes", unchecked((int)0x80042314));
+                    throw new VssException($"{what} did not finish within {AsyncLimit.TotalMinutes:0} minutes", unchecked((int)0x80042314));
                 }
                 Check(op.Wait(1000), what + " (wait)");
                 Check(op.QueryStatus(out var status, IntPtr.Zero), what + " (status)");
