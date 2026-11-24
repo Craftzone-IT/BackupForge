@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BackupForge.Gui.Core\BackupForge.Gui.Core.csproj" />
+    <ProjectReference Include="..\BackupForge.TestKit\BackupForge.TestKit.csproj" />
+  </ItemGroup>
+</Project>

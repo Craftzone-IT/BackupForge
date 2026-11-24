@@ -1,0 +1,285 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="append_only_hint" xml:space="preserve">
+    <value>Ransomware protection: use rest-server --append-only (or immutable object storage) for the second copy; forget/prune then runs on the server.</value>
+  </data>
+  <data name="below_min" xml:space="preserve">
+    <value>below the minimum</value>
+  </data>
+  <data name="confirm_cancel" xml:space="preserve">
+    <value>Cancel the running job '{0}'?</value>
+  </data>
+  <data name="confirm_grant" xml:space="preserve">
+    <value>The following T-SQL will run with your Windows login (sysadmin needed). Continue?</value>
+  </data>
+  <data name="confirm_mass_delete" xml:space="preserve">
+    <value>Allow ONE run of '{0}' to delete more files than the delete guard allows?</value>
+  </data>
+  <data name="confirm_remove_job" xml:space="preserve">
+    <value>Remove the job '{0}'? (Its backups on the target stay untouched.)</value>
+  </data>
+  <data name="confirm_remove_repo" xml:space="preserve">
+    <value>Remove the repository '{0}' from the configuration? (The repository itself is not deleted.)</value>
+  </data>
+  <data name="confirm_remove_target" xml:space="preserve">
+    <value>Remove the target '{0}'?</value>
+  </data>
+  <data name="confirm_repo_init" xml:space="preserve">
+    <value>Create a NEW, empty restic repository at {0}? A password will be generated — store it safely, without it the backup cannot be restored.</value>
+  </data>
+  <data name="confirm_restore_original" xml:space="preserve">
+    <value>Restore to the ORIGINAL location? Existing files will be overwritten; the overwritten files are moved to a …_RestoreBackup_&lt;timestamp&gt; folder.</value>
+  </data>
+  <data name="dryrun_running" xml:space="preserve">
+    <value>dry run in progress…</value>
+  </data>
+  <data name="dryrun_uses_saved" xml:space="preserve">
+    <value>The dry run uses the SAVED configuration. Continue without saving?</value>
+  </data>
+  <data name="exported" xml:space="preserve">
+    <value>Exported to {0} (without secrets).</value>
+  </data>
+  <data name="full_recovery_hint" xml:space="preserve">
+    <value>FULL recovery without log backups: the log file grows — switch to SIMPLE or back up the log</value>
+  </data>
+  <data name="grant_done" xml:space="preserve">
+    <value>Permissions set ({0} databases).</value>
+  </data>
+  <data name="imported" xml:space="preserve">
+    <value>Configuration imported.</value>
+  </data>
+  <data name="imported_missing" xml:space="preserve">
+    <value>Configuration imported. Set these passwords on the Targets / Notifications pages: {0}</value>
+  </data>
+  <data name="password_saved" xml:space="preserve">
+    <value>Password saved (it cannot be read back).</value>
+  </data>
+  <data name="queued" xml:space="preserve">
+    <value>queued</value>
+  </data>
+  <data name="recovery_sheet" xml:space="preserve">
+    <value>BackupForge — restic repository recovery sheet
+
+Location: {0}
+Password: {1}
+Created: {2} on {3}
+
+Without this password the backup CANNOT be restored. Keep it in a password manager or a safe.</value>
+  </data>
+  <data name="recovery_sheet_title" xml:space="preserve">
+    <value>Recovery sheet — print or save it now, the password is shown only once</value>
+  </data>
+  <data name="repo_created" xml:space="preserve">
+    <value>Repository created.</value>
+  </data>
+  <data name="repo_location_missing" xml:space="preserve">
+    <value>Enter the repository location first.</value>
+  </data>
+  <data name="restore_running" xml:space="preserve">
+    <value>restore in progress…</value>
+  </data>
+  <data name="restore_target_missing" xml:space="preserve">
+    <value>Choose a target folder (a new Restore_&lt;time&gt; folder is created in it).</value>
+  </data>
+  <data name="running_phase" xml:space="preserve">
+    <value>running: {0} {1}</value>
+  </data>
+  <data name="save_failed" xml:space="preserve">
+    <value>The configuration was not saved:</value>
+  </data>
+  <data name="saved" xml:space="preserve">
+    <value>Configuration saved.</value>
+  </data>
+  <data name="state_disabled" xml:space="preserve">
+    <value>DISABLED</value>
+  </data>
+  <data name="state_idle" xml:space="preserve">
+    <value>idle</value>
+  </data>
+  <data name="state_stale" xml:space="preserve">
+    <value>NO RECENT BACKUP</value>
+  </data>
+  <data name="target_line" xml:space="preserve">
+    <value>{0}: {1} GB free of {2} GB</value>
+  </data>
+  <data name="target_offline" xml:space="preserve">
+    <value>{0}: NOT REACHABLE ({1})</value>
+  </data>
+  <data name="test_failed" xml:space="preserve">
+    <value>{0}: not reachable — {1} (tested as {2})</value>
+  </data>
+  <data name="test_mail_sent" xml:space="preserve">
+    <value>Test e-mail sent.</value>
+  </data>
+  <data name="test_ok" xml:space="preserve">
+    <value>{0}: reachable, {1} GB free (tested as {2})</value>
+  </data>
+  <data name="warn_config" xml:space="preserve">
+    <value>Configuration error: {0}</value>
+  </data>
+  <data name="warn_disabled" xml:space="preserve">
+    <value>Disabled job: {0} (since {1})</value>
+  </data>
+  <data name="warn_guard" xml:space="preserve">
+    <value>Delete guard tripped: {0} — check the source, then approve once</value>
+  </data>
+  <data name="warn_stale" xml:space="preserve">
+    <value>No recent successful backup: {0}</value>
+  </data>
+  <data name="l_approve_delete" xml:space="preserve">
+    <value>Approve mass delete once</value>
+  </data>
+  <data name="l_browse" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="l_cancel_run" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="l_discover" xml:space="preserve">
+    <value>Discover instances</value>
+  </data>
+  <data name="l_dryrun" xml:space="preserve">
+    <value>Dry run</value>
+  </data>
+  <data name="l_email_enabled" xml:space="preserve">
+    <value>E-mail notifications</value>
+  </data>
+  <data name="l_enabled" xml:space="preserve">
+    <value>enabled</value>
+  </data>
+  <data name="l_existing_password" xml:space="preserve">
+    <value>existing repository password</value>
+  </data>
+  <data name="l_export" xml:space="preserve">
+    <value>Export configuration…</value>
+  </data>
+  <data name="l_grant" xml:space="preserve">
+    <value>Set permissions</value>
+  </data>
+  <data name="l_import" xml:space="preserve">
+    <value>Import configuration…</value>
+  </data>
+  <data name="l_job" xml:space="preserve">
+    <value>Job</value>
+  </data>
+  <data name="l_job_basic" xml:space="preserve">
+    <value>Job</value>
+  </data>
+  <data name="l_last_run" xml:space="preserve">
+    <value>Last run</value>
+  </data>
+  <data name="l_name" xml:space="preserve">
+    <value>name</value>
+  </data>
+  <data name="l_new_repo" xml:space="preserve">
+    <value>New repository (generate password, init)…</value>
+  </data>
+  <data name="l_next_run" xml:space="preserve">
+    <value>Next run</value>
+  </data>
+  <data name="l_password" xml:space="preserve">
+    <value>password</value>
+  </data>
+  <data name="l_password_is_set" xml:space="preserve">
+    <value>password is set</value>
+  </data>
+  <data name="l_print" xml:space="preserve">
+    <value>Print…</value>
+  </data>
+  <data name="l_refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="l_remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="l_report_preview" xml:space="preserve">
+    <value>Weekly report preview</value>
+  </data>
+  <data name="l_repos" xml:space="preserve">
+    <value>restic repositories</value>
+  </data>
+  <data name="l_restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="l_restore_point" xml:space="preserve">
+    <value>Restore point</value>
+  </data>
+  <data name="l_restore_to" xml:space="preserve">
+    <value>Restore into (a new Restore_&lt;time&gt; folder)</value>
+  </data>
+  <data name="l_run_now" xml:space="preserve">
+    <value>Run now</value>
+  </data>
+  <data name="l_save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="l_save_file" xml:space="preserve">
+    <value>Save to file…</value>
+  </data>
+  <data name="l_schedule" xml:space="preserve">
+    <value>Schedule</value>
+  </data>
+  <data name="l_set" xml:space="preserve">
+    <value>Set</value>
+  </data>
+  <data name="l_sources" xml:space="preserve">
+    <value>Sources</value>
+  </data>
+  <data name="l_sources_hint" xml:space="preserve">
+    <value>One source per line; excludes after a '|' separated by ';' (e.g. D:\Data | *.tmp; \Cache\). @staging:&lt;sql job&gt; backs up an SQL job's staging folder.</value>
+  </data>
+  <data name="l_tab_history" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="l_tab_jobs" xml:space="preserve">
+    <value>Jobs</value>
+  </data>
+  <data name="l_tab_notifications" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="l_tab_overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="l_tab_restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="l_tab_settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="l_tab_targets" xml:space="preserve">
+    <value>Targets and repositories</value>
+  </data>
+  <data name="l_targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="l_test_connection" xml:space="preserve">
+    <value>Test connection (as the service)</value>
+  </data>
+  <data name="l_test_mail" xml:space="preserve">
+    <value>Send test e-mail</value>
+  </data>
+  <data name="l_to_original" xml:space="preserve">
+    <value>to the ORIGINAL place</value>
+  </data>
+  <data name="l_type" xml:space="preserve">
+    <value>type</value>
+  </data>
+  <data name="l_unsaved" xml:space="preserve">
+    <value>Unsaved changes — press Save (the service validates every field).</value>
+  </data>
+  <data name="l_unsaved_close" xml:space="preserve">
+    <value>There are unsaved changes. Close anyway?</value>
+  </data>
+</root>
