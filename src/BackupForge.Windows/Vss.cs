@@ -24,6 +24,19 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
 
     public ISnapshotSession Create(IReadOnlyCollection<string> paths, CancellationToken ct)
     {
+        // another backup (or our previous set being released) may still be in progress: wait and retry a few times
+        for (var attempt = 1; ; attempt++)
+        {
+            try { return CreateOnce(paths, ct); }
+            catch (VssException ex) when (attempt < 4 && unchecked((uint)ex.Code) is 0x80042316 or 0x80042302)
+            {
+                if (ct.WaitHandle.WaitOne(TimeSpan.FromSeconds(10 * attempt))) ct.ThrowIfCancellationRequested();
+            }
+        }
+    }
+
+    private ISnapshotSession CreateOnce(IReadOnlyCollection<string> paths, CancellationToken ct)
+    {
         EnsureComSecurity();
         var volumes = paths.Select(VolumeOf).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         Check(CreateVssBackupComponentsInternal(out var bc), "CreateVssBackupComponents");

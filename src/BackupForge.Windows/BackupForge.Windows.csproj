@@ -6,6 +6,7 @@
     <PackageReference Include="System.Diagnostics.EventLog" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     <ProjectReference Include="..\BackupForge.Core\BackupForge.Core.csproj" />
+    <ProjectReference Include="..\BackupForge.Engine.Sql\BackupForge.Engine.Sql.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="BackupForge.Integration.Tests" />

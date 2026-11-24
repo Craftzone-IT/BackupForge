@@ -14,6 +14,7 @@
     <Project Path="tests/BackupForge.Core.Tests/BackupForge.Core.Tests.csproj" />
     <Project Path="tests/BackupForge.Engine.Files.Tests/BackupForge.Engine.Files.Tests.csproj" />
     <Project Path="tests/BackupForge.Engine.Restic.Tests/BackupForge.Engine.Restic.Tests.csproj" />
+    <Project Path="tests/BackupForge.Engine.Sql.Tests/BackupForge.Engine.Sql.Tests.csproj" />
     <Project Path="tests/BackupForge.Integration.Tests/BackupForge.Integration.Tests.csproj" />
     <Project Path="tests/BackupForge.Service.Tests/BackupForge.Service.Tests.csproj" />
     <Project Path="tests/BackupForge.TestKit/BackupForge.TestKit.csproj" />

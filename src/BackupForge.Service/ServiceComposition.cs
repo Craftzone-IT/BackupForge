@@ -5,6 +5,7 @@ using BackupForge.Core.Notifications;
 using BackupForge.Core.Status;
 using BackupForge.Engine.Files;
 using BackupForge.Engine.Restic;
+using BackupForge.Engine.Sql;
 using BackupForge.Service.Components;
 using Microsoft.Extensions.Logging;
 
@@ -22,6 +23,8 @@ public sealed class Platform
     public HttpMessageHandler? HttpHandler { get; init; }
     public ResticBinary Restic { get; init; } = ResticBinary.Default();
     public IProcessRunner Processes { get; init; } = new SystemProcessRunner();
+    public ISqlSessionFactory Sql { get; init; } = new SqlClientSessionFactory();
+    public IStagingPermissions StagingPermissions { get; init; } = NoStagingPermissions.Instance;
     public Func<DataPaths, ISecretStore> Secrets { get; init; } = _ => new InMemorySecretStore();
 
     public static Platform Current()
@@ -32,6 +35,7 @@ public sealed class Platform
             Connector = new Windows.WNetConnector(),
             Vss = new Windows.VssSnapshotProvider(),
             Events = new Windows.WindowsEventSink(),
+            StagingPermissions = new Windows.StagingAcl(),
             Secrets = p => OperatingSystem.IsWindows() ? new Windows.DpapiSecretStore(p.SecretsFile) : new InMemorySecretStore(),
         };
     }
@@ -51,6 +55,7 @@ public static class ServiceComposition
         [
             new FileJobEngine(platform.FileSystem, platform.Connector, platform.Vss, platform.FileEngine),
             new ResticEngine(platform.Restic, platform.Processes, masker),
+            new SqlEngine(platform.Sql, platform.FileSystem, platform.StagingPermissions),
         ];
     }
 
@@ -72,6 +77,9 @@ public static class ServiceComposition
         var restic = new ResticComponent(platform.Restic, platform.Processes, platform.Events);
         rt.AddComponent(restic);
         rt.Restic = restic;
+        var sql = new SqlSupport(platform.Sql);
+        rt.AddComponent(sql);
+        rt.Sql = sql;
         rt.AddComponent(probe);
         rt.AddComponent(notifier);
         var reporter = new WeeklyReporter(notifier);
@@ -94,6 +102,7 @@ public static class ServiceComposition
                 LastSnapshot = rt.History.GetValue(ResticState.LastSnapshotKey(job.Id)),
                 Snapshots = int.TryParse(rt.History.GetValue(ResticState.SnapshotCountKey(job.Id)), out var n) ? n : null,
             },
+            Sql = sql.Status,
             Repo = _ => new BackupForge.Core.Status.RepoStatus { ResticVersion = rt.History.GetValue(ResticState.VersionKey) },
         };
     }

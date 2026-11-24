@@ -55,7 +55,7 @@ public class WindowsPlatformTests
         using var locker = new FileStream(Path.Combine(src, "locked.db"), FileMode.Open, FileAccess.ReadWrite, FileShare.None);
 
         var withVss = await RunFilesJob(d, src, VssModes.Required, new VssSnapshotProvider());
-        Assert.Equal(RunResults.Ok, withVss.Result);
+        Assert.True(withVss.Result == RunResults.Ok, withVss.Summary + " | " + string.Join(" | ", withVss.Items.Select(i => i.Path + ": " + i.Message)));
         Assert.Equal("db", File.ReadAllText(d.Sub("target", "Docs", "locked.db")));
 
         Directory.Delete(d.Sub("target"), true);
@@ -120,9 +120,11 @@ public class WindowsPlatformTests
         using var d = new TempDir();
         try
         {
-            Run("net", "user", user, password, "/add");
-            Run("powershell", "-NoProfile", "-Command", $"New-SmbShare -Name {share} -Path '{d.Path}' -FullAccess '{Environment.MachineName}\\{user}' | Out-Null");
-            var unc = $@"\\127.0.0.1\{share}";
+            var created = Run("net", "user", user, password, "/add", "/y");
+            Assert.True(created.Code == 0, "net user: " + created.Output);
+            var shared = Run("powershell", "-NoProfile", "-Command", $"New-SmbShare -Name {share} -Path '{d.Path}' -FullAccess '{Environment.MachineName}\\{user}' | Out-Null");
+            Assert.True(shared.Code == 0, "New-SmbShare: " + shared.Output);
+            var unc = $@"\\localhost\{share}";
             var secrets = new InMemorySecretStore([new("target:t", password)]);
             var target = new TargetConfig { Id = "t", Type = TargetTypes.Smb, Path = unc + @"\backup", Username = $"{Environment.MachineName}\\{user}", PasswordRef = "target:t" };
             var connector = new WNetConnector();
@@ -143,14 +145,14 @@ public class WindowsPlatformTests
         }
     }
 
-    private static void Run(string exe, params string[] args)
+    private static (int Code, string Output) Run(string exe, params string[] args)
     {
         var psi = new ProcessStartInfo(exe) { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
         foreach (var a in args) psi.ArgumentList.Add(a);
         using var p = Process.Start(psi)!;
-        p.StandardOutput.ReadToEnd();
-        p.StandardError.ReadToEnd();
+        var o = p.StandardOutput.ReadToEnd() + p.StandardError.ReadToEnd();
         p.WaitForExit();
+        return (p.ExitCode, o);
     }
 
     private static async Task<RunOutcome> RunFilesJob(TempDir d, string src, string vss, ISnapshotProvider provider)

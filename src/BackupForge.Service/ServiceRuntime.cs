@@ -86,6 +86,7 @@ public sealed class ServiceRuntime : IAsyncDisposable
         {
             var handler = new ServiceIpcHandler(this);
             Restic?.RegisterIpc(handler);
+            Sql?.RegisterIpc(handler);
             RegisterRestore(handler);
             _ipc = new IpcServer(_options.PipeName, handler.HandleAsync, _loggers.CreateLogger("BackupForge.Ipc"));
             Coordinator.Changed += e => _ = handler.BroadcastAsync(e);
@@ -155,6 +156,7 @@ public sealed class ServiceRuntime : IAsyncDisposable
     public Components.WeeklyReporter? Reporter { get; set; }
     public Components.StatusWriter? StatusWriter { get; set; }
     public Components.ResticComponent? Restic { get; set; }
+    public Components.SqlSupport? Sql { get; set; }
 
     public StatusDocument BuildStatus() => StatusBuilder.Build(new StatusInputs
     {

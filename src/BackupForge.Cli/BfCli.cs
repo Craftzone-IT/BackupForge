@@ -36,7 +36,7 @@ public static class BfCli
           bf target test <targetId>
           bf repo init|snapshots|check <repoId> [--yes]
           bf restore <jobId> ...              see 'bf restore --help'
-          bf sql discover [<instance>] | grant <jobId> [--script]
+          bf sql discover [<instance>] | grant <jobId> [--login <sqllogin>] [--yes]
           bf report preview [<file.html>]
 
         Exit codes: 0 ok, 1 error, 2 usage, 3 service not reachable; with --wait: 0 ok, 10 warning, 11 failed.
@@ -84,6 +84,11 @@ public static class BfCli
         {
             stderr.WriteLine("error: " + ex.Message);
             return ExitUnavailable;
+        }
+        catch (Engine.Sql.SqlCommandException ex)
+        {
+            stderr.WriteLine("SQL error: " + ex.Message);
+            return ExitError;
         }
         catch (IpcException ex)
         {
@@ -377,19 +382,34 @@ public static class BfCli
                 return await Generic(IpcOps.SqlDiscover, args, o).ConfigureAwait(false);
             }
             case "grant":
-            {
-                var job = a.Positional(2, "jobId");
-                if (a.Has("--script"))
-                {
-                    var r = await Call(IpcOps.SqlGrantScript, new JsonObject { ["job_id"] = job }).ConfigureAwait(false);
-                    o.WriteLine(r?["script"]?.ToString());
-                    return ExitOk;
-                }
-                return await Generic(IpcOps.SqlGrant, new JsonObject { ["job_id"] = job, ["admin_login"] = a.Value("--login"), ["use_windows"] = a.Value("--login") is null }, o).ConfigureAwait(false);
-            }
+                return await SqlGrant(a, o).ConfigureAwait(false);
             default:
                 throw new UsageException("bf sql discover|grant");
         }
+    }
+
+    /// <summary>
+    /// SPEC 8.6: runs in bf.exe with the administrator's own Windows login (or --login sa + password on stdin) — the credential
+    /// is never stored and never sent to the service. Shows the T-SQL; executes it only with --yes.
+    /// </summary>
+    private static async Task<int> SqlGrant(Args a, TextWriter o)
+    {
+        var jobId = a.Positional(2, "jobId");
+        var cfgNode = await Call(IpcOps.ConfigGet).ConfigureAwait(false);
+        var cfg = ConfigJson.Parse(cfgNode!["config"]!.ToJsonString());
+        var job = cfg.FindJob(jobId) ?? throw new UsageException($"unknown job '{jobId}'");
+        if (job.Sql is null) throw new UsageException($"'{jobId}' is not an SQL job");
+        var login = a.Value("--login");
+        var password = login is null ? null : Console.In.ReadLine();
+        await using var session = await new Engine.Sql.SqlClientSessionFactory().OpenAsync(job.Sql.Instance, login, password, CancellationToken.None).ConfigureAwait(false);
+        var dbs = Engine.Sql.SqlPlanning.Select(job.Sql, await session.ListDatabasesAsync(CancellationToken.None).ConfigureAwait(false)).Select(d => d.Name).ToList();
+        var script = Engine.Sql.SqlPlanning.GrantScript(dbs, !string.IsNullOrEmpty(job.Sql.Checkdb));
+        o.WriteLine(script);
+        if (a.Has("--script")) return ExitOk;
+        if (!a.Has("--yes")) { o.WriteLine("review the script above, then repeat with --yes to run it"); return ExitOk; }
+        await session.ExecuteAsync(script, CancellationToken.None).ConfigureAwait(false);
+        o.WriteLine($"permissions set for {Engine.Sql.SqlPlanning.ServiceLogin} on {dbs.Count} database(s)");
+        return ExitOk;
     }
 
     private static async Task<int> Report(Args a, TextWriter o)

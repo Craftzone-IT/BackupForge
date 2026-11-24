@@ -387,4 +387,34 @@
   <data name="restic.restore" xml:space="preserve">
     <value>{0} fájl visszaállítva ({1}) ide: {2}</value>
   </data>
+  <data name="sql.summary" xml:space="preserve">
+    <value>{0}/{1} adatbázis rendben · {2}</value>
+  </data>
+  <data name="sql.summary_warn" xml:space="preserve">
+    <value> · {0} figyelmeztetés: {1}</value>
+  </data>
+  <data name="sql.full_recovery" xml:space="preserve">
+    <value>{0}: FULL recovery model, de nincs naplómentés — a naplófájl korlátlanul nő. Állítsd SIMPLE-re, vagy kapcsold be a naplómentést (v2).</value>
+  </data>
+  <data name="sql.no_space" xml:space="preserve">
+    <value>nincs elég hely az átmeneti mappában: {0} kell, {1} szabad ({2})</value>
+  </data>
+  <data name="sql.no_permission" xml:space="preserve">
+    <value>{0}: nincs jogosultság (új adatbázis?) — futtasd a Jogosultságok beállítását (bf sql grant {1})</value>
+  </data>
+  <data name="sql.connect_failed" xml:space="preserve">
+    <value>nem sikerült kapcsolódni: {0}: {1}</value>
+  </data>
+  <data name="sql.no_databases" xml:space="preserve">
+    <value>nincs mentendő adatbázis: {0}</value>
+  </data>
+  <data name="sql.checkdb_ok" xml:space="preserve">
+    <value>CHECKDB rendben: {0} adatbázis</value>
+  </data>
+  <data name="sql.checkdb_failed" xml:space="preserve">
+    <value>a CHECKDB hibát talált: {0}</value>
+  </data>
+  <data name="sql.express_no_compression" xml:space="preserve">
+    <value>az edíció nem támogatja a mentés tömörítését — tömörítés nélkül mentünk</value>
+  </data>
 </root>

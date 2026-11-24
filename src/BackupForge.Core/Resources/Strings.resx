@@ -387,4 +387,34 @@
   <data name="restic.restore" xml:space="preserve">
     <value>restored {0} file(s), {1} to {2}</value>
   </data>
+  <data name="sql.summary" xml:space="preserve">
+    <value>{0}/{1} databases ok · {2}</value>
+  </data>
+  <data name="sql.summary_warn" xml:space="preserve">
+    <value> · {0} warning(s): {1}</value>
+  </data>
+  <data name="sql.full_recovery" xml:space="preserve">
+    <value>{0}: FULL recovery model, but no log backup — the log file grows without limit. Switch to SIMPLE, or enable log backups (v2).</value>
+  </data>
+  <data name="sql.no_space" xml:space="preserve">
+    <value>not enough space in the staging folder: {0} needed, {1} free ({2})</value>
+  </data>
+  <data name="sql.no_permission" xml:space="preserve">
+    <value>{0}: no permission (new database?) — run "Set permissions" (bf sql grant {1})</value>
+  </data>
+  <data name="sql.connect_failed" xml:space="preserve">
+    <value>cannot connect to {0}: {1}</value>
+  </data>
+  <data name="sql.no_databases" xml:space="preserve">
+    <value>no database to back up on {0}</value>
+  </data>
+  <data name="sql.checkdb_ok" xml:space="preserve">
+    <value>CHECKDB ok: {0} database(s)</value>
+  </data>
+  <data name="sql.checkdb_failed" xml:space="preserve">
+    <value>CHECKDB found problems in {0}</value>
+  </data>
+  <data name="sql.express_no_compression" xml:space="preserve">
+    <value>the edition does not support backup compression — backing up uncompressed</value>
+  </data>
 </root>
