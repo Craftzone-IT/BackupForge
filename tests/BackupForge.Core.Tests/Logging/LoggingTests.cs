@@ -1,6 +1,5 @@
 using BackupForge.Core.Abstractions;
 using BackupForge.Core.Logging;
-using BackupForge.Core.Tests.Infra;
 using BackupForge.TestKit;
 using Microsoft.Extensions.Logging;
 

@@ -246,4 +246,106 @@
   <data name="sources.leaf_duplicate" xml:space="preserve">
     <value>With several sources every source folder name must be unique (they become subfolders of the mirror): '{0}'</value>
   </data>
+  <data name="report.title" xml:space="preserve">
+    <value>Weekly backup report</value>
+  </data>
+  <data name="report.period" xml:space="preserve">
+    <value>Period: {0} – {1}</value>
+  </data>
+  <data name="report.overall_ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="report.overall_warning" xml:space="preserve">
+    <value>WARNING</value>
+  </data>
+  <data name="report.overall_error" xml:space="preserve">
+    <value>ERROR</value>
+  </data>
+  <data name="report.jobs" xml:space="preserve">
+    <value>Jobs</value>
+  </data>
+  <data name="report.col_job" xml:space="preserve">
+    <value>Job</value>
+  </data>
+  <data name="report.col_runs" xml:space="preserve">
+    <value>Runs</value>
+  </data>
+  <data name="report.col_ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="report.col_warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="report.col_failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="report.col_skipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="report.col_last_ok" xml:space="preserve">
+    <value>Last success</value>
+  </data>
+  <data name="report.col_data" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="report.disabled" xml:space="preserve">
+    <value>Disabled jobs</value>
+  </data>
+  <data name="report.disabled_since" xml:space="preserve">
+    <value>{0} (since {1})</value>
+  </data>
+  <data name="report.stale" xml:space="preserve">
+    <value>No recent successful backup: {0}</value>
+  </data>
+  <data name="report.targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="report.target_row" xml:space="preserve">
+    <value>{0}: {1} free of {2}</value>
+  </data>
+  <data name="report.target_low" xml:space="preserve">
+    <value>below the minimum ({0} GB)</value>
+  </data>
+  <data name="report.target_offline" xml:space="preserve">
+    <value>{0}: NOT REACHABLE {1}</value>
+  </data>
+  <data name="report.versions" xml:space="preserve">
+    <value>Versions folders</value>
+  </data>
+  <data name="report.versions_row" xml:space="preserve">
+    <value>{0}: {1} folders, oldest {2}</value>
+  </data>
+  <data name="report.repos" xml:space="preserve">
+    <value>restic repositories</value>
+  </data>
+  <data name="report.repo_row" xml:space="preserve">
+    <value>{0}: last check {1} ({2}), last prune {3} ({4})</value>
+  </data>
+  <data name="report.sql" xml:space="preserve">
+    <value>SQL databases</value>
+  </data>
+  <data name="report.sql_row" xml:space="preserve">
+    <value>{0}: last success {1}{2}</value>
+  </data>
+  <data name="report.sql_full" xml:space="preserve">
+    <value> · FULL recovery model without log backups</value>
+  </data>
+  <data name="report.sql_checkdb" xml:space="preserve">
+    <value> · last CHECKDB {0} ({1})</value>
+  </data>
+  <data name="report.changes" xml:space="preserve">
+    <value>Configuration changes this week</value>
+  </data>
+  <data name="report.none" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="report.never" xml:space="preserve">
+    <value>never</value>
+  </data>
+  <data name="report.config_error" xml:space="preserve">
+    <value>Configuration error: {0}</value>
+  </data>
+  <data name="report.guard" xml:space="preserve">
+    <value>delete guard tripped: {0}</value>
+  </data>
 </root>

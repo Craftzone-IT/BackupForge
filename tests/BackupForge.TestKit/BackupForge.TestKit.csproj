@@ -5,5 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\BackupForge.Core\BackupForge.Core.csproj" />
+    <PackageReference Include="JsonSchema.Net" />
   </ItemGroup>
 </Project>

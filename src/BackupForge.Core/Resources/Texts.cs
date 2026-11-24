@@ -35,3 +35,26 @@ public static class SizeText
         return Texts.Format(culture, "size.tb", b / 1024 / 1024 / 1024 / 1024);
     }
 }
+
+/// <summary>Minimal HTML escaping for UTF-8 mails (WebUtility.HtmlEncode would turn every 'é' into an entity).</summary>
+public static class Html
+{
+    public static string Encode(string? s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        var sb = new System.Text.StringBuilder(s.Length + 16);
+        foreach (var ch in s)
+        {
+            switch (ch)
+            {
+                case '&': sb.Append("&amp;"); break;
+                case '<': sb.Append("&lt;"); break;
+                case '>': sb.Append("&gt;"); break;
+                case '"': sb.Append("&quot;"); break;
+                case '\'': sb.Append("&#39;"); break;
+                default: sb.Append(ch); break;
+            }
+        }
+        return sb.ToString();
+    }
+}

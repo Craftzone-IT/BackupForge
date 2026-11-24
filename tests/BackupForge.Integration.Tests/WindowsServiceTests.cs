@@ -46,7 +46,8 @@ public class WindowsServiceTests
             var bin = $"\"{exe}\" --data \"{paths.Root}\" --pipe {pipe}" + (testEngine ? " --test-engine" : "");
             var create = Sc("create", name, "binPath=", bin, "start=", "demand");
             Assert.Contains("SUCCESS", create, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("SUCCESS", Sc("start", name), StringComparison.OrdinalIgnoreCase);
+            var start = Sc("start", name);
+            Assert.True(start.Contains("START_PENDING", StringComparison.OrdinalIgnoreCase) || start.Contains("RUNNING", StringComparison.OrdinalIgnoreCase), start);
             await ServiceProcess.WaitForPipeAsync(pipe, TimeSpan.FromSeconds(60));
 
             await using (var c = await IpcClient.ConnectAsync(pipe))

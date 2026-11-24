@@ -246,4 +246,106 @@
   <data name="sources.leaf_duplicate" xml:space="preserve">
     <value>Több forrásnál a forrásmappák neve nem ismétlődhet (a tükörben almappák lesznek): '{0}'</value>
   </data>
+  <data name="report.title" xml:space="preserve">
+    <value>Heti mentési riport</value>
+  </data>
+  <data name="report.period" xml:space="preserve">
+    <value>Időszak: {0} – {1}</value>
+  </data>
+  <data name="report.overall_ok" xml:space="preserve">
+    <value>RENDBEN</value>
+  </data>
+  <data name="report.overall_warning" xml:space="preserve">
+    <value>FIGYELEM</value>
+  </data>
+  <data name="report.overall_error" xml:space="preserve">
+    <value>HIBA</value>
+  </data>
+  <data name="report.jobs" xml:space="preserve">
+    <value>Feladatok</value>
+  </data>
+  <data name="report.col_job" xml:space="preserve">
+    <value>Feladat</value>
+  </data>
+  <data name="report.col_runs" xml:space="preserve">
+    <value>Futások</value>
+  </data>
+  <data name="report.col_ok" xml:space="preserve">
+    <value>Sikeres</value>
+  </data>
+  <data name="report.col_warning" xml:space="preserve">
+    <value>Figyelmeztetés</value>
+  </data>
+  <data name="report.col_failed" xml:space="preserve">
+    <value>Hibás</value>
+  </data>
+  <data name="report.col_skipped" xml:space="preserve">
+    <value>Kihagyva</value>
+  </data>
+  <data name="report.col_last_ok" xml:space="preserve">
+    <value>Utolsó sikeres</value>
+  </data>
+  <data name="report.col_data" xml:space="preserve">
+    <value>Adat</value>
+  </data>
+  <data name="report.disabled" xml:space="preserve">
+    <value>Letiltott feladatok</value>
+  </data>
+  <data name="report.disabled_since" xml:space="preserve">
+    <value>{0} ({1} óta)</value>
+  </data>
+  <data name="report.stale" xml:space="preserve">
+    <value>Nincs friss sikeres mentés: {0}</value>
+  </data>
+  <data name="report.targets" xml:space="preserve">
+    <value>Célok</value>
+  </data>
+  <data name="report.target_row" xml:space="preserve">
+    <value>{0}: {1} szabad / {2}</value>
+  </data>
+  <data name="report.target_low" xml:space="preserve">
+    <value>a minimum ({0} GB) alatt</value>
+  </data>
+  <data name="report.target_offline" xml:space="preserve">
+    <value>{0}: NEM ELÉRHETŐ {1}</value>
+  </data>
+  <data name="report.versions" xml:space="preserve">
+    <value>Versions mappák</value>
+  </data>
+  <data name="report.versions_row" xml:space="preserve">
+    <value>{0}: {1} mappa, legrégebbi: {2}</value>
+  </data>
+  <data name="report.repos" xml:space="preserve">
+    <value>restic-tárolók</value>
+  </data>
+  <data name="report.repo_row" xml:space="preserve">
+    <value>{0}: utolsó ellenőrzés {1} ({2}), utolsó prune {3} ({4})</value>
+  </data>
+  <data name="report.sql" xml:space="preserve">
+    <value>SQL-adatbázisok</value>
+  </data>
+  <data name="report.sql_row" xml:space="preserve">
+    <value>{0}: utolsó sikeres mentés {1}{2}</value>
+  </data>
+  <data name="report.sql_full" xml:space="preserve">
+    <value> · FULL recovery model naplómentés nélkül</value>
+  </data>
+  <data name="report.sql_checkdb" xml:space="preserve">
+    <value> · utolsó CHECKDB {0} ({1})</value>
+  </data>
+  <data name="report.changes" xml:space="preserve">
+    <value>Konfigurációváltozások a héten</value>
+  </data>
+  <data name="report.none" xml:space="preserve">
+    <value>nincs</value>
+  </data>
+  <data name="report.never" xml:space="preserve">
+    <value>soha</value>
+  </data>
+  <data name="report.config_error" xml:space="preserve">
+    <value>Konfigurációs hiba: {0}</value>
+  </data>
+  <data name="report.guard" xml:space="preserve">
+    <value>törlési biztosíték kioldott: {0}</value>
+  </data>
 </root>

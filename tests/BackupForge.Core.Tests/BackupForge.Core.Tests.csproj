@@ -1,13 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="JsonSchema.Net" />
     <ProjectReference Include="..\BackupForge.TestKit\BackupForge.TestKit.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\BackupForge.Core\BackupForge.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\schema\**\*.json" Link="schema\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="fixtures\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

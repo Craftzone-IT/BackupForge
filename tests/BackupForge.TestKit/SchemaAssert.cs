@@ -1,9 +1,8 @@
 using System.Text.Json;
 using Json.Schema;
 
-using BackupForge.TestKit;
 
-namespace BackupForge.Core.Tests.Infra;
+namespace BackupForge.TestKit;
 
 public static class SchemaAssert
 {

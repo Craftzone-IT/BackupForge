@@ -2,6 +2,7 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsTestProject Condition="'$(MSBuildProjectName)' != 'BackupForge.TestKit'">true</IsTestProject>
     <NoWarn>$(NoWarn);CA1707;CA1416</NoWarn>
   </PropertyGroup>
@@ -14,5 +15,8 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'BackupForge.TestKit'">
+    <None Include="$(MSBuildThisFileDirectory)..\schema\**\*.json" Link="schema\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

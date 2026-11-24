@@ -81,7 +81,7 @@ public sealed class EngineHarness : IDisposable
     }
 
     public List<string> VersionFolders() =>
-        Directory.Exists(Versions) ? [.. Directory.GetDirectories(Versions).Select(Path.GetFileName).Order()!] : [];
+        Directory.Exists(Versions) ? [.. Directory.GetDirectories(Versions).Select(d => Path.GetFileName(d)!).Order()] : [];
 
     public void Dispose() => Dir.Dispose();
 }

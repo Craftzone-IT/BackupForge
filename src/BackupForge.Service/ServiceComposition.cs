@@ -18,6 +18,7 @@ public sealed class Platform
     public IEventSink Events { get; init; } = NullEventSink.Instance;
     public IMailSender Mail { get; init; } = new MailKitSender();
     public FileEngineOptions FileEngine { get; init; } = new();
+    public HttpMessageHandler? HttpHandler { get; init; }
     public Func<DataPaths, ISecretStore> Secrets { get; init; } = _ => new InMemorySecretStore();
 
     public static Platform Current()
@@ -63,7 +64,14 @@ public static class ServiceComposition
         rt.AddComponent(new LifecycleEvents(platform.Events, platform.Vss));
         rt.AddComponent(probe);
         rt.AddComponent(notifier);
+        var reporter = new WeeklyReporter(notifier);
+        rt.AddComponent(reporter);
+        rt.AddComponent(new Heartbeat(platform.HttpHandler, platform.Events));
+        var status = new StatusWriter();
+        rt.AddComponent(status);
         rt.Notifier = notifier;
+        rt.Reporter = reporter;
+        rt.StatusWriter = status;
         rt.TargetProbe = probe;
         var files = engines.OfType<FileJobEngine>().FirstOrDefault();
         rt.StatusProviders = new StatusProviders

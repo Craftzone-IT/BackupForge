@@ -130,6 +130,12 @@ public sealed class ServiceIpcHandler
                 ["account"] = Environment.UserName,
             });
         });
+        Register(IpcOps.ReportPreview, (_, _, _) =>
+        {
+            if (_rt.Reporter is null) throw new IpcException(IpcErrorCodes.Rejected, "not available");
+            var m = _rt.Reporter.Build();
+            return Task.FromResult<JsonNode?>(new JsonObject { ["subject"] = m.Subject, ["html"] = _rt.Masker.Apply(m.Html), ["text"] = _rt.Masker.Apply(m.Text) });
+        });
         Register(IpcOps.EventsSubscribe, (_, conn, _) =>
         {
             conn.Subscribed = true;

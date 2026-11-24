@@ -125,5 +125,5 @@ public static class MailBuilder
     public static string Duration(TimeSpan d) =>
         d.TotalHours >= 1 ? $"{(int)d.TotalHours}:{d.Minutes:00}:{d.Seconds:00}" : $"{d.Minutes}:{d.Seconds:00}";
 
-    private static string H(string s) => WebUtility.HtmlEncode(s);
+    private static string H(string s) => Html.Encode(s);
 }

@@ -1,6 +1,5 @@
 using BackupForge.Core.Abstractions;
 using BackupForge.Core.Config;
-using BackupForge.Core.Tests.Infra;
 using BackupForge.TestKit;
 
 namespace BackupForge.Core.Tests.Config;
