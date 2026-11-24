@@ -31,8 +31,15 @@ UninstallDisplayName=BackupForge
 UninstallDisplayIcon={app}\BackupForge.exe
 CloseApplications=yes
 
+#if FileExists(AddBackslash(CompilerPath) + "Languages\Hungarian.isl")
+  #define HuMessages "compiler:Languages\Hungarian.isl"
+#else
+  ; Hungarian is not shipped with every Inno Setup build: fall back to the English base messages (custom texts stay Hungarian)
+  #define HuMessages "compiler:Default.isl"
+#endif
+
 [Languages]
-Name: "hu"; MessagesFile: "compiler:Languages\Hungarian.isl"
+Name: "hu"; MessagesFile: "{#HuMessages}"
 Name: "en"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
