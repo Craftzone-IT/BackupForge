@@ -54,6 +54,7 @@ public static class ServiceComposition
         return
         [
             new FileJobEngine(platform.FileSystem, platform.Connector, platform.Vss, platform.FileEngine),
+            new FileRestoreEngine(platform.FileSystem, platform.Connector),
             new ResticEngine(platform.Restic, platform.Processes, masker),
             new SqlEngine(platform.Sql, platform.FileSystem, platform.StagingPermissions),
         ];
