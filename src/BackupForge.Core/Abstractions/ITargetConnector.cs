@@ -44,6 +44,11 @@ public interface ISnapshotSession : IDisposable
     /// <summary>Translates an original path to the same path inside the snapshot.</summary>
     string Translate(string path);
     IReadOnlyList<(string SnapshotId, string? SetId, string Volume)> Snapshots { get; }
+    /// <summary>
+    /// Why the snapshot is weaker than asked (CR-001 2.: e.g. the writers did not respond and it was taken without them).
+    /// Empty when the snapshot is application-consistent. The engine reports each as a run warning.
+    /// </summary>
+    IReadOnlyList<string> WritersSkippedReasons { get; }
 }
 
 public sealed class NoSnapshotProvider : ISnapshotProvider

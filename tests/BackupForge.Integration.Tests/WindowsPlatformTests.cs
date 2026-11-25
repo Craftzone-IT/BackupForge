@@ -57,7 +57,11 @@ public class WindowsPlatformTests
         using var locker = new FileStream(Path.Combine(src, "locked.db"), FileMode.Open, FileAccess.ReadWrite, FileShare.None);
 
         var withVss = await RunFilesJob(d, src, VssModes.Required, new VssSnapshotProvider());
-        Assert.True(withVss.Result == RunResults.Ok, withVss.Summary + " | " + string.Join(" | ", withVss.Items.Select(i => i.Path + ": " + i.Message)));
+        var detail = withVss.Summary + " | " + string.Join(" | ", withVss.Items.Select(i => i.Path + ": " + i.Message));
+        // CR-001 2.: the writer-less fallback (hosted runners) must show up as a warning; with writers the run is ok
+        var fellBack = withVss.Items.Any(i => i.Message.Contains("writers did not respond", StringComparison.Ordinal));
+        Assert.True(withVss.Result == (fellBack ? RunResults.Warning : RunResults.Ok), detail);
+        if (withVss.Result == RunResults.Warning) Assert.True(fellBack, detail);
         Assert.Equal("db", File.ReadAllText(d.Sub("target", "Docs", "locked.db")));
 
         Directory.Delete(d.Sub("target"), true);

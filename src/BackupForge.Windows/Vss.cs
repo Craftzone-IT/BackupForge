@@ -25,9 +25,6 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
     /// <summary>Upper bound for one VSS async step (writers can hang); when_available then continues without VSS.</summary>
     public static TimeSpan AsyncLimit { get; set; } = TimeSpan.FromMinutes(3);
 
-    /// <summary>Gathering writer metadata timed out and the snapshot was taken without writer involvement (crash-consistent).</summary>
-    public static event Action<string>? WritersSkipped;
-
     public ISnapshotSession Create(IReadOnlyCollection<string> paths, CancellationToken ct)
     {
         try
@@ -37,12 +34,13 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
         catch (VssException ex) when (ex.Message.StartsWith("GatherWriterMetadata", StringComparison.Ordinal))
         {
             // a hung writer must not block the backup: a fresh requester without writer metadata (crash-consistent snapshot)
-            WritersSkipped?.Invoke(ex.Message);
-            return CreateOnce(paths, withWriters: false, ct);
+            var session = CreateOnce(paths, withWriters: false, ct);
+            session.WritersSkippedReasons.Add(ex.Message);
+            return session;
         }
     }
 
-    private ISnapshotSession CreateOnce(IReadOnlyCollection<string> paths, bool withWriters, CancellationToken ct)
+    private Session CreateOnce(IReadOnlyCollection<string> paths, bool withWriters, CancellationToken ct)
     {
         EnsureComSecurity();
         var volumes = paths.Select(VolumeOf).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
@@ -197,6 +195,8 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
         public Guid SetId { get; set; }
 
         public IReadOnlyList<(string SnapshotId, string? SetId, string Volume)> Snapshots => _snapshots;
+        public List<string> WritersSkippedReasons { get; } = [];
+        IReadOnlyList<string> ISnapshotSession.WritersSkippedReasons => WritersSkippedReasons;
 
         public void Add(Guid id, string volume, string device)
         {

@@ -94,6 +94,13 @@ public sealed class FileJobEngine : IJobEngine
                         ctx.VssSnapshotCreated?.Invoke(s.SnapshotId, s.SetId);
                         log.Info($"VSS snapshot {s.SnapshotId} for {s.Volume}");
                     }
+                    foreach (var reason in snapshot.WritersSkippedReasons)
+                    {
+                        // CR-001 2.: a crash-consistent fallback is not silent
+                        var msg = Texts.Format(culture, "files.vss_no_writers", reason);
+                        log.Warning(msg);
+                        outcome.AddWarning(null, msg);
+                    }
                     roots = [.. roots.Select(r => r.OriginalPath.StartsWith(@"\\", StringComparison.Ordinal) ? r : r with { ReadPath = snapshot.Translate(r.OriginalPath) })];
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException and not OutOfMemoryException)
