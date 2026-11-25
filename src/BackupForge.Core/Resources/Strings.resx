@@ -417,4 +417,34 @@
   <data name="sql.express_no_compression" xml:space="preserve">
     <value>the edition does not support backup compression — backing up uncompressed</value>
   </data>
+  <data name="path.overlap_job" xml:space="preserve">
+    <value>The {0} {1} overlaps the {3} {4} of {2}</value>
+  </data>
+  <data name="role.mirror" xml:space="preserve">
+    <value>mirror folder</value>
+  </data>
+  <data name="role.versions" xml:space="preserve">
+    <value>Versions folder</value>
+  </data>
+  <data name="role.source" xml:space="preserve">
+    <value>source</value>
+  </data>
+  <data name="role.restic_repo" xml:space="preserve">
+    <value>restic repository</value>
+  </data>
+  <data name="role.staging" xml:space="preserve">
+    <value>SQL staging folder</value>
+  </data>
+  <data name="role.data_root" xml:space="preserve">
+    <value>data folder</value>
+  </data>
+  <data name="job.backupforge" xml:space="preserve">
+    <value>BackupForge</value>
+  </data>
+  <data name="files.protected_skipped" xml:space="preserve">
+    <value>{0} item(s) were not deleted because they belong to another job ({1})</value>
+  </data>
+  <data name="files.vss_no_writers" xml:space="preserve">
+    <value>VSS: the writers did not respond ({0}); the snapshot was taken without application consistency</value>
+  </data>
 </root>

@@ -153,6 +153,8 @@ public sealed class JobRunContext
     public Action<string, string?>? VssSnapshotCreated { get; init; }
     public Action<string>? VssSnapshotDeleted { get; init; }
     public RunOptions Options => Request.Options;
+    /// <summary>Folders of all jobs and of BackupForge itself (CR-001 1b.): an engine never deletes inside another job's folder.</summary>
+    public IReadOnlyList<Config.ProtectedPath> ProtectedPaths { get; init; } = [];
 }
 
 /// <summary>An engine for one job type and run kind.</summary>

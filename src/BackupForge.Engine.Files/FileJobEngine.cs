@@ -107,7 +107,7 @@ public sealed class FileJobEngine : IJobEngine
 
             // 4. plan
             ctx.Progress.Report(new RunProgress(RunPhases.Plan, null));
-            if (!dry) CleanupParts(mirrorRoot, log);
+            if (!dry) CleanupParts(mirrorRoot, log, ctx.ProtectedPaths.Where(pp => pp.JobId != job.Id).ToList());
             var caseInsensitive = _options.CaseInsensitive ?? !_fs.IsCaseSensitive;
             var excludes = ExcludeMatcher.For(job.Sources.SelectMany(s => s.Excludes), files.UseDefaultExcludes);
             var planner = new Planner(_fs, excludes, files.Mode == FilesModes.Mirror, files.Compare == CompareModes.Content,
@@ -122,6 +122,25 @@ public sealed class FileJobEngine : IJobEngine
             foreach (var (path, msg) in plan.Warnings) { log.Warning($"{path}: {msg}"); outcome.AddWarning(path, msg); }
             if (plan.CloudOnly.Count > 0 && files.CloudFiles == CloudFilesModes.Fail)
                 return RunOutcome.Failed(Texts.Format(culture, "files.cloud_failed", plan.CloudOnly[0]));
+
+            // 4b. safety net (CR-001 1b.): never delete inside a folder of another job / BackupForge, whatever the config says
+            var foreign = ctx.ProtectedPaths.Where(pp => pp.JobId != job.Id).ToList();
+            if (foreign.Count > 0)
+            {
+                var blocked = plan.Items
+                    .Where(i => i.Action is PlanAction.DeleteFile or PlanAction.DeleteDir)
+                    .Select(i => (Item: i, Owner: ProtectedPaths.Owner(foreign, job.Id, Path.Combine(mirrorRoot, i.Rel.Replace('\\', Path.DirectorySeparatorChar)))))
+                    .Where(x => x.Owner is not null)
+                    .ToList();
+                if (blocked.Count > 0)
+                {
+                    foreach (var (item, _) in blocked) plan.Items.Remove(item);
+                    var owners = string.Join(", ", blocked.Select(b => b.Owner!.JobId ?? "BackupForge").Distinct());
+                    var msg = Texts.Format(culture, "files.protected_skipped", blocked.Count(b => b.Item.Action == PlanAction.DeleteFile), owners);
+                    log.Warning(msg);
+                    outcome.AddWarning(null, msg);
+                }
+            }
 
             // 5. delete guard (SPEC 6.5) — before anything is deleted or moved to Versions
             var deletes = plan.DeleteFileCount;
@@ -407,7 +426,7 @@ public sealed class FileJobEngine : IJobEngine
     }
 
     /// <summary>Removes leftover *.bfpart files of an interrupted run — only inside the job's own mirror folder.</summary>
-    private void CleanupParts(string mirrorRoot, IRunLog log)
+    private void CleanupParts(string mirrorRoot, IRunLog log, IReadOnlyList<ProtectedPath> foreign)
     {
         if (!_fs.DirectoryExists(mirrorRoot)) return;
         var stack = new Stack<string>();
@@ -421,6 +440,7 @@ public sealed class FileJobEngine : IJobEngine
             foreach (var e in entries)
             {
                 if (e.IsReparsePoint) continue;
+                if (ProtectedPaths.Owner(foreign, "", e.FullPath) is not null) continue; // another job's folder (CR-001 1b.)
                 if (e.IsDirectory) stack.Push(e.FullPath);
                 else if (e.Name.EndsWith(FileCopier.PartSuffix, StringComparison.OrdinalIgnoreCase))
                 {

@@ -208,8 +208,8 @@ public sealed class ServiceIpcHandler
     private JsonNode? Validate(IpcRequest req)
     {
         var cfg = ParseConfigArg(req);
-        var v = ConfigValidator.Validate(cfg, _rt.Secrets);
-        return new JsonObject { ["valid"] = v.IsValid, ["errors"] = ValidationNode(v) };
+        var v = ConfigValidator.Validate(cfg, _rt.Secrets, _rt.Paths.Root);
+        return new JsonObject { ["valid"] = v.IsValid, ["errors"] = ValidationNode(v), ["warnings"] = WarningNode(v) };
     }
 
     private JsonNode? Save(IpcRequest req)
@@ -218,7 +218,7 @@ public sealed class ServiceIpcHandler
         var by = req.Str("by") is "cli" ? "cli" : "gui-user";
         var v = _rt.SaveConfig(cfg, by);
         if (!v.IsValid) throw new IpcException(IpcErrorCodes.Invalid, "invalid configuration", ValidationNode(v));
-        return new JsonObject { ["saved"] = true };
+        return new JsonObject { ["saved"] = true, ["warnings"] = WarningNode(v) };
     }
 
     private static BackupConfig ParseConfigArg(IpcRequest req)
@@ -232,6 +232,14 @@ public sealed class ServiceIpcHandler
         {
             throw new IpcException(IpcErrorCodes.Invalid, ex.Message, new JsonArray(new JsonObject { ["path"] = ex.JsonPath, ["code"] = "format.invalid", ["message"] = ex.Message }));
         }
+    }
+
+    private JsonArray WarningNode(ValidationResult v)
+    {
+        var arr = new JsonArray();
+        var culture = Texts.CultureFor(_rt.ConfigStore.Current.Language);
+        foreach (var e in v.Warnings) arr.Add(new JsonObject { ["path"] = e.Path, ["code"] = e.Code, ["message"] = e.Message(culture) });
+        return arr;
     }
 
     private JsonArray ValidationNode(ValidationResult? v)

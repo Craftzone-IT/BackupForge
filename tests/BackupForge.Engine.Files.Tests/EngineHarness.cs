@@ -74,6 +74,7 @@ public sealed class EngineHarness : IDisposable
             Secrets = new InMemorySecretStore(),
             Paths = new DataPaths(Dir.Sub("data")),
             State = State,
+            ProtectedPaths = ProtectedPaths.Collect(Config, Dir.Sub("data")),
         };
         var o = await engine.RunAsync(ctx, CancellationToken.None);
         Clock.Advance(TimeSpan.FromMinutes(10)); // next run gets its own Versions stamp

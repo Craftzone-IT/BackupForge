@@ -56,7 +56,7 @@ public static class SetupHelper
             BackupConfig cfg;
             try { cfg = ConfigJson.Load(configFile); }
             catch (ConfigFormatException ex) { log("config: " + ex.Message); return 1; }
-            var v = ConfigValidator.Validate(cfg, secrets);
+            var v = ConfigValidator.Validate(cfg, secrets, paths.Root);
             if (!v.IsValid)
             {
                 foreach (var e in v.Errors) log($"config: {e.Path}: {e.Message(Texts.CultureFor(cfg.Language))}");

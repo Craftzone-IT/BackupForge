@@ -113,9 +113,10 @@ public sealed partial class MainViewModel : ObservableObject
         ValidationErrors.Clear();
         try
         {
-            await _client.CallAsync(IpcOps.ConfigSave, new JsonObject { ["config"] = ConfigJson.Serialize(EditConfig) }).ConfigureAwait(true);
+            var saved = await _client.CallAsync(IpcOps.ConfigSave, new JsonObject { ["config"] = ConfigJson.Serialize(EditConfig) }).ConfigureAwait(true);
             await RefreshAsync().ConfigureAwait(true);
-            Dialogs.Info(Ui.T("saved"));
+            var warnings = saved?["warnings"]?.AsArray().Select(w => $"{w?["path"]}: {w?["message"]}").ToList() ?? [];
+            Dialogs.Info(warnings.Count == 0 ? Ui.T("saved") : Ui.T("saved") + Environment.NewLine + string.Join(Environment.NewLine, warnings));
             return true;
         }
         catch (IpcException ex)

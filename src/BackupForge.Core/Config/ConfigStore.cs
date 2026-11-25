@@ -74,7 +74,7 @@ public sealed class ConfigStore
                 return new ConfigLoadResult(false, false, ex.Message, null);
             }
 
-            var v = ConfigValidator.Validate(parsed, _secrets);
+            var v = ConfigValidator.Validate(parsed, _secrets, _paths.Root);
             if (!v.IsValid)
             {
                 Error = string.Join("; ", v.Errors.Select(e => $"{e.Path}: {e.Message(Texts.CultureFor(parsed.Language))}"));
@@ -106,8 +106,9 @@ public sealed class ConfigStore
     {
         lock (_lock)
         {
-            var v = ConfigValidator.Validate(config, _secrets);
+            var v = ConfigValidator.Validate(config, _secrets, _paths.Root);
             if (!v.IsValid) return v;
+            foreach (var w in v.Warnings) _log.LogWarning("configuration warning: {Path}: {Message}", w.Path, w.Message(Texts.CultureFor(config.Language)));
             _initialised = true;
             var changes = ConfigDiff.Describe(Current, config);
             RotateBackups();

@@ -248,6 +248,7 @@ public sealed class JobCoordinator : IAsyncDisposable
                     Secrets = _secrets,
                     Paths = _paths,
                     State = _history,
+                    ProtectedPaths = BackupForge.Core.Config.ProtectedPaths.Collect(a.Config, _paths.Root),
                     VssSnapshotCreated = (id, set) => _history.AddVssSnapshot(_clock.UtcNow, a.RunId, id, set),
                     VssSnapshotDeleted = id => _history.MarkVssDeleted(id, _clock.UtcNow),
                 };

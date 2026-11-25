@@ -417,4 +417,34 @@
   <data name="sql.express_no_compression" xml:space="preserve">
     <value>az edíció nem támogatja a mentés tömörítését — tömörítés nélkül mentünk</value>
   </data>
+  <data name="path.overlap_job" xml:space="preserve">
+    <value>A(z) {0} {1} átfedi a(z) {2} {3} útvonalát: {4}</value>
+  </data>
+  <data name="role.mirror" xml:space="preserve">
+    <value>tükörmappa</value>
+  </data>
+  <data name="role.versions" xml:space="preserve">
+    <value>Versions mappa</value>
+  </data>
+  <data name="role.source" xml:space="preserve">
+    <value>forrás</value>
+  </data>
+  <data name="role.restic_repo" xml:space="preserve">
+    <value>restic-tároló</value>
+  </data>
+  <data name="role.staging" xml:space="preserve">
+    <value>SQL átmeneti mappa</value>
+  </data>
+  <data name="role.data_root" xml:space="preserve">
+    <value>adatmappa</value>
+  </data>
+  <data name="job.backupforge" xml:space="preserve">
+    <value>BackupForge</value>
+  </data>
+  <data name="files.protected_skipped" xml:space="preserve">
+    <value>{0} tétel nem törlődött, mert egy másik feladathoz tartozik ({1})</value>
+  </data>
+  <data name="files.vss_no_writers" xml:space="preserve">
+    <value>VSS: a writerek nem válaszoltak ({0}), a pillanatkép alkalmazás-konzisztencia nélkül készült</value>
+  </data>
 </root>

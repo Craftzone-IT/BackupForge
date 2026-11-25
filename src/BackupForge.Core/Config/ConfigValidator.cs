@@ -16,13 +16,25 @@ public sealed record ValidationError(string Path, string Code, params object?[] 
 public sealed class ValidationResult
 {
     public List<ValidationError> Errors { get; } = [];
+    /// <summary>Not blocking (the configuration can be saved), but shown to the user.</summary>
+    public List<ValidationError> Warnings { get; } = [];
     public bool IsValid => Errors.Count == 0;
+    public bool HasWarning(string code, string path) => Warnings.Any(e => e.Code == code && e.Path == path);
     public bool Has(string code) => Errors.Any(e => e.Code == code);
     public bool Has(string code, string path) => Errors.Any(e => e.Code == code && e.Path == path);
     public override string ToString() => string.Join(Environment.NewLine, Errors);
 }
 
 /// <summary>Validates config.json semantics (SPEC 4. "Validálás"). Must pass before every save.</summary>
+/// <summary>A role name ("mirror folder" / "tükörmappa") formatted in the message's culture.</summary>
+public sealed class RoleText(string role) : IFormattable
+{
+    public string Role { get; } = role;
+    public string ToString(string? format, IFormatProvider? formatProvider) =>
+        Texts.Get(Role == "backupforge" ? "job.backupforge" : "role." + Role, formatProvider as CultureInfo ?? CultureInfo.CurrentCulture);
+    public override string ToString() => ToString(null, Texts.English);
+}
+
 public static partial class ConfigValidator
 {
     public const string StagingPrefix = "@staging:";
@@ -33,7 +45,8 @@ public static partial class ConfigValidator
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
     private static partial Regex EmailRegex();
 
-    public static ValidationResult Validate(BackupConfig config, ISecretStore? secrets = null)
+    /// <param name="dataRoot">The BackupForge data folder (default: %ProgramData%\BackupForge) — no job may write into it.</param>
+    public static ValidationResult Validate(BackupConfig config, ISecretStore? secrets = null, string? dataRoot = null)
     {
         var r = new ValidationResult();
         void Err(string path, string code, params object?[] args) => r.Errors.Add(new ValidationError(path, code, args));
@@ -178,12 +191,44 @@ public static partial class ConfigValidator
             if (!string.IsNullOrEmpty(mail.Username)) Secret("notifications.email.password_ref", mail.PasswordRef, required: true);
             Recurrence(r, "notifications.email.weekly_report", mail.WeeklyReport);
         }
+        CheckCrossJobOverlaps(r, config, dataRoot ?? Execution.DataPaths.Default().Root);
+
         var hb = config.Notifications.HeartbeatUrl;
         if (!string.IsNullOrWhiteSpace(hb) &&
             !(Uri.TryCreate(hb, UriKind.Absolute, out var u) && (u.Scheme == Uri.UriSchemeHttps || u.Scheme == Uri.UriSchemeHttp)))
             Err("notifications.heartbeat_url", "url.invalid", hb);
 
         return r;
+    }
+
+    /// <summary>
+    /// CR-001 1a.: a mirror (mode mirror) must not equal / contain / lie in a folder of another job or the data folder
+    /// (it would move it to its Versions folder or delete it); in update mode the same is a warning. Two Versions folders
+    /// must not overlap (retention of one would delete the other).
+    /// </summary>
+    private static void CheckCrossJobOverlaps(ValidationResult r, BackupConfig config, string dataRoot)
+    {
+        var all = ProtectedPaths.Collect(config, dataRoot);
+        for (var i = 0; i < config.Jobs.Count; i++)
+        {
+            var j = config.Jobs[i];
+            if (j.Type != JobTypes.Files || j.Files is null) continue;
+            var mine = all.Where(p => p.JobId == j.Id && p.Role is PathRoles.Mirror or PathRoles.Versions).ToList();
+            foreach (var own in mine)
+            {
+                foreach (var other in ProtectedPaths.Conflicts(all, j.Id, own.Path))
+                {
+                    if (own.Role == PathRoles.Mirror && other.Role == PathRoles.Mirror && PathUtil.EqualsPath(own.Path, other.Path)) continue; // target.shared
+                    var isVersionsPair = own.Role == PathRoles.Versions && other.Role == PathRoles.Versions;
+                    if (own.Role == PathRoles.Versions && !isVersionsPair) continue; // a foreign mirror over our Versions is reported at that mirror
+                    var path = own.Role == PathRoles.Mirror ? $"jobs[{i}].target" : $"jobs[{i}].files.versioning.folder";
+                    var err = new ValidationError(path, "path.overlap_job",
+                        new RoleText(own.Role), own.Path, other.JobId is null ? new RoleText("backupforge") : (object)$"'{other.JobId}'", new RoleText(other.Role), other.Path);
+                    if (own.Role == PathRoles.Mirror && j.Files.Mode == FilesModes.Update) r.Warnings.Add(err);
+                    else r.Errors.Add(err);
+                }
+            }
+        }
     }
 
     private static void ValidateFilesJob(ValidationResult r, BackupConfig config, JobConfig j, string p, List<(string Path, string JobId)> mirrorTargets)
