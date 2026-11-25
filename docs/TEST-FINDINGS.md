@@ -6,7 +6,7 @@ Teszt-környezet: Windows 11 munkaállomás (Z790), BackupForge 0.1.0 (`main` @ 
 
 ## Hibák
 
-### H1 — A Visszaállítás fül „Feladat” listája üres (2026-11-25)
+### H1 — A Visszaállítás fül „Feladat” listája üres (2026-11-25) — a CR-002 GUI-körrel együtt javítandó (user-döntés)
 - **Lépés**: két feladat elmentve (`files-1` fájlmentés, `restic-1` restic), mindkettő lefutott `ok`-kal → Visszaállítás fül.
 - **Elvárt**: a „Feladat” legördülőben `files-1` és `restic-1`.
 - **Tényleges**: a lista üres, így visszaállítási pont sem választható; a fül használhatatlan.
