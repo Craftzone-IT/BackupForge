@@ -7,7 +7,10 @@ using BackupForge.TestKit;
 
 namespace BackupForge.Integration.Tests;
 
-/// <summary>Runs only when (localdb)\MSSQLLocalDB answers (the CI step starts it); otherwise see docs/MANUAL-TESTS.md.</summary>
+/// <summary>
+/// Runs only when (localdb)\MSSQLLocalDB answers (the CI step starts it); otherwise see docs/MANUAL-TESTS.md.
+/// With <c>BF_REQUIRE_LOCALDB=1</c> (Windows CI, CR-001 3.) an unavailable LocalDB fails the test instead of skipping it.
+/// </summary>
 public sealed class LocalDbFactAttribute : FactAttribute
 {
     public const string Instance = @"(localdb)\MSSQLLocalDB";
@@ -23,9 +26,19 @@ public sealed class LocalDbFactAttribute : FactAttribute
         catch (Exception ex) { return "LocalDB not available: " + ex.Message; }
     });
 
+    public static bool Required => Environment.GetEnvironmentVariable("BF_REQUIRE_LOCALDB") == "1";
+
     public LocalDbFactAttribute()
     {
-        if (Problem.Value is { } p) Skip = p;
+        if (Problem.Value is not { } p) return;
+        if (Required && OperatingSystem.IsWindows()) return; // run → EnsureAvailable fails it
+        Skip = p;
+    }
+
+    /// <summary>Called first by every LocalDB test: fails with the probe's reason when LocalDB is required but missing.</summary>
+    public static void EnsureAvailable()
+    {
+        if (Problem.Value is { } p) Assert.Fail("BF_REQUIRE_LOCALDB=1 but " + p);
     }
 }
 
@@ -34,6 +47,7 @@ public class SqlLocalDbTests
     [LocalDbFact]
     public async Task Sql_backup_verify_checkdb_then_restic_chain()
     {
+        LocalDbFactAttribute.EnsureAvailable();
         using var d = new TempDir();
         var db = "bfit_" + Guid.NewGuid().ToString("N")[..8];
         var factory = new SqlClientSessionFactory();

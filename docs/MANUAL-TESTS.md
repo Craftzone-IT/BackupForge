@@ -27,6 +27,7 @@ Tiszta Windows Server 2019/2022 VM-en (vagy Windows 10/11-en), rendszergazdakén
 5. Feladat letiltása → Mentés. *Áttekintésen „Letiltott feladat … óta”, a `status.json`-ban `enabled: false` + `disabled_since`, a heti riportban külön szakasz.*
 6. Nyelv: Beállítások → en → Mentés → GUI újraindítása. *Angol felület és angol e-mailek.*
 7. Export / import: export → a fájlban nincs jelszó; importálás egy másik gépen → *a hiányzó titkok listája megjelenik.*
+8. **Két feladat ugyanarra a NAS-megosztásra, az egyik a gyökérbe** (CR-001): Célok → egy SMB-cél (`\\NAS01\backup`) → két fájlfeladat, az egyik `subdir` nélkül (a megosztás gyökerébe, tükör módban, a Versions mappa máshol), a másik `Company` almappába → Mentés. *A GUI nem engedi menteni: a gyökérbe mentő feladat `target` mezője mellett „… átfedi a(z) 'company' tükörmappa útvonalát …” hiba; `update` módban csak figyelmeztetés jön, a mentés megtörténik.*
 
 ## D. E-mail
 1. Értesítések → SMTP (pl. M365, starttls) → jelszó → Teszt e-mail. *A levél megérkezik.*

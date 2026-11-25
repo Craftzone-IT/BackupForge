@@ -16,6 +16,16 @@ namespace BackupForge.Service;
 /// </summary>
 public static class SetupHelper
 {
+    /// <summary>
+    /// CR-001 4b.: the installer always works on %ProgramData%\BackupForge — a stray BACKUPFORGE_DATA (developer override)
+    /// must not point --setup-uninstall --purge at some other folder.
+    /// </summary>
+    public static DataPaths InstallPaths() =>
+        new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "BackupForge"));
+
+    /// <summary>A folder is only purged when it is recognisably a BackupForge data folder.</summary>
+    public static bool LooksLikeDataFolder(DataPaths paths) => File.Exists(paths.ConfigFile) || File.Exists(paths.HistoryDb);
+
     public static int Run(string[] args, DataPaths paths, TextWriter output)
     {
         string? Arg(string n) { var i = Array.IndexOf(args, n); return i >= 0 && i + 1 < args.Length && !args[i + 1].StartsWith("--", StringComparison.Ordinal) ? args[i + 1] : null; }
@@ -116,7 +126,9 @@ public static class SetupHelper
             }
             catch (Exception ex) when (ex is System.Security.SecurityException or InvalidOperationException or ArgumentException) { log("event log source: " + ex.Message); }
         }
-        if (purge && Directory.Exists(paths.Root))
+        if (purge && Directory.Exists(paths.Root) && !LooksLikeDataFolder(paths))
+            log($"{paths.Root} kept: no config.json / history.db in it, not a BackupForge data folder");
+        else if (purge && Directory.Exists(paths.Root))
         {
             // only our own data folder — never backup targets, Versions folders or restic repositories
             Directory.Delete(paths.Root, recursive: true);

@@ -42,4 +42,35 @@ public class SetupHelperTests
         Assert.False(Directory.Exists(paths.Root));
         Assert.True(File.Exists(Path.Combine(target, "keep.txt")));
     }
+
+    [Fact]
+    public void Purge_only_deletes_a_recognisable_data_folder()
+    {
+        using var d = new TempDir();
+        var paths = new DataPaths(d.Sub("not-ours"));
+        Directory.CreateDirectory(paths.Root);
+        File.WriteAllText(Path.Combine(paths.Root, "important.docx"), "customer data");
+        var o = new StringWriter();
+        Assert.Equal(0, SetupHelper.Run(["--setup-uninstall", "--purge"], paths, o));
+        Assert.True(File.Exists(Path.Combine(paths.Root, "important.docx")));
+        Assert.Contains("not a BackupForge data folder", o.ToString(), StringComparison.Ordinal);
+
+        File.WriteAllText(paths.HistoryDb, "");
+        Assert.Equal(0, SetupHelper.Run(["--setup-uninstall", "--purge"], paths, o));
+        Assert.False(Directory.Exists(paths.Root));
+    }
+
+    [Fact]
+    public void Install_paths_ignore_the_data_override()
+    {
+        var old = Environment.GetEnvironmentVariable(DataPaths.DataDirEnvVar);
+        try
+        {
+            Environment.SetEnvironmentVariable(DataPaths.DataDirEnvVar, Path.Combine(Path.GetTempPath(), "elsewhere"));
+            var expected = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "BackupForge");
+            Assert.Equal(expected, SetupHelper.InstallPaths().Root);
+            Assert.NotEqual(expected, DataPaths.Default().Root);
+        }
+        finally { Environment.SetEnvironmentVariable(DataPaths.DataDirEnvVar, old); }
+    }
 }

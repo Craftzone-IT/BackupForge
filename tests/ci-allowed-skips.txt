@@ -1,0 +1,4 @@
+# Tests that may be skipped in the Windows CI job (CR-001 3.).
+# One fully qualified test name per line, each with a comment saying WHY it cannot run on the hosted runner.
+# Keep this list empty unless there is no other way: a skip here means the code path is only tested by hand
+# (docs/MANUAL-TESTS.md). On Linux only the "Windows only" skips are allowed (ci.yml).

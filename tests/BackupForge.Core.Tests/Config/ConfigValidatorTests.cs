@@ -59,6 +59,17 @@ public class ConfigValidatorTests
     }
 
     [Fact]
+    public void Versions_keep_days_is_at_least_one()
+    {
+        // CR-001 4a.: 0 would delete the Versions folder of the very run that just filled it
+        var c = ConfigFixtures.Minimal();
+        c.Jobs[0].Files!.Versioning.KeepDays = 0;
+        Assert.True(V(c).Has("range", "jobs[0].files.versioning.keep_days"));
+        c.Jobs[0].Files!.Versioning.KeepDays = 1;
+        Assert.False(V(c).Has("range", "jobs[0].files.versioning.keep_days"));
+    }
+
+    [Fact]
     public void Retention_ranges()
     {
         var c = ConfigFixtures.Minimal();

@@ -245,7 +245,7 @@ public static partial class ConfigValidator
             Range(r, $"{p}.files.delete_guard_pct", f.DeleteGuardPct, 1, 100);
             Range(r, $"{p}.files.delete_guard_min_files", f.DeleteGuardMinFiles, 0, 10_000_000);
             Range(r, $"{p}.files.parallelism", f.Parallelism, 1, 16);
-            Range(r, $"{p}.files.versioning.keep_days", f.Versioning.KeepDays, 0, 3650);
+            Range(r, $"{p}.files.versioning.keep_days", f.Versioning.KeepDays, 1, 3650);
             if (f.Versioning.MaxVersionsPerFile is < 1) Err($"{p}.files.versioning.max_versions_per_file", "range", f.Versioning.MaxVersionsPerFile, 1, "∞");
             if (f.ThrottleMbps is <= 0) Err($"{p}.files.throttle_mbps", "range", f.ThrottleMbps, 0, "∞");
         }

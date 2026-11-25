@@ -42,9 +42,12 @@ jobs:
           name: test-results-linux
           path: TestResults
           if-no-files-found: ignore
-      - name: Failed tests (summary)
+      - name: Test summary (failures, skips — only "Windows only" skips allowed)
         if: always()
-        run: python3 tools/trx_summary.py TestResults
+        run: >-
+          python3 tools/trx_summary.py TestResults --title "Linux tests"
+          --allow-skip-reason "Windows only"
+          --report BackupForge.Integration.Tests.SqlLocalDbTests.Sql_backup_verify_checkdb_then_restic_chain
 
   windows:
     name: Windows (build + all tests + integration)
@@ -59,11 +62,16 @@ jobs:
         id: restic
         shell: pwsh
         run: python tools/fetch_restic.py
-      - name: SQL Server LocalDB (for the SQL integration tests)
+      - name: SQL Server LocalDB (required by the SQL integration test, BF_REQUIRE_LOCALDB)
         id: localdb
-        continue-on-error: true
         shell: pwsh
         run: |
+          if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
+            choco install sqllocaldb -y --no-progress | Out-Null
+            $env:PATH = [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' + $env:PATH
+            $bin = Get-ChildItem "$env:ProgramFiles\Microsoft SQL Server\*\Tools\Binn\SqlLocalDB.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($bin) { $env:PATH = $bin.DirectoryName + ';' + $env:PATH; $bin.DirectoryName | Out-File -Append -Encoding utf8 $env:GITHUB_PATH }
+          }
           sqllocaldb info
           sqllocaldb start MSSQLLocalDB
           sqllocaldb info MSSQLLocalDB
@@ -73,7 +81,12 @@ jobs:
         shell: pwsh
         env:
           BF_REQUIRE_RESTIC: "1"
+          BF_REQUIRE_LOCALDB: "1"
         run: dotnet test BackupForge.slnx -c Release --no-build --logger "trx" --results-directory TestResults --blame-hang-timeout 6m
+      - name: Test summary (0 skipped tests outside tests/ci-allowed-skips.txt)
+        if: always()
+        shell: pwsh
+        run: python tools/trx_summary.py TestResults --title "Windows tests" --allowed-skips tests/ci-allowed-skips.txt --report BackupForge.Integration.Tests.SqlLocalDbTests.Sql_backup_verify_checkdb_then_restic_chain
       - name: Publish (win-x64, self-contained, single-file)
         shell: pwsh
         run: |
@@ -103,7 +116,3 @@ jobs:
           name: test-results-windows
           path: TestResults
           if-no-files-found: ignore
-      - name: Failed tests (summary)
-        if: always()
-        shell: pwsh
-        run: python tools/trx_summary.py TestResults

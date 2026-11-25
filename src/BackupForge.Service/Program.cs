@@ -14,7 +14,7 @@ if (Arg("--pipe") is { } pipe) Environment.SetEnvironmentVariable(BackupForge.Ip
 if (args.Contains("--test-engine")) Environment.SetEnvironmentVariable(TestEngine.EnvVar, "1");
 
 var paths = DataPaths.Default();
-if (args.Length > 0 && args[0] is "--setup-install" or "--setup-uninstall") return SetupHelper.Run(args, paths, Console.Out);
+if (args.Length > 0 && args[0] is "--setup-install" or "--setup-uninstall") return SetupHelper.Run(args, SetupHelper.InstallPaths(), Console.Out);
 paths.EnsureCreated();
 var masker = new SecretMasker();
 var clock = SystemClock.Instance;
