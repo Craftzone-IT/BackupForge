@@ -72,6 +72,14 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
   - CI (Windows): self-contained single-file publikálás (szolgáltatás, `bf`, GUI) → ISCC (ha nincs a runneren: `choco install innosetup`) → **füstteszt** `installer/smoke-test.ps1` (UTF-8 BOM): csendes telepítés konfiggal → a szolgáltatás fut, SID-típus UNRESTRICTED → `bf status` → `bf run docs --wait` → `status.json` létrejött → csendes eltávolítás → a szolgáltatás eltűnt, a célmappa érintetlen, a beállítások megmaradtak → artifact `installer`. Kiadás: `.github/workflows/release.yml` (`v*` tag → teszt, publikálás, telepítő, füstteszt, GitHub Release) — a taget a user hozza létre.
   - `LICENSE` (MIT, SPEC 18.2 alapértelmezés), `docs/EVENT-IDS.md`, `docs/MANUAL-TESTS.md`.
 
+- **CR-001 (átnézés utáni javítások, `docs/CR-001-review-fixes.md`) — KÉSZ (2026-11-25)**, CI zöld (Linux + Windows; a Windows-jobban 0 kihagyott teszt, a LocalDB-teszt lefutott és zöld — a job „Test summary” lépése / step summary mutatja).
+  - 1a: `Core/Config/ProtectedPaths` (`Collect`: fájlfeladatok tükre + Versions, minden feladat forrása (`@staging:` feloldva), helyi / UNC restic-tárolók (sftp: / s3: / rest: kimarad), SQL staging, `DataPaths.Root`) → `ConfigValidator` `path.overlap_job` (tükör módú tükör átfed = hiba, `update` mód = figyelmeztetés (`ValidationResult.Warnings`), két Versions átfed = hiba). A `Validate` harmadik paramétere a data root (szolgáltatás / setup a sajátját adja). IPC: `config.validate` / `config.save` `warnings`-t is ad, a GUI mentéskor megmutatja.
+  - 1b: `JobRunContext.ProtectedPaths` (a koordinátor ugyanazzal a `Collect`-tel tölti) → `FileJobEngine`: a terv után, a törlési biztosíték ELŐTT kiveszi a más feladathoz tartozó törléseket, warning `files.protected_skipped` („N tétel nem törlődött …”); a `CleanupParts` nem lép be idegen mappába.
+  - 1c: `ResourceLocks.PathsFor` / `PathsConflict`: a koordinátor nem indít olyan futást, amelynek írt mappája (tükör, Versions, tároló, staging) átfedi egy futó futás bármely mappáját (vagy fordítva); két olvasó (közös forrás) nem ütközik.
+  - 2: a statikus `WritersSkipped` esemény megszűnt; `ISnapshotSession.WritersSkippedReasons` → `FileJobEngine` warning `files.vss_no_writers`. A Windows VSS-teszt: tartaléknál warning kötelező, különben ok.
+  - 3: `BF_REQUIRE_LOCALDB=1` (Windows-CI) → hiányzó LocalDB = hibás teszt, nem kihagyás; a CI-lépés ha kell `choco install sqllocaldb`. `tools/trx_summary.py`: run / passed / failed / skipped, kihagyások okkal, `--allowed-skips tests/ci-allowed-skips.txt` (üres, kommentezett) → nem engedélyezett kihagyás = a lépés hibás; Linuxon csak a „Windows only” ok engedélyezett; `--report` a LocalDB-teszt eredményét név szerint írja; `$GITHUB_STEP_SUMMARY` táblázat.
+  - 4: `versioning.keep_days` ≥ 1 (validátor + séma); `SetupHelper.InstallPaths()` mindig `%ProgramData%\BackupForge` (a `BACKUPFORGE_DATA`-t figyelmen kívül hagyja), `/PURGE` csak `config.json` / `history.db` jelenlétében töröl, és előtte elengedi a SQLite-poolt (különben Windowson a zárolt `history.db` miatt a törlés elhasalt); `docs/MANUAL-TESTS.md` C.8 (két feladat ugyanarra a NAS-megosztásra).
+
 ## Eltérések a spec-től (F0)
 - **Ág**: az AGENT-RUN `main`-t ír, de ez a munkamenet a környezet előírása szerint a `claude/blissful-goldberg-vlt55t` ágra pusholhat (más ágra nem). Minden fázis ide megy; a `main`-be olvasztás (PR) a user dolga.
 - `config.json`-ban az ismeretlen mező hiba (nem csendben eldobott) — egy elgépelt kulcs (pl. `enabeld`) ne kapcsoljon ki csendben semmit.
@@ -124,10 +132,17 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
 - Kiadásnál a verzió csak numerikus lehet (`v1.2.3`), mert az Inno `VersionInfoVersion` ezt követeli.
 - Frissítéskor a konfigséma-migráció: a v1-ben egyetlen séma van; régebbi / ismeretlen sémánál a fájl `config.json.bak.premigrate` néven megmarad és figyelmeztetés kerül a `setup.log`-ba.
 
+## Eltérések a CR-001-től
+- A tükör == tükör pontos egyezést továbbra is a meglévő `target.shared` hiba jelzi (nem duplán `path.overlap_job`).
+- A Versions mappát a validátor csak más Versions mappához méri (a tükörrel való ütközést a tükör oldali hiba adja).
+- A futásidejű védőháló a „BackupForge” adatmappát is védi (JobId nélkül), a figyelmeztetésben „BackupForge” tulajdonosként.
+- 1c: a forrás-olvasás és egy másik feladat írása közti átfedés is sorba állít (pl. restic, ami egy fájlfeladat tükrét menti), nem csak író–író.
+- A CI LocalDB-lépése már nem `continue-on-error` (a LocalDB kötelező); ha a runneren nincs, chocolatey-vel telepíti.
+
 ## Következő lépés
-- **Minden fázis (F0–F7) kész, a CI zöld (Linux + Windows, telepítő-füstteszttel együtt).** Ami hátra van, az nem automatizálható itt:
+- **Minden fázis (F0–F7) és a CR-001 kész, a CI zöld (Linux + Windows, telepítő-füstteszttel, 0 nem engedélyezett kihagyással).** Ami hátra van, az nem automatizálható itt:
   1. a `claude/blissful-goldberg-vlt55t` ág beolvasztása a `main`-be (PR, user);
-  2. a `docs/MANUAL-TESTS.md` végigvitele egy tiszta Windows Server 2019/2022 VM-en (a 16. pont elfogadási feltételei: GUI-folyamatok, valódi NAS/SMB, SQL Express jogosultságok, e-mailek Outlookban, újraindítás futás közben);
+  2. utána a `docs/MANUAL-TESTS.md` végigvitele (az új C.8 ponttal együtt) egy tiszta Windows Server 2019/2022 VM-en (a 16. pont elfogadási feltételei: GUI-folyamatok, valódi NAS/SMB, SQL Express jogosultságok, e-mailek Outlookban, újraindítás futás közben);
   3. kiadás: `v0.1.0`-szerű tag (user) → `release.yml`;
   4. F8 (BackupPulse-integráció) a másik repóban, a chat CR-je alapján.
 - Ismert teendők / javaslatok a pilot előtt: VSS-writer-viselkedés valós szerveren (lásd Eltérések F2); a GUI-szerkesztő bővítése varázslókká (jelenleg mezős szerkesztő); a `versions.size_gb` számítása (most `null`); e-mail-kimenő sor perzisztálása.

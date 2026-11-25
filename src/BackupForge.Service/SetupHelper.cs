@@ -118,6 +118,7 @@ public static class SetupHelper
                     log($"orphaned VSS snapshots removed: {deleted.Count}");
                 }
                 catch (Exception ex) when (ex is not OutOfMemoryException) { log("VSS cleanup: " + ex.Message); }
+                finally { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); } // release history.db (pooled handle) before /PURGE
             }
             try
             {

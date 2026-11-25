@@ -1,6 +1,6 @@
 # CR-001 — Javítások a v1 átnézése alapján
 
-**Állapot: NYITOTT (2026-11-24)**
+**Állapot: KÉSZ (2026-11-25)** — részletek: CLAUDE.md „CR-001 — KÉSZ” és „Eltérések a CR-001-től”.
 Ág: `claude/blissful-goldberg-vlt55t` (ugyanaz, mint az F0–F7). A `main`-be olvasztás ezután jön.
 
 A F0–F7 után célzott átnézés készült a törlő kódutakra (mirror-törlés, Versions-megőrzés, staging-takarítás, `.bfpart`, törlési biztosíték, eltávolító) és két CI-kérdésre. A törlési logika egy feladaton belül rendben van: a nem listázható forrás alatt nincs törlés, a reparse pointokat nem követi, a kizárt fájlokat a célon sem törli, a megőrzés csak a minta szerinti mappákat bántja, a staging-takarítás csak a saját névmintájú `.bak`-okat. **A hiba a feladatok közötti átfedésnél van**, és van egy csendes VSS-leromlás.
