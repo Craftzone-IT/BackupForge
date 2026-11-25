@@ -101,6 +101,53 @@ public class CoordinatorTests
     }
 
     [Fact]
+    public async Task Overlapping_folders_serialize_even_with_different_lock_names()
+    {
+        // CR-001 1c.: j1 mirrors into the target root, j2 into <root>\d2 → different lock names, but j2 must wait; j3 (other target) runs
+        var cfg = TestConfigs.Jobs(3, c =>
+        {
+            c.General.MaxParallelJobs = 4;
+            c.Jobs[0].Target!.Subdir = "";
+            c.Jobs[0].Files!.Versioning.Folder = @"Z:1";
+            c.Jobs[2].Target!.TargetId = "t2";
+        });
+        await using var h = new CoordinatorHarness(cfg);
+        var r1 = h.Run("j1");
+        await h.Engine.WaitStartedAsync("j1");
+        var r2 = h.Run("j2");
+        var r3 = h.Run("j3");
+        await h.Engine.WaitStartedAsync("j3");
+        await Task.Delay(100);
+        Assert.False(h.Engine.IsRunning("j2"));
+        Assert.Single(h.Coordinator.Queued);
+        h.Engine.Complete("j1");
+        await h.Engine.WaitStartedAsync("j2");
+        h.Engine.Complete("j2");
+        h.Engine.Complete("j3");
+        await Task.WhenAll(r1.Completion, r2.Completion, r3.Completion).WaitAsync(Wait);
+    }
+
+    [Fact]
+    public void Path_conflicts_need_a_written_folder()
+    {
+        var c = TestConfigs.Jobs(2, c =>
+        {
+            c.Jobs[1].Sources = [new SourceConfig { Path = @"D:\S1\sub" }];                      // both only READ D:\S1
+            c.ResticRepos.Add(new ResticRepoConfig { Id = "r", Location = @"E:\repo", PasswordRef = "p" });
+            c.Jobs.Add(new JobConfig { Id = "ra", Name = "ra", Type = JobTypes.Restic, Sources = [new SourceConfig { Path = @"X:\B\d1" }], Restic = new ResticJobOptions { RepoId = "r" } });
+        });
+        WorkRequest W(string id) => new() { JobId = id, Trigger = "manual" };
+        var p1 = ResourceLocks.PathsFor(c, W("j1"), @"C:\ProgramData\BackupForge");
+        var p2 = ResourceLocks.PathsFor(c, W("j2"), @"C:\ProgramData\BackupForge");
+        var pr = ResourceLocks.PathsFor(c, W("ra"), @"C:\ProgramData\BackupForge");
+        var pm = ResourceLocks.PathsFor(c, W(MaintenanceIds.Repo("r")), @"C:\ProgramData\BackupForge");
+        Assert.False(ResourceLocks.PathsConflict(p1, p2));   // shared source, separate mirrors
+        Assert.True(ResourceLocks.PathsConflict(p1, pr));    // restic reads j1's mirror while j1 writes it
+        Assert.True(ResourceLocks.PathsConflict(pr, pm));    // repository maintenance vs backup
+        Assert.False(ResourceLocks.PathsConflict(p2, pm));
+    }
+
+    [Fact]
     public void Sql_instance_and_target_locks()
     {
         var c = BackupForge.Core.Tests.Config.ConfigFixtures.Example();

@@ -181,6 +181,8 @@ public sealed class JobCoordinator : IAsyncDisposable
                 var p = _pending[i];
                 var locks = LocksFor(p.Request);
                 if (locks.Any(_heldLocks.Contains)) { i++; continue; }
+                var paths = ResourceLocks.PathsFor(_config, p.Request, _paths.Root);
+                if (_active.Values.Concat(toStart).Any(o => ResourceLocks.PathsConflict(paths, o.Paths))) { i++; continue; }
                 _pending.RemoveAt(i);
                 foreach (var l in locks) _heldLocks.Add(l);
                 var job = _config.FindJob(p.Request.JobId);
@@ -188,7 +190,7 @@ public sealed class JobCoordinator : IAsyncDisposable
                     ? "c-" + Guid.NewGuid().ToString("N")[..10]
                     : null);
                 var runId = _history.StartRun(p.Request.JobId, p.Request.Kind, p.Request.Trigger, chainId, _clock.UtcNow);
-                var a = new Active(p, runId, chainId, locks, _clock.UtcNow, CancellationTokenSource.CreateLinkedTokenSource(_shutdown.Token), _config, job);
+                var a = new Active(p, runId, chainId, locks, _clock.UtcNow, CancellationTokenSource.CreateLinkedTokenSource(_shutdown.Token), _config, job) { Paths = paths };
                 _active[p.Request.JobId] = a;
                 toStart.Add(a);
             }
@@ -352,6 +354,8 @@ public sealed class JobCoordinator : IAsyncDisposable
         public long RunId { get; } = runId;
         public string? ChainRunId { get; } = chainRunId;
         public string[] Locks { get; } = locks;
+        /// <summary>CR-001 1c.: the folders this run reads / writes.</summary>
+        public IReadOnlyList<BackupForge.Core.Config.ProtectedPath> Paths { get; init; } = [];
         public DateTimeOffset Since { get; } = since;
         public CancellationTokenSource Cts { get; } = cts;
         public BackupConfig Config { get; } = config;
@@ -405,4 +409,23 @@ public static class ResourceLocks
                 break;
         }
     }
+
+    /// <summary>
+    /// CR-001 1c.: the folders a run touches (mirror, Versions, local repository, staging = written; sources = read),
+    /// from the same <see cref="ProtectedPaths.Collect"/> the validator uses. Maintenance runs touch their repository.
+    /// </summary>
+    public static IReadOnlyList<ProtectedPath> PathsFor(BackupConfig config, WorkRequest request, string dataRoot)
+    {
+        if (MaintenanceIds.RepoIdOf(request.JobId) is { } repoId)
+            return config.FindRepo(repoId) is { } repo && ProtectedPaths.LocalRepoPath(repo.Location) is { } rp
+                ? [new ProtectedPath(rp, request.JobId, PathRoles.Repository)]
+                : [];
+        return [.. ProtectedPaths.Collect(config, dataRoot).Where(p => p.JobId == request.JobId)];
+    }
+
+    /// <summary>Two runs conflict when a folder one of them writes overlaps any folder of the other (reading a folder being written included).</summary>
+    public static bool PathsConflict(IReadOnlyList<ProtectedPath> a, IReadOnlyList<ProtectedPath> b) =>
+        a.Any(x => b.Any(y => (IsWrite(x) || IsWrite(y)) && PathUtil.Overlaps(x.Path, y.Path)));
+
+    private static bool IsWrite(ProtectedPath p) => p.Role != PathRoles.Source;
 }
