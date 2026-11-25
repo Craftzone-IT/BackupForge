@@ -141,14 +141,14 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
 
 ## Következő lépés
 - **Minden fázis (F0–F7) és a CR-001 kész, a CI zöld (Linux + Windows, telepítő-füstteszttel, 0 nem engedélyezett kihagyással).** Ami hátra van, az nem automatizálható itt:
-  1. a `claude/blissful-goldberg-vlt55t` ág beolvasztása a `main`-be (PR, user);
-  2. utána a `docs/MANUAL-TESTS.md` végigvitele (az új C.8 ponttal együtt) egy tiszta Windows Server 2019/2022 VM-en (a 16. pont elfogadási feltételei: GUI-folyamatok, valódi NAS/SMB, SQL Express jogosultságok, e-mailek Outlookban, újraindítás futás közben);
+  1. ~~a `claude/blissful-goldberg-vlt55t` ág beolvasztása a `main`-be~~ — KÉSZ (2026-11-25, PR #1, `d3897fb`);
+  2. **most**: a `docs/MANUAL-TESTS.md` végigvitele (az új C.8 ponttal együtt) egy tiszta Windows Server 2019/2022 VM-en (a 16. pont elfogadási feltételei: GUI-folyamatok, valódi NAS/SMB, SQL Express jogosultságok, e-mailek Outlookban, újraindítás futás közben);
   3. kiadás: `v0.1.0`-szerű tag (user) → `release.yml`;
   4. F8 (BackupPulse-integráció) a másik repóban, a chat CR-je alapján.
+- **A kézi tesztek UTÁN: CR-002 — GUI varázsló** (user-döntés, 2026-11-25). A mostani mezős szerkesztő teszteléshez elég, de nyers kulcsneveket mutat (`kind`, `everymin`, `onsuccess`, `targetid`), a célt kézzel kell beírni, és nem vezet végig. Igény: Cobian / Veeam-szerű „Új feladat → Tovább → Tovább → Befejezés” varázsló (típus → forrás → cél legördülőből vagy „Új cél…” kapcsolatteszttel → mód és megőrzés emberi szöveggel → ütemezés választógombokkal + élő előnézet, láncolással → összegzés + próbafuttatás), haladó beállítások külön „Speciális” fülön, szerkesztés ugyanazzal a varázslóval, átfedés-ellenőrzés lépésenként. A CR-t a chat írja; a kézi tesztek közben felmerülő GUI-észrevételek is bekerülnek.
 - Ismert teendők / javaslatok a pilot előtt: VSS-writer-viselkedés valós szerveren (lásd Eltérések F2); a GUI-szerkesztő bővítése varázslókká (jelenleg mezős szerkesztő); a `versions.size_gb` számítása (most `null`); e-mail-kimenő sor perzisztálása.
 
 ## Döntésre vár (user)
-- **Ág**: minden munka a `claude/blissful-goldberg-vlt55t` ágon van (a környezet csak ide engedett pusholni) — a `main`-be olvasztás (PR) a user döntése.
 - Licenc: MIT (SPEC 18.2 alapértelmezés) — a `LICENSE` a repó gyökerében.
 - Végleges név: maradt a BackupForge (SPEC 18.1; átnevezés: namespace + telepítő AppId/név + dokumentáció).
 - Kódaláírás: nincs (SPEC 18.3) — a telepítő és az exe-k aláíratlanok.
