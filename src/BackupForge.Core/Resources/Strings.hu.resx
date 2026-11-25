@@ -1,0 +1,450 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="schema.unsupported" xml:space="preserve">
+    <value>Nem támogatott konfigséma: {0} (várt: {1})</value>
+  </data>
+  <data name="format.invalid" xml:space="preserve">
+    <value>Érvénytelen JSON: {0}</value>
+  </data>
+  <data name="required" xml:space="preserve">
+    <value>Kötelező mező</value>
+  </data>
+  <data name="id.invalid" xml:space="preserve">
+    <value>Érvénytelen azonosító: '{0}' (megengedett: a-z, 0-9, '-', '_', legfeljebb 64 karakter)</value>
+  </data>
+  <data name="id.duplicate" xml:space="preserve">
+    <value>Ismétlődő azonosító: '{0}'</value>
+  </data>
+  <data name="value.invalid" xml:space="preserve">
+    <value>Érvénytelen érték: '{0}' (lehetséges: {1})</value>
+  </data>
+  <data name="range" xml:space="preserve">
+    <value>Az érték ({0}) a megengedett tartományon kívül esik ({1}–{2})</value>
+  </data>
+  <data name="ref.target" xml:space="preserve">
+    <value>Ismeretlen cél: '{0}'</value>
+  </data>
+  <data name="ref.repo" xml:space="preserve">
+    <value>Ismeretlen restic-tároló: '{0}'</value>
+  </data>
+  <data name="ref.job" xml:space="preserve">
+    <value>Ismeretlen feladat: '{0}'</value>
+  </data>
+  <data name="ref.secret" xml:space="preserve">
+    <value>A(z) '{0}' titok nincs beállítva</value>
+  </data>
+  <data name="chain.cycle" xml:space="preserve">
+    <value>Körkörös lánc: {0}</value>
+  </data>
+  <data name="staging.not_sql" xml:space="preserve">
+    <value>A @staging:{0} csak SQL-feladatra mutathat</value>
+  </data>
+  <data name="target.shared" xml:space="preserve">
+    <value>Ugyanerre a célmappára a(z) '{0}' feladat is ír</value>
+  </data>
+  <data name="path.nested" xml:space="preserve">
+    <value>A forrás és a cél nem lehet egymásban ({0} ↔ {1})</value>
+  </data>
+  <data name="path.not_absolute" xml:space="preserve">
+    <value>Abszolút útvonal kell: '{0}'</value>
+  </data>
+  <data name="path.smb_unc" xml:space="preserve">
+    <value>SMB-célhoz UNC-útvonal kell (\\szerver\megosztás): '{0}'</value>
+  </data>
+  <data name="path.versions_inside" xml:space="preserve">
+    <value>A Versions mappa nem lehet a forrásban vagy a tükörmappában: '{0}'</value>
+  </data>
+  <data name="time.invalid" xml:space="preserve">
+    <value>Érvénytelen időpont: '{0}' (ÓÓ:pp)</value>
+  </data>
+  <data name="day.invalid" xml:space="preserve">
+    <value>Érvénytelen nap: '{0}' (Mon … Sun)</value>
+  </data>
+  <data name="recurrence.invalid" xml:space="preserve">
+    <value>Érvénytelen ütemezés: '{0}' (pl. 'weekly Sun 03:00', 'daily 02:00', 'monthly 1 04:00')</value>
+  </data>
+  <data name="percent.invalid" xml:space="preserve">
+    <value>Érvénytelen százalék: '{0}' (pl. '5%')</value>
+  </data>
+  <data name="versioning.folder_required" xml:space="preserve">
+    <value>Ha a feladat a célgyökérbe ment (üres subdir), a versioning.folder megadása kötelező</value>
+  </data>
+  <data name="block.required" xml:space="preserve">
+    <value>A(z) '{0}' blokk kötelező a(z) {1} típusú feladatnál</value>
+  </data>
+  <data name="sources.empty" xml:space="preserve">
+    <value>Legalább egy forrás kell</value>
+  </data>
+  <data name="sql.selected_empty" xml:space="preserve">
+    <value>'selected' módban az include lista nem lehet üres</value>
+  </data>
+  <data name="email.address_invalid" xml:space="preserve">
+    <value>Érvénytelen e-mail-cím: '{0}'</value>
+  </data>
+  <data name="url.invalid" xml:space="preserve">
+    <value>Érvénytelen URL: '{0}' (http/https)</value>
+  </data>
+  <data name="source.staging_only_restic_files" xml:space="preserve">
+    <value>@staging forrás csak fájl- és restic-feladatban adható meg</value>
+  </data>
+  <data name="sched.every_h" xml:space="preserve">
+    <value>{0} óránként</value>
+  </data>
+  <data name="sched.every_min" xml:space="preserve">
+    <value>{0} percenként</value>
+  </data>
+  <data name="sched.from" xml:space="preserve">
+    <value> {0}-{1}</value>
+  </data>
+  <data name="sched.window" xml:space="preserve">
+    <value> ({0} és {1} között)</value>
+  </data>
+  <data name="sched.daily" xml:space="preserve">
+    <value>naponta {0}</value>
+  </data>
+  <data name="sched.days" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="sched.weekly" xml:space="preserve">
+    <value>hetente, {0} {1}</value>
+  </data>
+  <data name="sched.monthly" xml:space="preserve">
+    <value>havonta, {0}. napon {1}</value>
+  </data>
+  <data name="sched.monthly_last" xml:space="preserve">
+    <value>havonta, az utolsó napon {0}</value>
+  </data>
+  <data name="sched.chained" xml:space="preserve">
+    <value>láncban: {0} után</value>
+  </data>
+  <data name="sched.chained_none" xml:space="preserve">
+    <value>láncban (egy feladat sem indítja)</value>
+  </data>
+  <data name="sched.manual" xml:space="preserve">
+    <value>csak kézzel</value>
+  </data>
+  <data name="day.short" xml:space="preserve">
+    <value>V,H,K,Sze,Cs,P,Szo</value>
+  </data>
+  <data name="day.long" xml:space="preserve">
+    <value>vasárnap,hétfő,kedd,szerda,csütörtök,péntek,szombat</value>
+  </data>
+  <data name="files.summary" xml:space="preserve">
+    <value>{0} másolva, {1} verziózva, {2} törölve · {3}</value>
+  </data>
+  <data name="files.summary_skipped" xml:space="preserve">
+    <value>, {0} kihagyva</value>
+  </data>
+  <data name="files.dryrun" xml:space="preserve">
+    <value>próbafuttatás: {0} másolandó ({3}), {1} verziózandó, {2} törlendő</value>
+  </data>
+  <data name="files.guard" xml:space="preserve">
+    <value>törlési biztosíték: {0} fájl ({1:0.#}%) törlődne — semmi sem törlődött; egyszeri jóváhagyás a GUI-ban vagy --allow-mass-delete</value>
+  </data>
+  <data name="files.source_missing" xml:space="preserve">
+    <value>a forrás nem elérhető: {0}</value>
+  </data>
+  <data name="files.source_empty" xml:space="preserve">
+    <value>a forrás üres: {0} — üres forrást soha nem tükrözünk</value>
+  </data>
+  <data name="files.target_unreachable" xml:space="preserve">
+    <value>a cél nem elérhető: {0}</value>
+  </data>
+  <data name="files.vss_failed" xml:space="preserve">
+    <value>a VSS-pillanatkép nem készült el ({0}) — VSS nélkül mentve</value>
+  </data>
+  <data name="files.vss_required" xml:space="preserve">
+    <value>a VSS-pillanatkép nem készült el ({0}), és vss = required</value>
+  </data>
+  <data name="files.too_many_errors" xml:space="preserve">
+    <value>{1} fájlból {0} nem volt másolható</value>
+  </data>
+  <data name="files.cloud_failed" xml:space="preserve">
+    <value>csak felhőben lévő (OneDrive) fájlok vannak, és cloud_files = fail: {0}</value>
+  </data>
+  <data name="size.b" xml:space="preserve">
+    <value>{0} B</value>
+  </data>
+  <data name="size.kb" xml:space="preserve">
+    <value>{0:0.#} KB</value>
+  </data>
+  <data name="size.mb" xml:space="preserve">
+    <value>{0:0.#} MB</value>
+  </data>
+  <data name="size.gb" xml:space="preserve">
+    <value>{0:0.#} GB</value>
+  </data>
+  <data name="size.tb" xml:space="preserve">
+    <value>{0:0.##} TB</value>
+  </data>
+  <data name="mail.failure" xml:space="preserve">
+    <value>HIBA</value>
+  </data>
+  <data name="mail.warning" xml:space="preserve">
+    <value>FIGYELMEZTETÉS</value>
+  </data>
+  <data name="mail.recovery" xml:space="preserve">
+    <value>HELYREÁLLT</value>
+  </data>
+  <data name="mail.stale" xml:space="preserve">
+    <value>NINCS FRISS MENTÉS</value>
+  </data>
+  <data name="mail.config" xml:space="preserve">
+    <value>KONFIGURÁCIÓS HIBA</value>
+  </data>
+  <data name="mail.test" xml:space="preserve">
+    <value>TESZT</value>
+  </data>
+  <data name="mail.stale_text" xml:space="preserve">
+    <value>{0}: {1:0} órája nincs sikeres mentés (várt gyakoriság: {2:0.#} óra)</value>
+  </data>
+  <data name="mail.config_text" xml:space="preserve">
+    <value>a config.json hibás, a szolgáltatás az utolsó érvényes konfigurációval fut tovább: {0}</value>
+  </data>
+  <data name="mail.test_text" xml:space="preserve">
+    <value>Ez egy tesztüzenet a(z) {0} BackupForge-ból.</value>
+  </data>
+  <data name="mail.job" xml:space="preserve">
+    <value>Feladat</value>
+  </data>
+  <data name="mail.result" xml:space="preserve">
+    <value>Eredmény</value>
+  </data>
+  <data name="mail.start" xml:space="preserve">
+    <value>Kezdés</value>
+  </data>
+  <data name="mail.duration" xml:space="preserve">
+    <value>Időtartam</value>
+  </data>
+  <data name="mail.summary" xml:space="preserve">
+    <value>Összesítő</value>
+  </data>
+  <data name="mail.errors" xml:space="preserve">
+    <value>Az első hibák</value>
+  </data>
+  <data name="mail.more_errors" xml:space="preserve">
+    <value>… és még {0}</value>
+  </data>
+  <data name="mail.log" xml:space="preserve">
+    <value>A futásnapló a gépen</value>
+  </data>
+  <data name="mail.trigger" xml:space="preserve">
+    <value>Indítás</value>
+  </data>
+  <data name="sources.leaf_duplicate" xml:space="preserve">
+    <value>Több forrásnál a forrásmappák neve nem ismétlődhet (a tükörben almappák lesznek): '{0}'</value>
+  </data>
+  <data name="report.title" xml:space="preserve">
+    <value>Heti mentési riport</value>
+  </data>
+  <data name="report.period" xml:space="preserve">
+    <value>Időszak: {0} – {1}</value>
+  </data>
+  <data name="report.overall_ok" xml:space="preserve">
+    <value>RENDBEN</value>
+  </data>
+  <data name="report.overall_warning" xml:space="preserve">
+    <value>FIGYELEM</value>
+  </data>
+  <data name="report.overall_error" xml:space="preserve">
+    <value>HIBA</value>
+  </data>
+  <data name="report.jobs" xml:space="preserve">
+    <value>Feladatok</value>
+  </data>
+  <data name="report.col_job" xml:space="preserve">
+    <value>Feladat</value>
+  </data>
+  <data name="report.col_runs" xml:space="preserve">
+    <value>Futások</value>
+  </data>
+  <data name="report.col_ok" xml:space="preserve">
+    <value>Sikeres</value>
+  </data>
+  <data name="report.col_warning" xml:space="preserve">
+    <value>Figyelmeztetés</value>
+  </data>
+  <data name="report.col_failed" xml:space="preserve">
+    <value>Hibás</value>
+  </data>
+  <data name="report.col_skipped" xml:space="preserve">
+    <value>Kihagyva</value>
+  </data>
+  <data name="report.col_last_ok" xml:space="preserve">
+    <value>Utolsó sikeres</value>
+  </data>
+  <data name="report.col_data" xml:space="preserve">
+    <value>Adat</value>
+  </data>
+  <data name="report.disabled" xml:space="preserve">
+    <value>Letiltott feladatok</value>
+  </data>
+  <data name="report.disabled_since" xml:space="preserve">
+    <value>{0} ({1} óta)</value>
+  </data>
+  <data name="report.stale" xml:space="preserve">
+    <value>Nincs friss sikeres mentés: {0}</value>
+  </data>
+  <data name="report.targets" xml:space="preserve">
+    <value>Célok</value>
+  </data>
+  <data name="report.target_row" xml:space="preserve">
+    <value>{0}: {1} szabad / {2}</value>
+  </data>
+  <data name="report.target_low" xml:space="preserve">
+    <value>a minimum ({0} GB) alatt</value>
+  </data>
+  <data name="report.target_offline" xml:space="preserve">
+    <value>{0}: NEM ELÉRHETŐ {1}</value>
+  </data>
+  <data name="report.versions" xml:space="preserve">
+    <value>Versions mappák</value>
+  </data>
+  <data name="report.versions_row" xml:space="preserve">
+    <value>{0}: {1} mappa, legrégebbi: {2}</value>
+  </data>
+  <data name="report.repos" xml:space="preserve">
+    <value>restic-tárolók</value>
+  </data>
+  <data name="report.repo_row" xml:space="preserve">
+    <value>{0}: utolsó ellenőrzés {1} ({2}), utolsó prune {3} ({4})</value>
+  </data>
+  <data name="report.sql" xml:space="preserve">
+    <value>SQL-adatbázisok</value>
+  </data>
+  <data name="report.sql_row" xml:space="preserve">
+    <value>{0}: utolsó sikeres mentés {1}{2}</value>
+  </data>
+  <data name="report.sql_full" xml:space="preserve">
+    <value> · FULL recovery model naplómentés nélkül</value>
+  </data>
+  <data name="report.sql_checkdb" xml:space="preserve">
+    <value> · utolsó CHECKDB {0} ({1})</value>
+  </data>
+  <data name="report.changes" xml:space="preserve">
+    <value>Konfigurációváltozások a héten</value>
+  </data>
+  <data name="report.none" xml:space="preserve">
+    <value>nincs</value>
+  </data>
+  <data name="report.never" xml:space="preserve">
+    <value>soha</value>
+  </data>
+  <data name="report.config_error" xml:space="preserve">
+    <value>Konfigurációs hiba: {0}</value>
+  </data>
+  <data name="report.guard" xml:space="preserve">
+    <value>törlési biztosíték kioldott: {0}</value>
+  </data>
+  <data name="restic.summary" xml:space="preserve">
+    <value>snapshot {0} · {1} új, {2} módosult fájl · +{3} a tárolóban</value>
+  </data>
+  <data name="restic.no_repo" xml:space="preserve">
+    <value>a tároló nem létezik a megadott helyen — hozd létre (bf repo init {0}), vagy javítsd a helyet</value>
+  </data>
+  <data name="restic.wrong_password" xml:space="preserve">
+    <value>rossz tárolójelszó ({0} titok)</value>
+  </data>
+  <data name="restic.locked" xml:space="preserve">
+    <value>a tárolót egy másik folyamat zárolja: {0}</value>
+  </data>
+  <data name="restic.binary_bad" xml:space="preserve">
+    <value>a restic.exe hiányzik, sérült vagy módosított ({0})</value>
+  </data>
+  <data name="restic.partial" xml:space="preserve">
+    <value>{0} fájl nem volt olvasható</value>
+  </data>
+  <data name="restic.failed" xml:space="preserve">
+    <value>a restic {0} kóddal állt le: {1}</value>
+  </data>
+  <data name="restic.check_ok" xml:space="preserve">
+    <value>ellenőrzés rendben ({0} beolvasva)</value>
+  </data>
+  <data name="restic.check_failed" xml:space="preserve">
+    <value>az ellenőrzés {0} hibát talált</value>
+  </data>
+  <data name="restic.forget" xml:space="preserve">
+    <value>forget: {0} snapshot törölve, {1} megtartva; prune kész</value>
+  </data>
+  <data name="restic.append_only" xml:space="preserve">
+    <value>append-only szerver: a forget/prune a szerver oldalán fut</value>
+  </data>
+  <data name="restic.missing_secret" xml:space="preserve">
+    <value>a(z) {0} titok nincs beállítva</value>
+  </data>
+  <data name="restic.restore" xml:space="preserve">
+    <value>{0} fájl visszaállítva ({1}) ide: {2}</value>
+  </data>
+  <data name="sql.summary" xml:space="preserve">
+    <value>{0}/{1} adatbázis rendben · {2}</value>
+  </data>
+  <data name="sql.summary_warn" xml:space="preserve">
+    <value> · {0} figyelmeztetés: {1}</value>
+  </data>
+  <data name="sql.full_recovery" xml:space="preserve">
+    <value>{0}: FULL recovery model, de nincs naplómentés — a naplófájl korlátlanul nő. Állítsd SIMPLE-re, vagy kapcsold be a naplómentést (v2).</value>
+  </data>
+  <data name="sql.no_space" xml:space="preserve">
+    <value>nincs elég hely az átmeneti mappában: {0} kell, {1} szabad ({2})</value>
+  </data>
+  <data name="sql.no_permission" xml:space="preserve">
+    <value>{0}: nincs jogosultság (új adatbázis?) — futtasd a Jogosultságok beállítását (bf sql grant {1})</value>
+  </data>
+  <data name="sql.connect_failed" xml:space="preserve">
+    <value>nem sikerült kapcsolódni: {0}: {1}</value>
+  </data>
+  <data name="sql.no_databases" xml:space="preserve">
+    <value>nincs mentendő adatbázis: {0}</value>
+  </data>
+  <data name="sql.checkdb_ok" xml:space="preserve">
+    <value>CHECKDB rendben: {0} adatbázis</value>
+  </data>
+  <data name="sql.checkdb_failed" xml:space="preserve">
+    <value>a CHECKDB hibát talált: {0}</value>
+  </data>
+  <data name="sql.express_no_compression" xml:space="preserve">
+    <value>az edíció nem támogatja a mentés tömörítését — tömörítés nélkül mentünk</value>
+  </data>
+  <data name="path.overlap_job" xml:space="preserve">
+    <value>A(z) {0} {1} átfedi a(z) {2} {3} útvonalát: {4}</value>
+  </data>
+  <data name="role.mirror" xml:space="preserve">
+    <value>tükörmappa</value>
+  </data>
+  <data name="role.versions" xml:space="preserve">
+    <value>Versions mappa</value>
+  </data>
+  <data name="role.source" xml:space="preserve">
+    <value>forrás</value>
+  </data>
+  <data name="role.restic_repo" xml:space="preserve">
+    <value>restic-tároló</value>
+  </data>
+  <data name="role.staging" xml:space="preserve">
+    <value>SQL átmeneti mappa</value>
+  </data>
+  <data name="role.data_root" xml:space="preserve">
+    <value>adatmappa</value>
+  </data>
+  <data name="job.backupforge" xml:space="preserve">
+    <value>BackupForge</value>
+  </data>
+  <data name="files.protected_skipped" xml:space="preserve">
+    <value>{0} tétel nem törlődött, mert egy másik feladathoz tartozik ({1})</value>
+  </data>
+  <data name="files.vss_no_writers" xml:space="preserve">
+    <value>VSS: a writerek nem válaszoltak ({0}), a pillanatkép alkalmazás-konzisztencia nélkül készült</value>
+  </data>
+</root>

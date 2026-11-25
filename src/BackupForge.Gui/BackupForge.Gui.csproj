@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>BackupForge</AssemblyName>
+    <RootNamespace>BackupForge.Gui</RootNamespace>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <ProjectReference Include="..\BackupForge.Core\BackupForge.Core.csproj" />
+    <ProjectReference Include="..\BackupForge.Ipc\BackupForge.Ipc.csproj" />
+    <ProjectReference Include="..\BackupForge.Gui.Core\BackupForge.Gui.Core.csproj" />
+  </ItemGroup>
+</Project>

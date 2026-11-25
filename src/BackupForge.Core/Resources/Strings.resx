@@ -1,0 +1,450 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="schema.unsupported" xml:space="preserve">
+    <value>Unsupported config schema {0} (expected {1})</value>
+  </data>
+  <data name="format.invalid" xml:space="preserve">
+    <value>Invalid JSON: {0}</value>
+  </data>
+  <data name="required" xml:space="preserve">
+    <value>Required field</value>
+  </data>
+  <data name="id.invalid" xml:space="preserve">
+    <value>Invalid identifier '{0}' (allowed: a-z, 0-9, '-', '_', at most 64 characters)</value>
+  </data>
+  <data name="id.duplicate" xml:space="preserve">
+    <value>Duplicate identifier '{0}'</value>
+  </data>
+  <data name="value.invalid" xml:space="preserve">
+    <value>Invalid value '{0}' (allowed: {1})</value>
+  </data>
+  <data name="range" xml:space="preserve">
+    <value>Value {0} is out of range ({1}–{2})</value>
+  </data>
+  <data name="ref.target" xml:space="preserve">
+    <value>Unknown target '{0}'</value>
+  </data>
+  <data name="ref.repo" xml:space="preserve">
+    <value>Unknown restic repository '{0}'</value>
+  </data>
+  <data name="ref.job" xml:space="preserve">
+    <value>Unknown job '{0}'</value>
+  </data>
+  <data name="ref.secret" xml:space="preserve">
+    <value>Secret '{0}' is not set</value>
+  </data>
+  <data name="chain.cycle" xml:space="preserve">
+    <value>Circular chain: {0}</value>
+  </data>
+  <data name="staging.not_sql" xml:space="preserve">
+    <value>@staging:{0} must refer to an SQL job</value>
+  </data>
+  <data name="target.shared" xml:space="preserve">
+    <value>Job '{0}' already writes to the same target folder</value>
+  </data>
+  <data name="path.nested" xml:space="preserve">
+    <value>Source and target must not contain each other ({0} ↔ {1})</value>
+  </data>
+  <data name="path.not_absolute" xml:space="preserve">
+    <value>Absolute path required: '{0}'</value>
+  </data>
+  <data name="path.smb_unc" xml:space="preserve">
+    <value>An SMB target needs a UNC path (\\server\share): '{0}'</value>
+  </data>
+  <data name="path.versions_inside" xml:space="preserve">
+    <value>The Versions folder must not be inside the source or the mirror folder: '{0}'</value>
+  </data>
+  <data name="time.invalid" xml:space="preserve">
+    <value>Invalid time '{0}' (HH:mm)</value>
+  </data>
+  <data name="day.invalid" xml:space="preserve">
+    <value>Invalid day '{0}' (Mon … Sun)</value>
+  </data>
+  <data name="recurrence.invalid" xml:space="preserve">
+    <value>Invalid schedule '{0}' (e.g. 'weekly Sun 03:00', 'daily 02:00', 'monthly 1 04:00')</value>
+  </data>
+  <data name="percent.invalid" xml:space="preserve">
+    <value>Invalid percentage '{0}' (e.g. '5%')</value>
+  </data>
+  <data name="versioning.folder_required" xml:space="preserve">
+    <value>When the job writes to the target root (empty subdir), versioning.folder is required</value>
+  </data>
+  <data name="block.required" xml:space="preserve">
+    <value>The '{0}' block is required for {1} jobs</value>
+  </data>
+  <data name="sources.empty" xml:space="preserve">
+    <value>At least one source is required</value>
+  </data>
+  <data name="sql.selected_empty" xml:space="preserve">
+    <value>With mode 'selected' the include list must not be empty</value>
+  </data>
+  <data name="email.address_invalid" xml:space="preserve">
+    <value>Invalid e-mail address '{0}'</value>
+  </data>
+  <data name="url.invalid" xml:space="preserve">
+    <value>Invalid URL '{0}' (http/https)</value>
+  </data>
+  <data name="source.staging_only_restic_files" xml:space="preserve">
+    <value>@staging sources are allowed only in files and restic jobs</value>
+  </data>
+  <data name="sched.every_h" xml:space="preserve">
+    <value>every {0} h</value>
+  </data>
+  <data name="sched.every_min" xml:space="preserve">
+    <value>every {0} min</value>
+  </data>
+  <data name="sched.from" xml:space="preserve">
+    <value> from {0}</value>
+  </data>
+  <data name="sched.window" xml:space="preserve">
+    <value> (between {0} and {1})</value>
+  </data>
+  <data name="sched.daily" xml:space="preserve">
+    <value>daily at {0}</value>
+  </data>
+  <data name="sched.days" xml:space="preserve">
+    <value>{0} at {1}</value>
+  </data>
+  <data name="sched.weekly" xml:space="preserve">
+    <value>weekly on {0} at {1}</value>
+  </data>
+  <data name="sched.monthly" xml:space="preserve">
+    <value>monthly on day {0} at {1}</value>
+  </data>
+  <data name="sched.monthly_last" xml:space="preserve">
+    <value>monthly on the last day at {0}</value>
+  </data>
+  <data name="sched.chained" xml:space="preserve">
+    <value>chained: after {0}</value>
+  </data>
+  <data name="sched.chained_none" xml:space="preserve">
+    <value>chained (no job triggers it)</value>
+  </data>
+  <data name="sched.manual" xml:space="preserve">
+    <value>manual only</value>
+  </data>
+  <data name="day.short" xml:space="preserve">
+    <value>Sun,Mon,Tue,Wed,Thu,Fri,Sat</value>
+  </data>
+  <data name="day.long" xml:space="preserve">
+    <value>Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday</value>
+  </data>
+  <data name="files.summary" xml:space="preserve">
+    <value>{0} copied, {1} versioned, {2} deleted · {3}</value>
+  </data>
+  <data name="files.summary_skipped" xml:space="preserve">
+    <value>, {0} skipped</value>
+  </data>
+  <data name="files.dryrun" xml:space="preserve">
+    <value>dry-run: {0} to copy ({3}), {1} to version, {2} to delete</value>
+  </data>
+  <data name="files.guard" xml:space="preserve">
+    <value>delete guard: {0} files ({1:0.#}%) would be deleted — nothing deleted; approve once in the GUI or run with --allow-mass-delete</value>
+  </data>
+  <data name="files.source_missing" xml:space="preserve">
+    <value>source not reachable: {0}</value>
+  </data>
+  <data name="files.source_empty" xml:space="preserve">
+    <value>source is empty: {0} — an empty source is never mirrored</value>
+  </data>
+  <data name="files.target_unreachable" xml:space="preserve">
+    <value>target not reachable: {0}</value>
+  </data>
+  <data name="files.vss_failed" xml:space="preserve">
+    <value>VSS snapshot failed ({0}) — copied without VSS</value>
+  </data>
+  <data name="files.vss_required" xml:space="preserve">
+    <value>VSS snapshot failed ({0}) and vss = required</value>
+  </data>
+  <data name="files.too_many_errors" xml:space="preserve">
+    <value>{0} of {1} files could not be copied</value>
+  </data>
+  <data name="files.cloud_failed" xml:space="preserve">
+    <value>cloud-only (OneDrive) files present and cloud_files = fail: {0}</value>
+  </data>
+  <data name="size.b" xml:space="preserve">
+    <value>{0} B</value>
+  </data>
+  <data name="size.kb" xml:space="preserve">
+    <value>{0:0.#} KB</value>
+  </data>
+  <data name="size.mb" xml:space="preserve">
+    <value>{0:0.#} MB</value>
+  </data>
+  <data name="size.gb" xml:space="preserve">
+    <value>{0:0.#} GB</value>
+  </data>
+  <data name="size.tb" xml:space="preserve">
+    <value>{0:0.##} TB</value>
+  </data>
+  <data name="mail.failure" xml:space="preserve">
+    <value>ERROR</value>
+  </data>
+  <data name="mail.warning" xml:space="preserve">
+    <value>WARNING</value>
+  </data>
+  <data name="mail.recovery" xml:space="preserve">
+    <value>RECOVERED</value>
+  </data>
+  <data name="mail.stale" xml:space="preserve">
+    <value>NO RECENT BACKUP</value>
+  </data>
+  <data name="mail.config" xml:space="preserve">
+    <value>CONFIGURATION ERROR</value>
+  </data>
+  <data name="mail.test" xml:space="preserve">
+    <value>TEST</value>
+  </data>
+  <data name="mail.stale_text" xml:space="preserve">
+    <value>{0}: no successful backup for {1:0} hours (expected every {2:0.#} h)</value>
+  </data>
+  <data name="mail.config_text" xml:space="preserve">
+    <value>config.json is invalid, the service keeps running with the last valid configuration: {0}</value>
+  </data>
+  <data name="mail.test_text" xml:space="preserve">
+    <value>This is a test message from BackupForge on {0}.</value>
+  </data>
+  <data name="mail.job" xml:space="preserve">
+    <value>Job</value>
+  </data>
+  <data name="mail.result" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="mail.start" xml:space="preserve">
+    <value>Started</value>
+  </data>
+  <data name="mail.duration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="mail.summary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="mail.errors" xml:space="preserve">
+    <value>First errors</value>
+  </data>
+  <data name="mail.more_errors" xml:space="preserve">
+    <value>… and {0} more</value>
+  </data>
+  <data name="mail.log" xml:space="preserve">
+    <value>Run log on the server</value>
+  </data>
+  <data name="mail.trigger" xml:space="preserve">
+    <value>Trigger</value>
+  </data>
+  <data name="sources.leaf_duplicate" xml:space="preserve">
+    <value>With several sources every source folder name must be unique (they become subfolders of the mirror): '{0}'</value>
+  </data>
+  <data name="report.title" xml:space="preserve">
+    <value>Weekly backup report</value>
+  </data>
+  <data name="report.period" xml:space="preserve">
+    <value>Period: {0} – {1}</value>
+  </data>
+  <data name="report.overall_ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="report.overall_warning" xml:space="preserve">
+    <value>WARNING</value>
+  </data>
+  <data name="report.overall_error" xml:space="preserve">
+    <value>ERROR</value>
+  </data>
+  <data name="report.jobs" xml:space="preserve">
+    <value>Jobs</value>
+  </data>
+  <data name="report.col_job" xml:space="preserve">
+    <value>Job</value>
+  </data>
+  <data name="report.col_runs" xml:space="preserve">
+    <value>Runs</value>
+  </data>
+  <data name="report.col_ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="report.col_warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="report.col_failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="report.col_skipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="report.col_last_ok" xml:space="preserve">
+    <value>Last success</value>
+  </data>
+  <data name="report.col_data" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="report.disabled" xml:space="preserve">
+    <value>Disabled jobs</value>
+  </data>
+  <data name="report.disabled_since" xml:space="preserve">
+    <value>{0} (since {1})</value>
+  </data>
+  <data name="report.stale" xml:space="preserve">
+    <value>No recent successful backup: {0}</value>
+  </data>
+  <data name="report.targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="report.target_row" xml:space="preserve">
+    <value>{0}: {1} free of {2}</value>
+  </data>
+  <data name="report.target_low" xml:space="preserve">
+    <value>below the minimum ({0} GB)</value>
+  </data>
+  <data name="report.target_offline" xml:space="preserve">
+    <value>{0}: NOT REACHABLE {1}</value>
+  </data>
+  <data name="report.versions" xml:space="preserve">
+    <value>Versions folders</value>
+  </data>
+  <data name="report.versions_row" xml:space="preserve">
+    <value>{0}: {1} folders, oldest {2}</value>
+  </data>
+  <data name="report.repos" xml:space="preserve">
+    <value>restic repositories</value>
+  </data>
+  <data name="report.repo_row" xml:space="preserve">
+    <value>{0}: last check {1} ({2}), last prune {3} ({4})</value>
+  </data>
+  <data name="report.sql" xml:space="preserve">
+    <value>SQL databases</value>
+  </data>
+  <data name="report.sql_row" xml:space="preserve">
+    <value>{0}: last success {1}{2}</value>
+  </data>
+  <data name="report.sql_full" xml:space="preserve">
+    <value> · FULL recovery model without log backups</value>
+  </data>
+  <data name="report.sql_checkdb" xml:space="preserve">
+    <value> · last CHECKDB {0} ({1})</value>
+  </data>
+  <data name="report.changes" xml:space="preserve">
+    <value>Configuration changes this week</value>
+  </data>
+  <data name="report.none" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="report.never" xml:space="preserve">
+    <value>never</value>
+  </data>
+  <data name="report.config_error" xml:space="preserve">
+    <value>Configuration error: {0}</value>
+  </data>
+  <data name="report.guard" xml:space="preserve">
+    <value>delete guard tripped: {0}</value>
+  </data>
+  <data name="restic.summary" xml:space="preserve">
+    <value>snapshot {0} · {1} new, {2} changed · +{3} in the repository</value>
+  </data>
+  <data name="restic.no_repo" xml:space="preserve">
+    <value>the repository does not exist at the configured location — create it (bf repo init {0}) or fix the location</value>
+  </data>
+  <data name="restic.wrong_password" xml:space="preserve">
+    <value>wrong repository password (secret {0})</value>
+  </data>
+  <data name="restic.locked" xml:space="preserve">
+    <value>the repository is locked by another process: {0}</value>
+  </data>
+  <data name="restic.binary_bad" xml:space="preserve">
+    <value>restic.exe is missing, damaged or modified ({0})</value>
+  </data>
+  <data name="restic.partial" xml:space="preserve">
+    <value>{0} file(s) could not be read</value>
+  </data>
+  <data name="restic.failed" xml:space="preserve">
+    <value>restic exited with code {0}: {1}</value>
+  </data>
+  <data name="restic.check_ok" xml:space="preserve">
+    <value>check ok (read {0})</value>
+  </data>
+  <data name="restic.check_failed" xml:space="preserve">
+    <value>check found {0} error(s)</value>
+  </data>
+  <data name="restic.forget" xml:space="preserve">
+    <value>forget: {0} snapshot(s) removed, {1} kept; prune done</value>
+  </data>
+  <data name="restic.append_only" xml:space="preserve">
+    <value>append-only server: forget/prune runs on the server side</value>
+  </data>
+  <data name="restic.missing_secret" xml:space="preserve">
+    <value>secret {0} is not set</value>
+  </data>
+  <data name="restic.restore" xml:space="preserve">
+    <value>restored {0} file(s), {1} to {2}</value>
+  </data>
+  <data name="sql.summary" xml:space="preserve">
+    <value>{0}/{1} databases ok · {2}</value>
+  </data>
+  <data name="sql.summary_warn" xml:space="preserve">
+    <value> · {0} warning(s): {1}</value>
+  </data>
+  <data name="sql.full_recovery" xml:space="preserve">
+    <value>{0}: FULL recovery model, but no log backup — the log file grows without limit. Switch to SIMPLE, or enable log backups (v2).</value>
+  </data>
+  <data name="sql.no_space" xml:space="preserve">
+    <value>not enough space in the staging folder: {0} needed, {1} free ({2})</value>
+  </data>
+  <data name="sql.no_permission" xml:space="preserve">
+    <value>{0}: no permission (new database?) — run "Set permissions" (bf sql grant {1})</value>
+  </data>
+  <data name="sql.connect_failed" xml:space="preserve">
+    <value>cannot connect to {0}: {1}</value>
+  </data>
+  <data name="sql.no_databases" xml:space="preserve">
+    <value>no database to back up on {0}</value>
+  </data>
+  <data name="sql.checkdb_ok" xml:space="preserve">
+    <value>CHECKDB ok: {0} database(s)</value>
+  </data>
+  <data name="sql.checkdb_failed" xml:space="preserve">
+    <value>CHECKDB found problems in {0}</value>
+  </data>
+  <data name="sql.express_no_compression" xml:space="preserve">
+    <value>the edition does not support backup compression — backing up uncompressed</value>
+  </data>
+  <data name="path.overlap_job" xml:space="preserve">
+    <value>The {0} {1} overlaps the {3} {4} of {2}</value>
+  </data>
+  <data name="role.mirror" xml:space="preserve">
+    <value>mirror folder</value>
+  </data>
+  <data name="role.versions" xml:space="preserve">
+    <value>Versions folder</value>
+  </data>
+  <data name="role.source" xml:space="preserve">
+    <value>source</value>
+  </data>
+  <data name="role.restic_repo" xml:space="preserve">
+    <value>restic repository</value>
+  </data>
+  <data name="role.staging" xml:space="preserve">
+    <value>SQL staging folder</value>
+  </data>
+  <data name="role.data_root" xml:space="preserve">
+    <value>data folder</value>
+  </data>
+  <data name="job.backupforge" xml:space="preserve">
+    <value>BackupForge</value>
+  </data>
+  <data name="files.protected_skipped" xml:space="preserve">
+    <value>{0} item(s) were not deleted because they belong to another job ({1})</value>
+  </data>
+  <data name="files.vss_no_writers" xml:space="preserve">
+    <value>VSS: the writers did not respond ({0}); the snapshot was taken without application consistency</value>
+  </data>
+</root>

@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "instance_name": "SRV01 mentés",
+  "language": "hu",
+  "general": {
+    "max_parallel_jobs": 2,
+    "history_retention_days": 400,
+    "log_retention_days": 30
+  },
+  "targets": [
+    { "id": "nas1", "type": "smb", "path": "\\\\192.168.1.10\\backup\\srv01", "username": "nas\\backupuser", "password_ref": "target:nas1", "min_free_gb": 50 },
+    { "id": "usb", "type": "local", "path": "X:\\Mentes", "min_free_gb": 20 }
+  ],
+  "restic_repos": [
+    { "id": "offsite", "location": "sftp:backup@storage.example.com:/srv01", "password_ref": "restic:offsite",
+      "env_refs": { }, "append_only_server": false,
+      "retention": { "keep_last": 3, "keep_daily": 14, "keep_weekly": 8, "keep_monthly": 12, "keep_yearly": 2 },
+      "maintenance": { "forget_prune": "weekly Sun 03:00", "check": "weekly Sat 05:00", "check_read_data_subset": "5%" } }
+  ],
+  "jobs": [
+    {
+      "id": "company-mirror", "name": "Céges adatok → NAS", "type": "files", "enabled": true,
+      "schedule": { "kind": "interval", "every_min": 240, "start": "06:15", "window": null },
+      "sources": [ { "path": "D:\\Company", "excludes": ["*.tmp", "~$*", "Thumbs.db", "\\$RECYCLE.BIN\\"] } ],
+      "target": { "target_id": "nas1", "subdir": "Company" },
+      "files": {
+        "mode": "mirror",
+        "versioning": { "enabled": true, "folder": null, "keep_days": 21, "max_versions_per_file": null },
+        "vss": "when_available",
+        "delete_guard_pct": 20,
+        "delete_guard_min_files": 50,
+        "compare": "size_mtime"
+      },
+      "expected_interval_h": 4,
+      "notify": "default"
+    },
+    {
+      "id": "sql-main", "name": "SQL: SQLEXPRESS", "type": "sql", "enabled": true,
+      "schedule": { "kind": "daily", "times": ["12:30", "22:30"] },
+      "sql": {
+        "instance": ".\\SQLEXPRESS", "auth": "windows", "login_ref": null,
+        "databases": { "mode": "all_user", "include": [], "exclude": [], "include_system": true },
+        "verify": true, "copy_only": false, "compression": "auto",
+        "keep_local": 2, "checkdb": "weekly Sun 01:00"
+      },
+      "on_success": ["sql-to-offsite"]
+    },
+    {
+      "id": "sql-to-offsite", "name": "SQL-mentések → offsite", "type": "restic", "enabled": true,
+      "schedule": { "kind": "chained" },
+      "sources": [ { "path": "@staging:sql-main" } ],
+      "restic": { "repo_id": "offsite", "vss": "never", "tags": ["sql"] }
+    }
+  ],
+  "notifications": {
+    "email": {
+      "enabled": true, "smtp_host": "smtp.office365.com", "smtp_port": 587, "security": "starttls",
+      "username": "system@example.com", "password_ref": "smtp", "from": "system@example.com",
+      "to": ["it@example.com"],
+      "on_failure": true, "on_warning": true, "on_recovery": true,
+      "weekly_report": "Sun 06:30"
+    },
+    "event_log": true,
+    "heartbeat_url": null
+  }
+}

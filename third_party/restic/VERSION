@@ -1,0 +1,8 @@
+# Pinned restic release (SPEC 7.1). tools/fetch_restic.py downloads the official Windows build,
+# verifies it against the release's SHA256SUMS and against the pins below, and extracts restic.exe.
+version=0.20.0
+zip=restic_0.20.0_windows_amd64.zip
+url=https://github.com/restic/restic/releases/download/v0.20.0/restic_0.20.0_windows_amd64.zip
+sums_url=https://github.com/restic/restic/releases/download/v0.20.0/SHA256SUMS
+zip_sha256=bba9061c3dce081701ab353ec8cb73a78be73b71a538aad560f2d1067602b7fe
+exe_sha256=2683eb2b061f11568b9132ac0242f183ba4b3a0ed7630f1186a57e889c82a0e2

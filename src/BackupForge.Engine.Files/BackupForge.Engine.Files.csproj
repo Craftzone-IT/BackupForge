@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" />
+    <ProjectReference Include="..\BackupForge.Core\BackupForge.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="BackupForge.Engine.Files.Tests" />
+  </ItemGroup>
+</Project>

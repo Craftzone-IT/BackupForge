@@ -9,3 +9,5 @@ publish/
 installer/Output/
 third_party/restic/*.exe
 third_party/restic/*.zip
+third_party/restic/restic
+third_party/restic/*.bz2

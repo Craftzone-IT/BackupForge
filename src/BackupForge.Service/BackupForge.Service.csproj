@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>BackupForge.Service</AssemblyName>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+    <PackageReference Include="MailKit" />
+    <ProjectReference Include="..\BackupForge.Core\BackupForge.Core.csproj" />
+    <ProjectReference Include="..\BackupForge.Engine.Files\BackupForge.Engine.Files.csproj" />
+    <ProjectReference Include="..\BackupForge.Engine.Restic\BackupForge.Engine.Restic.csproj" />
+    <ProjectReference Include="..\BackupForge.Engine.Sql\BackupForge.Engine.Sql.csproj" />
+    <ProjectReference Include="..\BackupForge.Windows\BackupForge.Windows.csproj" />
+    <ProjectReference Include="..\BackupForge.Ipc\BackupForge.Ipc.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\third_party\restic\restic.exe" Link="restic.exe" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\third_party\restic\restic.exe')" />
+    <None Include="..\..\third_party\restic\LICENSE" Link="restic-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="BackupForge.Service.Tests" />
+    <InternalsVisibleTo Include="BackupForge.Integration.Tests" />
+  </ItemGroup>
+</Project>

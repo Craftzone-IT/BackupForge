@@ -1,0 +1,285 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="append_only_hint" xml:space="preserve">
+    <value>Zsarolóvírus elleni védelem: a második másolathoz rest-server --append-only (vagy változtathatatlan objektumtár) javasolt; ilyenkor a forget/prune a szerveren fut.</value>
+  </data>
+  <data name="below_min" xml:space="preserve">
+    <value>a minimum alatt</value>
+  </data>
+  <data name="confirm_cancel" xml:space="preserve">
+    <value>Megszakítod a futó '{0}' feladatot?</value>
+  </data>
+  <data name="confirm_grant" xml:space="preserve">
+    <value>Az alábbi T-SQL a saját Windows-loginoddal fut (sysadmin jog kell). Folytatod?</value>
+  </data>
+  <data name="confirm_mass_delete" xml:space="preserve">
+    <value>Engedélyezed, hogy a(z) '{0}' következő futása a törlési biztosítéknál több fájlt töröljön (egyszeri jóváhagyás)?</value>
+  </data>
+  <data name="confirm_remove_job" xml:space="preserve">
+    <value>Törlöd a(z) '{0}' feladatot? (A célon lévő mentésekhez nem nyúl.)</value>
+  </data>
+  <data name="confirm_remove_repo" xml:space="preserve">
+    <value>Eltávolítod a(z) '{0}' tárolót a konfigurációból? (Magát a tárolót nem törli.)</value>
+  </data>
+  <data name="confirm_remove_target" xml:space="preserve">
+    <value>Eltávolítod a(z) '{0}' célt?</value>
+  </data>
+  <data name="confirm_repo_init" xml:space="preserve">
+    <value>ÚJ, üres restic-tárolót hozol létre itt: {0}? A jelszót a program generálja — mentsd el biztonságos helyre, nélküle a mentés nem állítható vissza.</value>
+  </data>
+  <data name="confirm_restore_original" xml:space="preserve">
+    <value>Visszaállítás az EREDETI helyre? A meglévő fájlok felülíródnak — a felülírt fájlok a …_RestoreBackup_&lt;időbélyeg&gt; mappába kerülnek.</value>
+  </data>
+  <data name="dryrun_running" xml:space="preserve">
+    <value>próbafuttatás folyamatban…</value>
+  </data>
+  <data name="dryrun_uses_saved" xml:space="preserve">
+    <value>A próbafuttatás a MENTETT konfigurációval fut. Folytatod mentés nélkül?</value>
+  </data>
+  <data name="exported" xml:space="preserve">
+    <value>Exportálva: {0} (titkok nélkül).</value>
+  </data>
+  <data name="full_recovery_hint" xml:space="preserve">
+    <value>FULL recovery naplómentés nélkül: a naplófájl nő — állítsd SIMPLE-re vagy mentsd a naplót</value>
+  </data>
+  <data name="grant_done" xml:space="preserve">
+    <value>Jogosultságok beállítva ({0} adatbázis).</value>
+  </data>
+  <data name="imported" xml:space="preserve">
+    <value>Konfiguráció importálva.</value>
+  </data>
+  <data name="imported_missing" xml:space="preserve">
+    <value>Konfiguráció importálva. Ezeket a jelszavakat add meg a Célok / Értesítések oldalon: {0}</value>
+  </data>
+  <data name="password_saved" xml:space="preserve">
+    <value>Jelszó elmentve (visszaolvasni nem lehet).</value>
+  </data>
+  <data name="queued" xml:space="preserve">
+    <value>sorban</value>
+  </data>
+  <data name="recovery_sheet" xml:space="preserve">
+    <value>BackupForge — restic-tároló helyreállítási lap
+
+Hely: {0}
+Jelszó: {1}
+Létrehozva: {2}, gép: {3}
+
+E jelszó nélkül a mentés NEM állítható vissza. Tárold jelszókezelőben vagy széfben.</value>
+  </data>
+  <data name="recovery_sheet_title" xml:space="preserve">
+    <value>Helyreállítási lap — most nyomtasd ki vagy mentsd el, a jelszó csak egyszer látszik</value>
+  </data>
+  <data name="repo_created" xml:space="preserve">
+    <value>A tároló létrejött.</value>
+  </data>
+  <data name="repo_location_missing" xml:space="preserve">
+    <value>Előbb add meg a tároló helyét.</value>
+  </data>
+  <data name="restore_running" xml:space="preserve">
+    <value>visszaállítás folyamatban…</value>
+  </data>
+  <data name="restore_target_missing" xml:space="preserve">
+    <value>Válassz célmappát (benne egy új Restore_&lt;időpont&gt; mappa készül).</value>
+  </data>
+  <data name="running_phase" xml:space="preserve">
+    <value>fut: {0} {1}</value>
+  </data>
+  <data name="save_failed" xml:space="preserve">
+    <value>A konfiguráció nem lett elmentve:</value>
+  </data>
+  <data name="saved" xml:space="preserve">
+    <value>Konfiguráció elmentve.</value>
+  </data>
+  <data name="state_disabled" xml:space="preserve">
+    <value>LETILTVA</value>
+  </data>
+  <data name="state_idle" xml:space="preserve">
+    <value>vár</value>
+  </data>
+  <data name="state_stale" xml:space="preserve">
+    <value>NINCS FRISS MENTÉS</value>
+  </data>
+  <data name="target_line" xml:space="preserve">
+    <value>{0}: {1} GB szabad / {2} GB</value>
+  </data>
+  <data name="target_offline" xml:space="preserve">
+    <value>{0}: NEM ELÉRHETŐ ({1})</value>
+  </data>
+  <data name="test_failed" xml:space="preserve">
+    <value>{0}: nem elérhető — {1} (a teszt fiókja: {2})</value>
+  </data>
+  <data name="test_mail_sent" xml:space="preserve">
+    <value>Teszt e-mail elküldve.</value>
+  </data>
+  <data name="test_ok" xml:space="preserve">
+    <value>{0}: elérhető, {1} GB szabad (a teszt fiókja: {2})</value>
+  </data>
+  <data name="warn_config" xml:space="preserve">
+    <value>Konfigurációs hiba: {0}</value>
+  </data>
+  <data name="warn_disabled" xml:space="preserve">
+    <value>Letiltott feladat: {0} ({1} óta)</value>
+  </data>
+  <data name="warn_guard" xml:space="preserve">
+    <value>Törlési biztosíték kioldott: {0} — ellenőrizd a forrást, utána egyszeri jóváhagyás</value>
+  </data>
+  <data name="warn_stale" xml:space="preserve">
+    <value>Nincs friss sikeres mentés: {0}</value>
+  </data>
+  <data name="l_approve_delete" xml:space="preserve">
+    <value>Tömeges törlés egyszeri jóváhagyása</value>
+  </data>
+  <data name="l_browse" xml:space="preserve">
+    <value>Tallózás…</value>
+  </data>
+  <data name="l_cancel_run" xml:space="preserve">
+    <value>Megszakítás</value>
+  </data>
+  <data name="l_discover" xml:space="preserve">
+    <value>Példányok felderítése</value>
+  </data>
+  <data name="l_dryrun" xml:space="preserve">
+    <value>Próbafuttatás</value>
+  </data>
+  <data name="l_email_enabled" xml:space="preserve">
+    <value>E-mail-értesítések</value>
+  </data>
+  <data name="l_enabled" xml:space="preserve">
+    <value>engedélyezve</value>
+  </data>
+  <data name="l_existing_password" xml:space="preserve">
+    <value>meglévő tároló jelszava</value>
+  </data>
+  <data name="l_export" xml:space="preserve">
+    <value>Konfiguráció exportálása…</value>
+  </data>
+  <data name="l_grant" xml:space="preserve">
+    <value>Jogosultságok beállítása</value>
+  </data>
+  <data name="l_import" xml:space="preserve">
+    <value>Konfiguráció importálása…</value>
+  </data>
+  <data name="l_job" xml:space="preserve">
+    <value>Feladat</value>
+  </data>
+  <data name="l_job_basic" xml:space="preserve">
+    <value>Feladat</value>
+  </data>
+  <data name="l_last_run" xml:space="preserve">
+    <value>Utolsó futás</value>
+  </data>
+  <data name="l_name" xml:space="preserve">
+    <value>név</value>
+  </data>
+  <data name="l_new_repo" xml:space="preserve">
+    <value>Új tároló (jelszó generálása, létrehozás)…</value>
+  </data>
+  <data name="l_next_run" xml:space="preserve">
+    <value>Következő futás</value>
+  </data>
+  <data name="l_password" xml:space="preserve">
+    <value>jelszó</value>
+  </data>
+  <data name="l_password_is_set" xml:space="preserve">
+    <value>jelszó beállítva</value>
+  </data>
+  <data name="l_print" xml:space="preserve">
+    <value>Nyomtatás…</value>
+  </data>
+  <data name="l_refresh" xml:space="preserve">
+    <value>Frissítés</value>
+  </data>
+  <data name="l_remove" xml:space="preserve">
+    <value>Törlés</value>
+  </data>
+  <data name="l_report_preview" xml:space="preserve">
+    <value>Heti riport előnézete</value>
+  </data>
+  <data name="l_repos" xml:space="preserve">
+    <value>restic-tárolók</value>
+  </data>
+  <data name="l_restore" xml:space="preserve">
+    <value>Visszaállítás</value>
+  </data>
+  <data name="l_restore_point" xml:space="preserve">
+    <value>Visszaállítási pont</value>
+  </data>
+  <data name="l_restore_to" xml:space="preserve">
+    <value>Ide (új Restore_&lt;időpont&gt; mappába)</value>
+  </data>
+  <data name="l_run_now" xml:space="preserve">
+    <value>Futtatás most</value>
+  </data>
+  <data name="l_save" xml:space="preserve">
+    <value>Mentés</value>
+  </data>
+  <data name="l_save_file" xml:space="preserve">
+    <value>Mentés fájlba…</value>
+  </data>
+  <data name="l_schedule" xml:space="preserve">
+    <value>Ütemezés</value>
+  </data>
+  <data name="l_set" xml:space="preserve">
+    <value>Beállítás</value>
+  </data>
+  <data name="l_sources" xml:space="preserve">
+    <value>Források</value>
+  </data>
+  <data name="l_sources_hint" xml:space="preserve">
+    <value>Soronként egy forrás; kizárások '|' után ';'-vel (pl. D:\Data | *.tmp; \Cache\). @staging:&lt;sql feladat&gt; egy SQL-feladat átmeneti mappáját menti.</value>
+  </data>
+  <data name="l_tab_history" xml:space="preserve">
+    <value>Előzmények</value>
+  </data>
+  <data name="l_tab_jobs" xml:space="preserve">
+    <value>Feladatok</value>
+  </data>
+  <data name="l_tab_notifications" xml:space="preserve">
+    <value>Értesítések</value>
+  </data>
+  <data name="l_tab_overview" xml:space="preserve">
+    <value>Áttekintés</value>
+  </data>
+  <data name="l_tab_restore" xml:space="preserve">
+    <value>Visszaállítás</value>
+  </data>
+  <data name="l_tab_settings" xml:space="preserve">
+    <value>Beállítások</value>
+  </data>
+  <data name="l_tab_targets" xml:space="preserve">
+    <value>Célok és tárolók</value>
+  </data>
+  <data name="l_targets" xml:space="preserve">
+    <value>Célok</value>
+  </data>
+  <data name="l_test_connection" xml:space="preserve">
+    <value>Kapcsolat tesztelése (a szolgáltatás nevében)</value>
+  </data>
+  <data name="l_test_mail" xml:space="preserve">
+    <value>Teszt e-mail küldése</value>
+  </data>
+  <data name="l_to_original" xml:space="preserve">
+    <value>az EREDETI helyre</value>
+  </data>
+  <data name="l_type" xml:space="preserve">
+    <value>típus</value>
+  </data>
+  <data name="l_unsaved" xml:space="preserve">
+    <value>Nem mentett változások — nyomd meg a Mentés gombot (a szolgáltatás minden mezőt ellenőriz).</value>
+  </data>
+  <data name="l_unsaved_close" xml:space="preserve">
+    <value>Nem mentett változások vannak. Bezárod mégis?</value>
+  </data>
+</root>

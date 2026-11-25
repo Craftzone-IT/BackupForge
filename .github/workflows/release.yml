@@ -1,0 +1,49 @@
+name: Release
+
+# A v* tag (created by the user) builds the installer and attaches it to the GitHub Release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - name: Fetch restic (pinned, verified)
+        run: python tools/fetch_restic.py
+      - name: Version from tag
+        id: v
+        shell: pwsh
+        run: |
+          $v = "${{ github.ref_name }}".TrimStart('v')
+          "version=$v" >> $env:GITHUB_OUTPUT
+      - name: Test
+        run: dotnet test BackupForge.slnx -c Release
+      - name: Publish
+        shell: pwsh
+        run: |
+          $common = @('-c','Release','-r','win-x64','--self-contained','true','-p:PublishSingleFile=true','-p:IncludeNativeLibrariesForSelfExtract=true','-p:DebugType=none',"-p:Version=${{ steps.v.outputs.version }}")
+          dotnet publish src/BackupForge.Service @common -o artifacts/publish/service
+          dotnet publish src/BackupForge.Cli @common -o artifacts/publish/cli
+          dotnet publish src/BackupForge.Gui @common -o artifacts/publish/gui
+      - name: Installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          & $iscc "/DAppVersion=${{ steps.v.outputs.version }}" installer/BackupForge.iss
+      - name: Smoke test
+        shell: pwsh
+        run: ./installer/smoke-test.ps1 -Setup (Get-ChildItem installer/Output/*.exe | Select-Object -First 1).FullName
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/Output/*.exe

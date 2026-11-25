@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BackupForge.Windows\BackupForge.Windows.csproj" />
+    <ProjectReference Include="..\..\src\BackupForge.Service\BackupForge.Service.csproj" />
+    <ProjectReference Include="..\..\src\BackupForge.Cli\BackupForge.Cli.csproj" />
+    <ProjectReference Include="..\..\src\BackupForge.Engine.Sql\BackupForge.Engine.Sql.csproj" />
+    <ProjectReference Include="..\..\src\BackupForge.Engine.Restic\BackupForge.Engine.Restic.csproj" />
+    <ProjectReference Include="..\BackupForge.TestKit\BackupForge.TestKit.csproj" />
+  </ItemGroup>
+</Project>
