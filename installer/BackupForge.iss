@@ -56,10 +56,16 @@ en.SetupFailed=Setup step failed (see the setup log): %1
 Name: "path"; Description: "{cm:AddToPath}"
 
 [Files]
+#ifdef SingleFile
+; the old layout (three self-contained single-file exes) — CI builds it only to test the upgrade to the shared folder
 Source: "{#PublishDir}\service\BackupForge.Service.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\cli\bf.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\gui\BackupForge.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\gui\*.dll"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+#else
+; CR-002 A8.: one self-contained folder for the service, bf and the GUI (installer/publish.ps1) — the .NET runtime only once
+Source: "{#PublishDir}\app\*"; DestDir: "{app}"; Excludes: "restic.exe,restic-LICENSE.txt,*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs
+#endif
 Source: "..\third_party\restic\restic.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\third_party\restic\LICENSE"; DestDir: "{app}"; DestName: "restic-LICENSE.txt"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion

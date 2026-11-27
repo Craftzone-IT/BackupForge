@@ -29,11 +29,7 @@ jobs:
         run: dotnet test BackupForge.slnx -c Release
       - name: Publish
         shell: pwsh
-        run: |
-          $common = @('-c','Release','-r','win-x64','--self-contained','true','-p:PublishSingleFile=true','-p:IncludeNativeLibrariesForSelfExtract=true','-p:DebugType=none',"-p:Version=${{ steps.v.outputs.version }}")
-          dotnet publish src/BackupForge.Service @common -o artifacts/publish/service
-          dotnet publish src/BackupForge.Cli @common -o artifacts/publish/cli
-          dotnet publish src/BackupForge.Gui @common -o artifacts/publish/gui
+        run: ./installer/publish.ps1 -Out artifacts/publish -Version "${{ steps.v.outputs.version }}"
       - name: Installer
         shell: pwsh
         run: |

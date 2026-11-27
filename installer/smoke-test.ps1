@@ -1,5 +1,5 @@
 ﻿# CI smoke test of the installer (AGENT-RUN 6.): install silently → service runs → bf status → uninstall → service gone, target untouched
-param([string]$Setup)
+param([string]$Setup, [string]$OldSetup)
 $ErrorActionPreference = 'Stop'
 $target = Join-Path $env:RUNNER_TEMP 'bf-smoke-target'
 New-Item -ItemType Directory -Force $target | Out-Null
@@ -18,12 +18,25 @@ $config = [ordered]@{
 $secrets = Join-Path $env:RUNNER_TEMP 'bf-smoke.secrets.json'
 [IO.File]::WriteAllText($secrets, '{"smtp":"smoke-test-password-1"}', (New-Object Text.UTF8Encoding $false))
 
+function Wait-Running {
+  $svc = Get-Service BackupForge
+  for ($i = 0; $i -lt 60 -and $svc.Status -ne 'Running'; $i++) { Start-Sleep 1; $svc.Refresh() }
+  if ($svc.Status -ne 'Running') { throw "service not running: $($svc.Status)" }
+}
+$install = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/CONFIG=`"$cfg`"","/SECRETS=`"$secrets`"",'/LOG=setup-install.log')
+if ($OldSetup) {
+  # CR-002 A8: first the old single-file layout, then the new shared-folder installer over it (upgrade, no /CONFIG)
+  Write-Host "installing the old layout $OldSetup"
+  $p = Start-Process -FilePath $OldSetup -ArgumentList $install -Wait -PassThru
+  if ($p.ExitCode -ne 0) { throw "old setup exit $($p.ExitCode)" }
+  Wait-Running
+  $install = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/LOG=setup-upgrade.log')
+}
 Write-Host "installing $Setup"
-$p = Start-Process -FilePath $Setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/CONFIG=`"$cfg`"","/SECRETS=`"$secrets`"",'/LOG=setup-install.log' -Wait -PassThru
+$p = Start-Process -FilePath $Setup -ArgumentList $install -Wait -PassThru
 if ($p.ExitCode -ne 0) { throw "setup exit $($p.ExitCode)" }
-$svc = Get-Service BackupForge
-for ($i = 0; $i -lt 60 -and $svc.Status -ne 'Running'; $i++) { Start-Sleep 1; $svc.Refresh() }
-if ($svc.Status -ne 'Running') { throw "service not running: $($svc.Status)" }
+Wait-Running
+if ($OldSetup -and -not (Test-Path (Join-Path ${env:ProgramFiles} 'BackupForge\BackupForge.Service.dll'))) { throw 'upgrade did not install the shared-folder layout' }
 $sid = (& sc.exe qsidtype BackupForge) -join ' '
 if ($sid -notmatch 'UNRESTRICTED') { throw "service SID type: $sid" }
 # CR-002 A6: secrets.dat is SYSTEM only (no installing administrator)

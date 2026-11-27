@@ -1,4 +1,9 @@
 <Project>
+  <PropertyGroup>
+    <!-- CR-002 A8.: the service, bf and the GUI are published into ONE folder — the transitive packages below must resolve to the
+         same version in every project (otherwise e.g. bf's Microsoft.Extensions.Options 9.0 would overwrite the service's 10.0). -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.15" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.15" />
@@ -8,6 +13,11 @@
     <PackageVersion Include="System.Diagnostics.EventLog" Version="10.0.15" />
     <PackageVersion Include="System.IO.Hashing" Version="10.0.15" />
     <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Primitives" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.15" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
+    <PackageVersion Include="System.Configuration.ConfigurationManager" Version="10.0.15" />
     <PackageVersion Include="MailKit" Version="4.18.2" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="JsonSchema.Net" Version="9.7.0" />

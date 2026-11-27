@@ -95,13 +95,9 @@ jobs:
         run: |
           & src/BackupForge.Cli/bin/Release/net10.0/bf.exe diag vss "$env:RUNNER_TEMP"
           "exit code: $LASTEXITCODE"
-      - name: Publish (win-x64, self-contained, single-file)
+      - name: Publish (win-x64, self-contained, one shared folder)
         shell: pwsh
-        run: |
-          $common = @('-c','Release','-r','win-x64','--self-contained','true','-p:PublishSingleFile=true','-p:IncludeNativeLibrariesForSelfExtract=true','-p:DebugType=none')
-          dotnet publish src/BackupForge.Service @common -o artifacts/publish/service
-          dotnet publish src/BackupForge.Cli @common -o artifacts/publish/cli
-          dotnet publish src/BackupForge.Gui @common -o artifacts/publish/gui
+        run: ./installer/publish.ps1 -Out artifacts/publish
       - name: Installer (Inno Setup)
         shell: pwsh
         run: |
@@ -109,9 +105,18 @@ jobs:
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
           & $iscc "/DAppVersion=0.1.0.$env:GITHUB_RUN_NUMBER" installer/BackupForge.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Installer smoke test (silent install → service → bf → uninstall)
+          Get-ChildItem installer/Output/*.exe | ForEach-Object { "installer: $($_.Name) $([math]::Round($_.Length / 1MB, 1)) MB" }
+      - name: Old-layout installer (single-file, for the upgrade test)
         shell: pwsh
-        run: ./installer/smoke-test.ps1 -Setup (Get-ChildItem installer/Output/*.exe | Select-Object -First 1).FullName
+        run: |
+          ./installer/publish.ps1 -Out artifacts/publish-single -SingleFile
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "/DAppVersion=0.0.9.$env:GITHUB_RUN_NUMBER" /DSingleFile "/DPublishDir=..\artifacts\publish-single" "/O$PWD\installer\OldOutput" installer/BackupForge.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem installer/OldOutput/*.exe | ForEach-Object { "old-layout installer: $($_.Name) $([math]::Round($_.Length / 1MB, 1)) MB" }
+      - name: Installer smoke test (old layout → upgrade → service → bf → uninstall)
+        shell: pwsh
+        run: ./installer/smoke-test.ps1 -Setup (Get-ChildItem installer/Output/*.exe | Select-Object -First 1).FullName -OldSetup (Get-ChildItem installer/OldOutput/*.exe | Select-Object -First 1).FullName
       - name: Upload installer
         uses: actions/upload-artifact@v5
         with:
