@@ -86,3 +86,23 @@ public class ResticParserTests
     [Fact]
     public void Pinned_version_is_embedded() => Assert.Equal("0.20.0", ResticBinary.PinnedVersion);
 }
+
+public class ResticPathsTests
+{
+    [Theory]
+    [InlineData(@"C:\data\x", "/C/data/x")]
+    [InlineData("C:/data/x", "/C/data/x")]
+    [InlineData(@"c:\data\x\", "/C/data/x")]
+    [InlineData("/C/data/x", "/C/data/x")]
+    [InlineData("/home/u/docs/", "/home/u/docs")]
+    [InlineData(@"data\x", "/data/x")]
+    [InlineData("/", "/")]
+    [InlineData(@"C:\", "/C")]
+    public void To_snapshot_path(string input, string expected) => Assert.Equal(expected, ResticPaths.ToSnapshotPath(input));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void Empty_is_null(string? input) => Assert.Null(ResticPaths.ToSnapshotPath(input));
+}

@@ -96,6 +96,48 @@ public sealed class ResticIntegrationTests : IDisposable
         Assert.Equal(RunResults.Ok, check.Result);
     }
 
+    private async Task<RunOutcome> Restore(string? path, string target)
+    {
+        var engine = new ResticEngine(Bin, new SystemProcessRunner(), _masker);
+        var parameters = new Dictionary<string, string> { ["snapshot"] = "latest", ["target"] = target };
+        if (path is not null) parameters["path"] = path;
+        var ctx = new JobRunContext
+        {
+            Config = _cfg, Job = _cfg.FindJob("docs"), Request = new WorkRequest { JobId = "docs", Kind = RunKinds.Restore, Trigger = RunTriggers.Manual, Parameters = parameters },
+            RunId = 2, Log = new MemoryRunLog(), Progress = new Progress<RunProgress>(), Clock = SystemClock.Instance, Secrets = _secrets,
+            Paths = new DataPaths(_dir.Sub("data")), State = _state,
+        };
+        return await engine.RunAsync(ctx, CancellationToken.None);
+    }
+
+    [ResticFact]
+    public async Task Restore_accepts_native_paths_counts_files_and_fails_on_a_missing_path()
+    {
+        // CR-002 A4.: the OS path of the source (C:\… on Windows, /… on Linux) is converted to the snapshot form
+        await Client.InitAsync(_cfg.ResticRepos[0], _secrets, CancellationToken.None);
+        Assert.Equal(RunResults.Ok, (await Run()).Result);
+        var file = Path.Combine(Src, "sub", "b.txt");
+
+        var one = await Restore(file, _dir.Sub("r1"));
+        Assert.True(one.Result == RunResults.Ok, one.Summary);
+        Assert.Equal(1, one.FilesCopied);                              // not the restored folders
+        Assert.Contains(" 1 ", " " + one.Summary + " ", StringComparison.Ordinal);
+        Assert.Equal("beta", File.ReadAllText(Directory.GetFiles(_dir.Sub("r1"), "b.txt", SearchOption.AllDirectories).Single()));
+
+        var slashes = await Restore(file.Replace('\\', '/'), _dir.Sub("r2"));  // C:/data/x (Windows); unchanged on Linux
+        Assert.Equal(RunResults.Ok, slashes.Result);
+        var folder = await Restore(Path.Combine(Src, "sub") + Path.DirectorySeparatorChar, _dir.Sub("r3"));
+        Assert.Equal(1, folder.FilesCopied);
+
+        var missing = await Restore(Path.Combine(Src, "nope.txt"), _dir.Sub("r4"));
+        Assert.Equal(RunResults.Failed, missing.Result);
+        Assert.Contains("no such path in the snapshot", missing.Summary, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(_dir.Sub("r4")) && Directory.EnumerateFileSystemEntries(_dir.Sub("r4")).Any());
+
+        var all = await Restore(null, _dir.Sub("r5"));
+        Assert.Equal(2, all.FilesCopied);                              // a.txt + sub/b.txt (skip.tmp is excluded)
+    }
+
     [ResticFact]
     public async Task Missing_repository_is_never_created_automatically()
     {

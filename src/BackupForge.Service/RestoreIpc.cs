@@ -52,6 +52,7 @@ public static class RestoreIpc
             else if (job.Type == JobTypes.Restic && rt.Restic is not null)
             {
                 var repo = rt.ConfigStore.Current.FindRepo(job.Restic!.RepoId)!;
+                path = Engine.Restic.ResticPaths.ToSnapshotPath(path) ?? ""; // C:\data → /C/data (CR-002 A4.)
                 var nodes = await rt.Restic.Client.LsAsync(repo, rt.Secrets, point == "current" ? "latest" : point, path.Length == 0 ? null : path, ct).ConfigureAwait(false);
                 var prefix = "/" + path.Trim('/');
                 foreach (var n in nodes.Where(n => path.Length == 0 ? n.Path.Count(c => c == '/') <= 2 : n.Path.StartsWith(prefix + "/", StringComparison.Ordinal) && n.Path.Count(c => c == '/') == prefix.Count(c => c == '/') + 1))

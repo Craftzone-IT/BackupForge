@@ -447,4 +447,7 @@
   <data name="files.vss_no_writers" xml:space="preserve">
     <value>VSS: a writerek nem válaszoltak ({0}), a pillanatkép alkalmazás-konzisztencia nélkül készült</value>
   </data>
+  <data name="restic.restore_no_path" xml:space="preserve">
+    <value>nincs ilyen útvonal a pillanatképben: {0}</value>
+  </data>
 </root>

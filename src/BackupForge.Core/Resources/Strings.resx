@@ -447,4 +447,7 @@
   <data name="files.vss_no_writers" xml:space="preserve">
     <value>VSS: the writers did not respond ({0}); the snapshot was taken without application consistency</value>
   </data>
+  <data name="restic.restore_no_path" xml:space="preserve">
+    <value>no such path in the snapshot: {0}</value>
+  </data>
 </root>

@@ -270,18 +270,31 @@ public sealed class ResticEngine : IJobEngine
         var p = ctx.Request.Parameters;
         var snapshot = p.GetValueOrDefault("snapshot") ?? "latest";
         var target = p.GetValueOrDefault("target") ?? throw new InvalidOperationException("restore target missing");
-        var include = p.GetValueOrDefault("path");
+        var include = ResticPaths.ToSnapshotPath(p.GetValueOrDefault("path"));
         if (Directory.Exists(target) && Directory.EnumerateFileSystemEntries(target).Any())
             return RunOutcome.Failed($"restore target is not empty: {target}");
-        Directory.CreateDirectory(target);
         var client = new ResticClient(_binary, _processes, ctx.Paths.ResticCache, _masker);
-        var args = new List<string>();
-        var summary = await client.RestoreAsync(repo, ctx.Secrets, snapshot, string.IsNullOrEmpty(include) ? null : include, target, overwrite: false, ctx.Log, ct).ConfigureAwait(false);
+        if (include is not null)
+        {
+            // CR-002 A4.: a path that is not in the snapshot is an error, not "ok, 0 files"
+            var nodes = await client.LsAsync(repo, ctx.Secrets, snapshot, include, ct).ConfigureAwait(false);
+            var cmp = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            var hit = nodes.FirstOrDefault(n => string.Equals(n.Path, include, cmp));
+            if (hit is null && !nodes.Any(n => n.Path.StartsWith(include + "/", cmp)))
+                return RunOutcome.Failed(Texts.Format(culture, "restic.restore_no_path", include));
+            if (hit is not null) include = hit.Path; // the snapshot's own spelling (case) for --include
+        }
+        Directory.CreateDirectory(target);
+        var summary = await client.RestoreAsync(repo, ctx.Secrets, snapshot, include, target, overwrite: false, ctx.Log, ct).ConfigureAwait(false);
+        // restic's files_restored counts folders too: count the restored FILES (CR-002 A4.)
+        var files = Directory.EnumerateFiles(target, "*", SearchOption.AllDirectories).LongCount();
+        if (include is not null && files == 0)
+            return RunOutcome.Failed(Texts.Format(culture, "restic.restore_no_path", include));
         return new RunOutcome
         {
-            FilesCopied = summary?.FilesRestored ?? 0,
+            FilesCopied = files,
             BytesTransferred = summary?.BytesRestored ?? 0,
-            Summary = Texts.Format(culture, "restic.restore", summary?.FilesRestored ?? 0, SizeText.Format(summary?.BytesRestored ?? 0, culture), target),
+            Summary = Texts.Format(culture, "restic.restore", files, SizeText.Format(summary?.BytesRestored ?? 0, culture), target),
         };
     }
 
