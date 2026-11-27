@@ -206,7 +206,7 @@
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                         <Button Content="{l:Loc l_discover}" Command="{Binding DiscoverCommand}"/>
-                        <ComboBox ItemsSource="{Binding SqlJobIds}" SelectedItem="{Binding GrantJobId}"/>
+                        <ComboBox ItemsSource="{Binding SqlJobIds}" SelectedItem="{Binding GrantJobId}" MinWidth="180"/>
                         <Button Content="{l:Loc l_grant}" Command="{Binding GrantCommand}"/>
                     </StackPanel>
                     <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding Problems}" Foreground="#b00020"/>
@@ -228,7 +228,7 @@
             <TabItem Header="{l:Loc l_tab_history}" DataContext="{Binding History}">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                        <ComboBox ItemsSource="{Binding JobIds}" SelectedItem="{Binding JobFilter}" IsEditable="True"/>
+                        <ComboBox ItemsSource="{Binding JobIds}" SelectedItem="{Binding JobFilter}" IsEditable="True" MinWidth="180"/>
                         <Button Content="{l:Loc l_refresh}" Command="{Binding LoadCommand}"/>
                     </StackPanel>
                     <Grid>
@@ -258,7 +258,7 @@
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top">
                         <StackPanel Orientation="Horizontal">
-                            <Label Content="{l:Loc l_job}"/><ComboBox ItemsSource="{Binding JobIds}" SelectedItem="{Binding JobId}"/>
+                            <Label Content="{l:Loc l_job}"/><ComboBox ItemsSource="{Binding JobIds}" SelectedItem="{Binding JobId}" MinWidth="180"/>
                             <Label Content="{l:Loc l_restore_point}"/><ComboBox ItemsSource="{Binding Points}" SelectedItem="{Binding Point}" MinWidth="220">
                                 <ComboBox.ItemTemplate><DataTemplate><TextBlock><Run Text="{Binding [point], Mode=OneWay}"/>  <Run Text="{Binding [time], Mode=OneWay}" Foreground="Gray"/></TextBlock></DataTemplate></ComboBox.ItemTemplate>
                             </ComboBox>

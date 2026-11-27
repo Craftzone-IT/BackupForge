@@ -11,8 +11,16 @@ namespace BackupForge.Gui.Core.ViewModels;
 
 public sealed record SqlDbRow(string Instance, string Name, string RecoveryModel, string Size, string LastFullAny, bool System, string? Warning);
 
-public sealed partial class SqlViewModel(MainViewModel main) : ObservableObject
+public sealed partial class SqlViewModel : ObservableObject
 {
+    private readonly MainViewModel main;
+
+    public SqlViewModel(MainViewModel main)
+    {
+        this.main = main;
+        main.ConfigReloaded += () => OnPropertyChanged(nameof(SqlJobIds)); // H1: computed list, refreshed after load / save
+    }
+
     public ObservableCollection<SqlDbRow> Databases { get; } = [];
     public ObservableCollection<string> Problems { get; } = [];
     [ObservableProperty] public partial string Script { get; set; } = "";
@@ -64,8 +72,16 @@ public sealed partial class SqlViewModel(MainViewModel main) : ObservableObject
     }
 }
 
-public sealed partial class HistoryViewModel(MainViewModel main) : ObservableObject
+public sealed partial class HistoryViewModel : ObservableObject
 {
+    private readonly MainViewModel main;
+
+    public HistoryViewModel(MainViewModel main)
+    {
+        this.main = main;
+        main.ConfigReloaded += () => OnPropertyChanged(nameof(JobIds)); // H1
+    }
+
     public ObservableCollection<JsonNode> Runs { get; } = [];
     [ObservableProperty] public partial string? JobFilter { get; set; }
     [ObservableProperty] public partial JsonNode? Selected { get; set; }
@@ -107,8 +123,16 @@ public sealed partial class HistoryViewModel(MainViewModel main) : ObservableObj
 public sealed record BrowseEntry(string Name, bool IsDirectory, string Size, string Modified);
 
 /// <summary>SPEC 13.: point → browse → target (a new folder by default) → restore.</summary>
-public sealed partial class RestoreViewModel(MainViewModel main) : ObservableObject
+public sealed partial class RestoreViewModel : ObservableObject
 {
+    private readonly MainViewModel main;
+
+    public RestoreViewModel(MainViewModel main)
+    {
+        this.main = main;
+        main.ConfigReloaded += () => OnPropertyChanged(nameof(JobIds)); // H1: the restore job list was empty forever
+    }
+
     public ObservableCollection<JsonNode> Points { get; } = [];
     public ObservableCollection<BrowseEntry> Entries { get; } = [];
     [ObservableProperty] public partial string? JobId { get; set; }

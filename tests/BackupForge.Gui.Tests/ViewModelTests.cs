@@ -182,6 +182,29 @@ public class ViewModelTests
     }
 
     [Fact]
+    public async Task Job_lists_of_restore_history_and_sql_follow_the_configuration()
+    {
+        // H1 / CR-002 B1.: the computed lists must notify after every load (also after a save)
+        var c = new FakeClient();
+        var vm = new MainViewModel(c, new NullDialogs());
+        var changed = new List<string>();
+        vm.Restore.PropertyChanged += (_, e) => changed.Add("restore." + e.PropertyName);
+        vm.History.PropertyChanged += (_, e) => changed.Add("history." + e.PropertyName);
+        vm.Sql.PropertyChanged += (_, e) => changed.Add("sql." + e.PropertyName);
+        Assert.Empty(vm.Restore.JobIds);
+        await vm.RefreshAsync();
+        Assert.Contains("restore.JobIds", changed);
+        Assert.Contains("history.JobIds", changed);
+        Assert.Contains("sql.SqlJobIds", changed);
+        Assert.Equal(["company-mirror", "sql-to-offsite"], vm.Restore.JobIds.Order(StringComparer.Ordinal));
+        Assert.Equal(3, vm.History.JobIds.Count());
+        Assert.Equal(["sql-main"], vm.Sql.SqlJobIds);
+        changed.Clear();
+        Assert.True(await vm.SaveAsync());
+        Assert.Contains("restore.JobIds", changed);
+    }
+
+    [Fact]
     public async Task Missing_secrets_after_import()
     {
         var (_, c, _) = await Create();
