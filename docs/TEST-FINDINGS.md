@@ -16,13 +16,13 @@ Teszt-környezetek:
 - **Javítás**: a három ViewModel iratkozzon fel a `ConfigReloaded`-re, és hívjon `OnPropertyChanged(nameof(JobIds))`-t (mentés után is — a mentés `RefreshAsync`-et hív); a combóknak `MinWidth` (most összecsukott, üresnek látszik). Teszt: a meglévő hamis IPC-kliensű Gui-tesztek mintájára — `RefreshAsync` után a `JobIds` tartalmazza a feladatokat, és a `PropertyChanged` kiváltódik.
 - **Kerülőút addig**: `bf restore <jobId> --list` / `--browse` / `--from … --path … --to …` (rendszergazdai PowerShell).
 
-### H2 — A VSS-pillanatkép valós szerveren sem készül el: „snapshot has no device object” (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 kész (A1; ellenőrzésre vár (chat): `bf diag vss` a tesztgépen)**
+### H2 — A VSS-pillanatkép valós szerveren sem készül el: „snapshot has no device object” (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 után is hibás (T3) → CR-003 1.**
 - **Lépés**: `vss: when_available` fájlfeladat (`docs-local`, C:\ forrás) futtatása.
 - **Tényleges**: minden futás `warning` „a VSS-pillanatkép nem készült el (snapshot has no device object) — VSS nélkül mentve”. A writerek mind `Stable / No error` (`vssadmin list writers`), és `vssadmin create shadow /for=C:` ugyanezen a gépen hibátlanul működik. A BackupForge tehát **gyakorlatilag soha nem használ VSS-t** — zárolt fájlok (PST, nyitott adatbázisfájl) mentése így nem működik. A tartalék helyesen `warning`-ot ad (a CR-001 2. pontja működik), és árva pillanatkép nem maradt.
 - **Gyanú (kódból)**: `src/BackupForge.Windows/Vss.cs` 113–115. sor: a `GetSnapshotProperties` után a `VssSnapshotProp.SnapshotDeviceObject` `IntPtr` üres. Valószínűleg a `IVssBackupComponents` vtable-sorrendje csúszik el (egy másik metódus hívódik meg S_OK-val), vagy a `VSS_SNAPSHOT_PROP` marshalingja hibás. Elképzelhető, hogy a CI-runner „writerek nem válaszolnak” jelensége is ugyanez a hiba.
 - **Javítás**: vtable-sorrend ellenőrzése a `vsbackup.h` alapján (a `GetSnapshotProperties` pontos indexe), a struktúra-elrendezés ellenőrzése, és egy Windows-integrációs teszt, ami **megköveteli**, hogy egy egészséges gépen a pillanatkép elkészüljön (eszközútvonal nem üres, egy zárolt fájl a pillanatképből olvasható). A CI-n, ha a runner writerei tényleg nem válaszolnak, a writerek nélküli ágat külön teszt fedje.
 
-### H3 — SMB-cél: időnként 1219-es hiba („már van kapcsolat más hitelesítéssel”) (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 kész (A2; ellenőrzésre vár (chat): 30 perces SMB-forgatókönyv)**
+### H3 — SMB-cél: időnként 1219-es hiba („már van kapcsolat más hitelesítéssel”) (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 után is hibás, más okkal (T3) → CR-003 2.**
 - **Lépés**: SMB-cél saját felhasználóval (`\\localhost\nas`, `BF-TEST\bfnas`), az első futás `ok`; néhány perc múlva újabb futás.
 - **Tényleges**: a futás `failed` „a cél nem elérhető: … (error 1219)”, **ugyanabban a másodpercben**, amikor a `TargetProbe` (5 percenkénti célellenőrzés) is 1219-et kapott (`22:33:40`). Később, külön időpontban a futás ismét `ok`. A futás után a kapcsolat megmarad (`Get-SmbConnection`: `localhost\nas`, credential `bfnas`) — a SPEC 14. szerint a futás végén `WNetCancelConnection2` kellene.
 - **Gyanú**: a cél-ellenőrzés és a futás egyszerre hív `WNetAddConnection2`/`WNetCancelConnection2`-t ugyanarra a szerverre; az egyik bontja vagy átmenetileg más állapotban hagyja a kapcsolatot, a másik 1219-et kap.
@@ -34,7 +34,7 @@ Teszt-környezetek:
 ### H5 — Két visszaállítás ugyanabba a célmappába ugyanabban a másodpercben ütközik (T2) — kicsi → CR-002 — **→ CR-002 kész (A5)**
 - A `Restore_<yyyy-MM-dd HHmmss>` név másodperc-pontosságú; két egymás utáni `bf restore … --to C:\restore-test` ugyanabban a másodpercben → a második `failed` „restore target is not empty”. Ütközéskor kapjon utótagot (`… (2)`).
 
-### H6 — Szolgáltatás leállítása nagy fájl másolása közben ~70 mp (T2) — kicsi → CR-002 — **→ CR-002 kész (A3; ellenőrzésre vár (chat))**
+### H6 — Szolgáltatás leállítása nagy fájl másolása közben ~70 mp (T2) — kicsi → CR-002 — **→ CR-002 kész (A3), T3: 6,9 mp**
 - 3 GB-os (768 MB-os fájlokból álló) másolás közben `Restart-Service` → a futás helyesen `interrupted`, a `.bfpart` eltűnt, árva VSS nincs, a következő futás befejezi — **de** a leállás kivárta a teljes 60 mp-es türelmi időt („1 run(s) did not stop within 00:01:00”). A másolás fájlon belül is figyelje a megszakítást (darabos másolás `CancellationToken`-nel), hogy a leállás néhány mp legyen.
 
 ### H7 — `secrets.dat` ACL-jében a telepítő felhasználó is szerepel (T2) — kicsi → CR-002 — **→ CR-002 kész (A6)**
@@ -53,6 +53,27 @@ Teszt-környezetek:
 
 ## Egyéb
 - E1 (→ CR-002 A8): a telepítő > 100 MB: a CI három self-contained single-file exe-t publikál (szolgáltatás, `bf`, GUI), mindegyikben a teljes .NET runtime (a GUI-ban a WPF is). Javaslat: egy közös programmappa, self-contained, de nem single-file (a runtime egyszer). Nem sürgős. **→ CR-002 kész (A8: 114,3 → 57,5 MB)**
+
+## T3 — CR-002 újrateszt (2026-11-27, a T2 VM-en)
+CI-telepítő: `BackupForge-Setup-0.1.0.33.exe` (`92f56ad`, run 45983073037, SHA-256 `acaaecb2…f94f5a`), csendes friss telepítés (előtte `/PURGE`-dzsel eltávolított példány).
+
+- **H2 (VSS) — továbbra is hibás, a hiba helye megvan.** `bf diag vss C:\data\docs`: writerekkel (10 writer, `GatherWriterMetadata` 2,1 s) és `--no-writers`-szel is: `AddToSnapshotSet` → `PrepareForBackup` / `DoSnapshotSet` `FINISHED` → `GetSnapshotProperties(<id>)` = `S_OK`, de a 128 bájtos `VSS_SNAPSHOT_PROP` **csupa nulla** (5 újraolvasás után is) → „no device object”, kilépés 1. A pillanatkép valójában elkészül.
+  - A chat egy önálló C#-próbával (PowerShell `Add-Type`, ugyanazzal a COM-deklarációval) ellenőrizte:
+    - a vtable-hely jó: a 37. hely `ImportSnapshots` (`0x80042311`), a 38. `BreakSnapshotSet` (`VSS_E_OBJECT_NOT_FOUND` a pillanatkép-azonosítóra), a 39. `GetSnapshotProperties` (`S_OK`, üres), a 40. `Query` (`E_INVALIDARG` hibás argumentumra);
+    - a `Guid` érték és `ref` szerinti átadása ugyanazt adja;
+    - egy második, `VSS_CTX_ALL` kontextusú requester `GetSnapshotProperties`-e is üres;
+    - **az `IVssBackupComponents::Query(GUID_NULL, VSS_OBJECT_NONE, VSS_OBJECT_SNAPSHOT, out IVssEnumObject)` + `IVssEnumObject::Next` viszont visszaadja a pillanatképet az egyező azonosítóval és a helyes eszközútvonallal** (`\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy16`). → CR-003 1.
+- **H3 (SMB 1219) — továbbra is hibás, más okkal.** A `docs-nas` 5 percenként futott 12:16–12:46 között: **7 futásból 4 `failed`** („…already has a connection to the server with other credentials (error 1219), not made by BackupForge”). A minta váltakozó (ok, failed, failed, ok, ok, failed, failed). A `Get-SmbConnection` a `\\localhost\nas`-ra **a gép saját fiókjával** (`WORKGROUP\BF-TEST$`) mutat kapcsolatot, nem a `bfnas`-szal. Ezt a LocalSystem hitelesítés nélküli hozzáférése hozza létre.
+  - Kódból: a `status.json` percenkénti írása a `FileJobEngine.VersionsInfo`-t hívja (`ServiceComposition.cs` 102. sor), ami lease nélkül járja be a hálózati cél Versions mappáját. A `restore.versions` / `restore.browse` (`RestoreIpc`, `FileRestoreEngine.Points`) szintén lease nélkül olvas. → CR-003 2.
+  - A CI 20 párhuzamos próbás tesztje ezt nem fogta meg, mert rövid ideig fut, és a státuszíró nem volt benne.
+- **H4** ✓: `--path 'C:\data\docs\file1.txt'` → `ok`, „1 fájl visszaállítva”; nem létező útvonal → `failed` „nincs ilyen útvonal a pillanatképben: /C/data/docs/nincs-ilyen.txt”.
+- **H5** ✓: két visszaállítás ugyanabban a másodpercben → `Restore_2026-11-27 120915` és `… 120915 (2)`.
+- **H6** ✓ (közel a célhoz): két 1 GB-os fájl másolása közben `Restart-Service` 6,9 s (a leállítás 6 s, a futás `interrupted`, `.bfpart` nem maradt). Ez lassú virtuális lemezen mért érték (6 s alatt 64 MB). Korábban kb. 70 s volt.
+- **H7** ✓: `icacls secrets.dat` → csak `NT AUTHORITY\SYSTEM:(F)`.
+- **H8** ✓: a `bf run … > fájl` kimenete UTF-8 (`C3` bájtok, „másolva”); a `setup.log` `EF BB BF`-fel kezdődik; 0-s eseményazonosító nem jelent meg. A szolgáltatásnapló BOM-ját nem sikerült ellenőrizni (a `logs\service-*.log` a mai, frissítés előtti példány folytatása lehetett).
+- **A8** ✓: telepítő 57,5 MB; telepítve 322 fájl, 189 MB (`BackupForge.exe`, `BackupForge.Service.exe`, `bf.exe` ~160 KB-os apphostok + közös runtime).
+- Apróság: a szolgáltatásnapló egy leállításnál kétszer írja a „stopping” / „stopped” sort.
+- Nem tesztelt (T3): a GUI-varázsló (a user saját gépén), e-mail, CHECKDB-ütemezés.
 
 ## Rendben (T2 — Windows Server 2022, tiszta VM)
 - **A — telepítés**: csendes telepítés `/CONFIG` + `/SECRETS`-szel (exit 0; a setup.log figyelmeztet a secrets-fájl törlésére), szolgáltatás `Running`, LocalSystem, `SERVICE_SID_TYPE: UNRESTRICTED`, helyreállítás 3× restart 60 s / reset 86400; ProgramData ACL öröklés nélkül SYSTEM + Administrators; eseménynapló 1000. **Frissítés** ugyanazzal a telepítővel: konfig (hash) és előzmények változatlanok, a titkok működnek. **Eltávolítás** megtartással: szolgáltatás, programmappa, eseményforrás eltűnik, `config.json` + `history.db` marad; újratelepítés után ugyanazok a feladatok. **`/PURGE`**: az adatmappa is törlődik. A mentési célok (helyi, SMB, restic) **mindhárom esetben bájtra azonos fájlszámmal megmaradtak**; árva VSS nincs.
