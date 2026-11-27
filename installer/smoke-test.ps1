@@ -15,15 +15,25 @@ $config = [ordered]@{
               sources = @(@{ path = $src }); target = @{ target_id = 't'; subdir = 'Docs' }; files = @{ vss = 'never' } })
 }
 [IO.File]::WriteAllText($cfg, ($config | ConvertTo-Json -Depth 8), (New-Object Text.UTF8Encoding $false))
+$secrets = Join-Path $env:RUNNER_TEMP 'bf-smoke.secrets.json'
+[IO.File]::WriteAllText($secrets, '{"smtp":"smoke-test-password-1"}', (New-Object Text.UTF8Encoding $false))
 
 Write-Host "installing $Setup"
-$p = Start-Process -FilePath $Setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/CONFIG=`"$cfg`"",'/LOG=setup-install.log' -Wait -PassThru
+$p = Start-Process -FilePath $Setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/CONFIG=`"$cfg`"","/SECRETS=`"$secrets`"",'/LOG=setup-install.log' -Wait -PassThru
 if ($p.ExitCode -ne 0) { throw "setup exit $($p.ExitCode)" }
 $svc = Get-Service BackupForge
 for ($i = 0; $i -lt 60 -and $svc.Status -ne 'Running'; $i++) { Start-Sleep 1; $svc.Refresh() }
 if ($svc.Status -ne 'Running') { throw "service not running: $($svc.Status)" }
 $sid = (& sc.exe qsidtype BackupForge) -join ' '
 if ($sid -notmatch 'UNRESTRICTED') { throw "service SID type: $sid" }
+# CR-002 A6: secrets.dat is SYSTEM only (no installing administrator)
+$secretsDat = Join-Path $env:ProgramData 'BackupForge\secrets.dat'
+if (-not (Test-Path $secretsDat)) { throw 'secrets.dat missing' }
+$acl = Get-Acl $secretsDat
+& icacls.exe $secretsDat
+if (-not $acl.AreAccessRulesProtected) { throw 'secrets.dat inherits permissions' }
+$others = @($acl.Access | Where-Object { $_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -ne 'S-1-5-18' })
+if ($others.Count -gt 0) { throw "secrets.dat ACL is not SYSTEM only: $(($others | ForEach-Object { $_.IdentityReference.Value }) -join ', ')" }
 $bf = Join-Path ${env:ProgramFiles} 'BackupForge\bf.exe'
 for ($i = 0; $i -lt 30; $i++) { & $bf status *> $null; if ($LASTEXITCODE -eq 0) { break }; Start-Sleep 1 }
 & $bf status

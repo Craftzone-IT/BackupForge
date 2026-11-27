@@ -64,7 +64,10 @@ public static class ServiceComposition
     {
         platform ??= Platform.Current();
         var engines = Engines(platform, masker);
-        var rt = new ServiceRuntime(paths, loggers, clock, engines, platform.Secrets(paths), masker, options);
+        var secrets = platform.Secrets(paths);
+        if (OperatingSystem.IsWindows() && secrets is Windows.DpapiSecretStore { AclRepaired: true })
+            loggers.CreateLogger("BackupForge.Secrets").LogInformation("secrets.dat: access list reset to SYSTEM only");
+        var rt = new ServiceRuntime(paths, loggers, clock, engines, secrets, masker, options);
         Attach(rt, platform, engines);
         return rt;
     }

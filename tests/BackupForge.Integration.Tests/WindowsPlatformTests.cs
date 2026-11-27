@@ -30,6 +30,28 @@ public class WindowsPlatformTests
     }
 
     [WindowsAdminFact]
+    public void Dpapi_system_only_acl_installer_reimport_and_startup_repair()
+    {
+        // CR-002 A6.: the installer writes a SYSTEM-only file and can still re-import; an old file (with the admin) is repaired
+        using var d = new TempDir();
+        var path = d.Sub("secrets.dat");
+        var dev = new DpapiSecretStore(path);                  // development mode: SYSTEM + this (admin) user
+        dev.Set("target:nas1", "test-password-123");
+        Assert.False(DpapiSecretStore.HasSystemOnlyAcl(path));
+
+        var installer = new DpapiSecretStore(path, systemOnly: true);
+        Assert.True(installer.AclRepaired);                    // the start-up migration
+        Assert.True(DpapiSecretStore.HasSystemOnlyAcl(path));
+        Assert.Throws<UnauthorizedAccessException>(() => File.ReadAllBytes(path)); // not even the administrator
+
+        var again = new DpapiSecretStore(path, systemOnly: true); // upgrade: the installer (owner) reads its own SYSTEM-only file
+        Assert.Equal("test-password-123", again.Get("target:nas1"));
+        Assert.False(again.AclRepaired);
+        again.Set("smtp", "test-smtp-pw-789");
+        Assert.True(DpapiSecretStore.HasSystemOnlyAcl(path));
+    }
+
+    [WindowsAdminFact]
     public void Vss_snapshot_reads_an_exclusively_locked_file()
     {
         using var d = new TempDir();

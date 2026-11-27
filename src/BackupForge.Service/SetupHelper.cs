@@ -52,7 +52,22 @@ public static class SetupHelper
         paths.EnsureCreated();
         if (OperatingSystem.IsWindows()) RestrictProgramData(paths.Root, log);
 
-        ISecretStore secrets = OperatingSystem.IsWindows() ? new Windows.DpapiSecretStore(paths.SecretsFile) : new InMemorySecretStore();
+        ISecretStore secrets;
+        try
+        {
+            secrets = OperatingSystem.IsWindows() ? new Windows.DpapiSecretStore(paths.SecretsFile, systemOnly: true) : new InMemorySecretStore(); // SPEC 14.: SYSTEM only (CR-002 A6.)
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // secrets.dat rewritten by the service (owner SYSTEM): the administrator cannot read it — keep it untouched
+            if (secretsFile is not null)
+            {
+                log("ERROR: secrets.dat belongs to the service and cannot be updated by the installer — set the secrets with 'bf secret set <ref>' instead");
+                return 1;
+            }
+            log("secrets.dat is owned by the service (not readable by the installer): secret checks of the configuration skipped");
+            secrets = new UnknownSecrets();
+        }
         if (secretsFile is not null)
         {
             var map = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(secretsFile)) ?? [];
@@ -152,5 +167,15 @@ public static class SetupHelper
                 System.Security.AccessControl.PropagationFlags.None, System.Security.AccessControl.AccessControlType.Allow));
         di.SetAccessControl(sec);
         log($"{root}: ACL = SYSTEM + Administrators (no inheritance)");
+    }
+
+    /// <summary>Validation stand-in when the existing secrets.dat cannot be read: every reference counts as set.</summary>
+    private sealed class UnknownSecrets : ISecretStore
+    {
+        public bool Has(string reference) => true;
+        public string? Get(string reference) => null;
+        public void Set(string reference, string value) => throw new InvalidOperationException("secrets.dat is not writable by the installer");
+        public bool Remove(string reference) => false;
+        public IReadOnlyCollection<string> References => [];
     }
 }
