@@ -29,46 +29,65 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
     {
         try
         {
-            return CreateOnce(paths, withWriters: true, ct);
+            return CreateOnce(paths, withWriters: true, ct, []);
         }
-        catch (VssException ex) when (ex.Message.StartsWith("GatherWriterMetadata", StringComparison.Ordinal))
+        catch (VssStepException ex) when (ex.Message.StartsWith("GatherWriterMetadata", StringComparison.Ordinal))
         {
             // a hung writer must not block the backup: a fresh requester without writer metadata (crash-consistent snapshot)
-            var session = CreateOnce(paths, withWriters: false, ct);
+            var session = CreateOnce(paths, withWriters: false, ct, [.. ex.Trace]);
             session.WritersSkippedReasons.Add(ex.Message);
             return session;
         }
     }
 
-    private Session CreateOnce(IReadOnlyCollection<string> paths, bool withWriters, CancellationToken ct)
+    /// <summary>
+    /// One requester, one snapshot set. Every step (HRESULT, async status, time) is recorded in <paramref name="trace"/>; the
+    /// trace is attached to failures (<see cref="VssStepException"/>, <see cref="VssSnapshotIncompleteException"/>) and to the
+    /// session (<c>bf diag vss</c>). The trace holds volume names, never the machine name.
+    /// </summary>
+    private Session CreateOnce(IReadOnlyCollection<string> paths, bool withWriters, CancellationToken ct, List<string> trace, Action<string>? raw = null)
     {
         EnsureComSecurity();
         var volumes = paths.Select(VolumeOf).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        Check(CreateVssBackupComponentsInternal(out var bc), "CreateVssBackupComponents");
-        var session = new Session(bc);
+        trace.Add($"requester ({(withWriters ? "with writers" : "without writers")}) for {string.Join(", ", volumes)}");
+        Step(CreateVssBackupComponentsInternal(out var bc), "CreateVssBackupComponents", trace);
+        var session = new Session(bc, trace);
         try
         {
-            Check(bc.InitializeForBackup(null), "InitializeForBackup");
-            Check(bc.SetContext(VSS_CTX_BACKUP), "SetContext");
-            Check(bc.SetBackupState(false, false, VSS_BT_COPY, false), "SetBackupState");
+            Step(bc.InitializeForBackup(null), "InitializeForBackup", trace);
+            Step(bc.SetContext(VSS_CTX_BACKUP), "SetContext(BACKUP)", trace);
+            Step(bc.SetBackupState(false, false, VSS_BT_COPY, false), "SetBackupState(COPY)", trace);
             if (withWriters)
             {
-                Wait(bc.GatherWriterMetadata(out var gather), gather, "GatherWriterMetadata", ct, TimeSpan.FromSeconds(90));
-                bc.FreeWriterMetadata();
+                Wait(bc.GatherWriterMetadata(out var gather), gather, "GatherWriterMetadata", ct, trace, TimeSpan.FromSeconds(90));
+                var hrCount = bc.GetWriterMetadataCount(out var writers);
+                trace.Add($"GetWriterMetadataCount: {VssAsyncWait.Hex(hrCount)}, {writers} writer(s)");
+                session.Writers = (int)writers;
             }
-            Check(bc.StartSnapshotSet(out var setId), "StartSnapshotSet");
+            Step(bc.StartSnapshotSet(out var setId), "StartSnapshotSet", trace);
             session.SetId = setId;
             var ids = new List<(Guid Id, string Volume)>();
             foreach (var v in volumes)
             {
-                Check(bc.AddToSnapshotSet(v, Guid.Empty, out var sid), $"AddToSnapshotSet({v})");
+                Step(bc.AddToSnapshotSet(v, Guid.Empty, out var sid), $"AddToSnapshotSet({v})", trace);
+                trace.Add($"  snapshot id {sid}");
                 ids.Add((sid, v));
             }
-            Wait(bc.PrepareForBackup(out var prep), prep, "PrepareForBackup", ct);
-            Wait(bc.DoSnapshotSet(out var doSet), doSet, "DoSnapshotSet", ct);
+            Wait(bc.PrepareForBackup(out var prep), prep, "PrepareForBackup", ct, trace);
+            Wait(bc.DoSnapshotSet(out var doSet), doSet, "DoSnapshotSet", ct, trace);
+            // the writer metadata stays valid until the snapshot set is done (CR-002 A1. hypothesis 5)
+            if (withWriters) trace.Add($"FreeWriterMetadata: {VssAsyncWait.Hex(bc.FreeWriterMetadata())}");
             foreach (var (sid, v) in ids)
             {
-                var device = DeviceObject(bc, sid);
+                // the snapshot record of a fresh set may lag a moment behind DoSnapshotSet on a busy system: retry before giving up
+                string? device = null;
+                for (var attempt = 1; attempt <= 5 && device is null; attempt++)
+                {
+                    device = DeviceObject(bc, sid, trace, raw);
+                    if (device is null && attempt < 5) Thread.Sleep(500);
+                }
+                if (device is null)
+                    throw new VssSnapshotIncompleteException($"snapshot {sid} of {v} has no device object", trace);
                 session.Add(sid, v, device);
             }
             return session;
@@ -78,6 +97,59 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
             session.Dispose();
             throw;
         }
+    }
+
+    /// <summary>
+    /// <c>bf diag vss</c> (CR-002 A1.): takes one snapshot of the volume of <paramref name="path"/>, prints every step and
+    /// reads the first 4 KB of the first file under <paramref name="path"/> from the snapshot, then deletes the snapshot.
+    /// Exit code 0 = device path present and readable, 1 otherwise.
+    /// </summary>
+    public int Diagnose(string path, bool withWriters, TextWriter o, CancellationToken ct = default)
+    {
+        var trace = new List<string>();
+        o.WriteLine($"process elevated: {Environment.IsPrivilegedProcess}");
+        Session? session = null;
+        try
+        {
+            session = CreateOnce([path], withWriters, ct, trace, line => trace.Add(line));
+            foreach (var t in trace) o.WriteLine(t);
+            trace.Clear();
+            var file = FirstFile(path);
+            if (file is null)
+            {
+                o.WriteLine($"no file under {path} to read back — snapshot device present, read test skipped");
+                return 0;
+            }
+            var inSnapshot = session.Translate(file);
+            using var fs = new FileStream(inSnapshot, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            var buf = new byte[4096];
+            var n = fs.Read(buf, 0, buf.Length);
+            o.WriteLine($"read {n} byte(s) of {file} from {inSnapshot}");
+            o.WriteLine("RESULT: ok");
+            return 0;
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            var t = ex switch { VssStepException v => v.Trace, VssSnapshotIncompleteException v => v.Trace, _ => trace };
+            foreach (var line in t) o.WriteLine(line);
+            o.WriteLine($"RESULT: failed — {ex.GetType().Name}: {ex.Message}");
+            return 1;
+        }
+        finally
+        {
+            session?.Dispose();
+            o.WriteLine("cleanup: snapshot set deleted");
+        }
+    }
+
+    private static string? FirstFile(string path)
+    {
+        if (File.Exists(path)) return path;
+        try
+        {
+            return Directory.EnumerateFiles(path, "*", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true }).FirstOrDefault();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return null; }
     }
 
     public IReadOnlyList<string> DeleteOrphans(IEnumerable<string> snapshotIds)
@@ -104,20 +176,38 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
         return deleted;
     }
 
-    private static string DeviceObject(IVssBackupComponents bc, Guid snapshotId)
+    private const int VSS_SS_CREATED = 12;
+
+    /// <summary>GetSnapshotProperties → the device path, or null (everything that was seen goes to the trace).</summary>
+    private static string? DeviceObject(IVssBackupComponents bc, Guid snapshotId, List<string> trace, Action<string>? raw)
     {
         var size = Marshal.SizeOf<VssSnapshotProp>();
         var buf = Marshal.AllocHGlobal(size);
+        var filled = false;
         try
         {
-            Check(bc.GetSnapshotProperties(snapshotId, buf), "GetSnapshotProperties");
+            unsafe { new Span<byte>((void*)buf, size).Clear(); }
+            var hr = bc.GetSnapshotProperties(snapshotId, buf);
+            trace.Add($"GetSnapshotProperties({snapshotId}): {VssAsyncWait.Hex(hr)} {VssException.Describe(hr)}");
+            if (hr < 0) return null;
+            filled = true;
+            if (raw is not null)
+            {
+                var bytes = new byte[size];
+                Marshal.Copy(buf, bytes, 0, size);
+                raw($"  VSS_SNAPSHOT_PROP ({size} bytes): {Convert.ToHexString(bytes)}");
+            }
             var prop = Marshal.PtrToStructure<VssSnapshotProp>(buf);
-            var device = Marshal.PtrToStringUni(prop.SnapshotDeviceObject) ?? throw new InvalidOperationException("snapshot has no device object");
-            VssFreeSnapshotPropertiesInternal(buf);
-            return device;
+            var device = Marshal.PtrToStringUni(prop.SnapshotDeviceObject);
+            trace.Add($"  SnapshotId {prop.SnapshotId} ({(prop.SnapshotId == snapshotId ? "matches" : prop.SnapshotId == Guid.Empty ? "EMPTY — struct not filled" : "DIFFERS")}), " +
+                      $"count {prop.SnapshotsCount}, status {prop.Status}{(prop.Status == VSS_SS_CREATED ? " (CREATED)" : "")}, " +
+                      $"original volume {Marshal.PtrToStringUni(prop.OriginalVolumeName) ?? "-"}, device {device ?? "NONE"}");
+            return string.IsNullOrEmpty(device) ? null : device;
         }
         finally
         {
+            // free the strings VSS allocated inside the struct on every path (was only on success)
+            if (filled) VssFreeSnapshotPropertiesInternal(buf);
             Marshal.FreeHGlobal(buf);
         }
     }
@@ -152,34 +242,23 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
         }
     }
 
-    private static void Check(int hr, string what)
+    private static void Step(int hr, string what, List<string> trace)
     {
-        if (hr < 0) throw new VssException($"{what} failed: 0x{hr:X8} {VssException.Describe(hr)}", hr);
+        trace.Add($"{what}: {VssAsyncWait.Hex(hr)}");
+        if (hr < 0) throw new VssStepException($"{what} failed: {VssAsyncWait.Hex(hr)} {VssException.Describe(hr)}", hr, trace);
     }
 
-    private static void Wait(int hr, IVssAsync? op, string what, CancellationToken ct, TimeSpan? limit = null)
+    private static void Wait(int hr, IVssAsync? op, string what, CancellationToken ct, List<string> trace, TimeSpan? limit = null)
     {
-        Check(hr, what);
+        Step(hr, what, trace);
         if (op is null) return;
-        var deadline = DateTime.UtcNow + (limit ?? AsyncLimit);
         try
         {
-            while (true)
-            {
-                ct.ThrowIfCancellationRequested();
-                if (DateTime.UtcNow > deadline)
-                {
-                    op.Cancel();
-                    throw new VssException($"{what} did not finish within {(limit ?? AsyncLimit).TotalSeconds:0} s", unchecked((int)0x80042314));
-                }
-                Check(op.Wait(1000), what + " (wait)");
-                Check(op.QueryStatus(out var status, IntPtr.Zero), what + " (status)");
-                if (status == 0x0004230A) return;           // VSS_S_ASYNC_FINISHED
-                if (status == 0x00042309) continue;          // VSS_S_ASYNC_PENDING
-                if (status == 0x0004230B) throw new OperationCanceledException(what + " cancelled"); // VSS_S_ASYNC_CANCELLED
-                Check(status, what);
-                return;
-            }
+            VssAsyncWait.Run(new AsyncAdapter(op), what, limit ?? AsyncLimit, ct, trace);
+        }
+        catch (VssStepException ex)
+        {
+            throw new VssStepException($"{ex.Message} {VssException.Describe(ex.Code)}".TrimEnd(), ex.Code, trace);
         }
         finally
         {
@@ -187,8 +266,17 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
         }
     }
 
-    private sealed class Session(IVssBackupComponents bc) : ISnapshotSession
+    private sealed class AsyncAdapter(IVssAsync op) : IVssAsyncOperation
     {
+        public int Cancel() => op.Cancel();
+        public int Wait(uint milliseconds) => op.Wait(milliseconds);
+        public int QueryStatus(out int status) => op.QueryStatus(out status, IntPtr.Zero);
+    }
+
+    private sealed class Session(IVssBackupComponents bc, List<string> trace) : ISnapshotSession
+    {
+        public List<string> Trace { get; } = trace;
+        public int Writers { get; set; }
         private readonly List<(string SnapshotId, string? SetId, string Volume)> _snapshots = [];
         private readonly List<(string Volume, string Device)> _map = [];
         private bool _disposed;

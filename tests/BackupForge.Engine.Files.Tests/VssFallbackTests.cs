@@ -43,4 +43,25 @@ public class VssFallbackTests
         var o = await h.RunAsync();
         Assert.Equal(RunResults.Ok, o.Result);
     }
+
+    private sealed class BrokenVss : ISnapshotProvider
+    {
+        public bool IsSupported => true;
+        public ISnapshotSession Create(IReadOnlyCollection<string> paths, CancellationToken ct) =>
+            throw new VssSnapshotIncompleteException("snapshot {snap-1} of C:\\ has no device object",
+                ["DoSnapshotSet: status 0x0004230A (FINISHED) at 3.1 s", "GetSnapshotProperties({snap-1}): 0x00000000", "  SnapshotId 00000000-0000-0000-0000-000000000000 (EMPTY — struct not filled)"]);
+        public IReadOnlyList<string> DeleteOrphans(IEnumerable<string> snapshotIds) => [];
+    }
+
+    [Fact]
+    public async Task Snapshot_without_device_logs_the_trace_at_error_level()
+    {
+        // CR-002 A1. 4.: not a silent "VSS unavailable" — the run log carries the HRESULTs and statuses
+        using var h = new EngineHarness { Vss = new BrokenVss() };
+        h.Job.Files!.Vss = VssModes.WhenAvailable;
+        h.Write("a.txt", "a");
+        var o = await h.RunAsync();
+        Assert.Equal(RunResults.Warning, o.Result);
+        Assert.Contains(h.Log.Lines, l => l.StartsWith("ERR VSS diagnostics:", StringComparison.Ordinal) && l.Contains("struct not filled", StringComparison.Ordinal));
+    }
 }

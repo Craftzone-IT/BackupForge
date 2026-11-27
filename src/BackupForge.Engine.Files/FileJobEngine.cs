@@ -105,6 +105,14 @@ public sealed class FileJobEngine : IJobEngine
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException and not OutOfMemoryException)
                 {
+                    // CR-002 A1.: the snapshot exists but VSS gave no device path → an engine problem: full step trace at Error level
+                    var trace = ex switch { VssSnapshotIncompleteException i => i.Trace, VssStepException s => s.Trace, _ => null };
+                    if (trace is not null)
+                    {
+                        var level = ex is VssSnapshotIncompleteException ? "error" : "info";
+                        var text = "VSS diagnostics:\n  " + string.Join("\n  ", trace);
+                        if (level == "error") log.Error(text); else log.Info(text);
+                    }
                     if (files.Vss == VssModes.Required) return RunOutcome.Failed(Texts.Format(culture, "files.vss_required", ex.Message));
                     var msg = Texts.Format(culture, "files.vss_failed", ex.Message);
                     log.Warning(msg);

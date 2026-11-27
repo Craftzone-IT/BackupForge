@@ -9,6 +9,7 @@
     <ProjectReference Include="..\BackupForge.Core\BackupForge.Core.csproj" />
     <ProjectReference Include="..\BackupForge.Ipc\BackupForge.Ipc.csproj" />
     <ProjectReference Include="..\BackupForge.Engine.Sql\BackupForge.Engine.Sql.csproj" />
+    <ProjectReference Include="..\BackupForge.Windows\BackupForge.Windows.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="BackupForge.Service.Tests" />

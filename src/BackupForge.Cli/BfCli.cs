@@ -38,6 +38,7 @@ public static class BfCli
           bf restore <jobId> ...              see 'bf restore --help'
           bf sql discover [<instance>] | grant <jobId> [--login <sqllogin>] [--yes]
           bf report preview [<file.html>]
+          bf diag vss [<path>] [--no-writers]  VSS self-test (elevated, without the service)
 
         Exit codes: 0 ok, 1 error, 2 usage, 3 service not reachable; with --wait: 0 ok, 10 warning, 11 failed.
         """;
@@ -71,6 +72,7 @@ public static class BfCli
                 "restore" => await Restore(a, stdout).ConfigureAwait(false),
                 "sql" => await Sql(a, stdout).ConfigureAwait(false),
                 "report" => await Report(a, stdout).ConfigureAwait(false),
+                "diag" when a.Positional(1, "vss") == "vss" => DiagVss(a, stdout),
                 _ => throw new UsageException($"unknown command '{a.Command}'"),
             };
         }
@@ -410,6 +412,19 @@ public static class BfCli
         await session.ExecuteAsync(script, CancellationToken.None).ConfigureAwait(false);
         o.WriteLine($"permissions set for {Engine.Sql.SqlPlanning.ServiceLogin} on {dbs.Count} database(s)");
         return ExitOk;
+    }
+
+    /// <summary>CR-002 A1.: one VSS snapshot with a full step trace, in this process (needs an elevated prompt).</summary>
+    private static int DiagVss(Args a, TextWriter o)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            o.WriteLine("bf diag vss: Windows only");
+            return ExitError;
+        }
+        var path = a.PositionalOrNull(2) ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "System32", "drivers", "etc");
+        Windows.VssSnapshotProvider.InitializeComSecurity(); // first COM use in the process, exactly as the service does
+        return new Windows.VssSnapshotProvider().Diagnose(path, withWriters: !a.Has("--no-writers"), o);
     }
 
     private static async Task<int> Report(Args a, TextWriter o)

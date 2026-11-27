@@ -47,6 +47,26 @@ public class WindowsPlatformTests
     }
 
     [WindowsAdminFact]
+    public async Task Bf_diag_vss_without_writers_reads_a_locked_file_from_the_snapshot()
+    {
+        // CR-002 A1.: the diagnostic command must succeed on the runner (writer-less path) and read the locked file back
+        using var d = new TempDir();
+        var dir = d.Sub("only");
+        Directory.CreateDirectory(dir);
+        var file = Path.Combine(dir, "locked.db");
+        File.WriteAllText(file, "database content");
+        using var locker = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var o = new StringWriter();
+        var code = await BackupForge.Cli.BfCli.RunAsync(["diag", "vss", dir, "--no-writers"], o, o, TextReader.Null);
+        var text = o.ToString();
+        Assert.True(code == 0, text);
+        Assert.Contains("read 16 byte(s)", text, StringComparison.Ordinal);
+        Assert.Contains("(FINISHED)", text, StringComparison.Ordinal);
+        Assert.Contains("RESULT: ok", text, StringComparison.Ordinal);
+        Assert.DoesNotContain(Environment.MachineName, text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [WindowsAdminFact]
     public async Task Files_job_with_vss_copies_locked_file_without_vss_it_is_skipped()
     {
         using var d = new TempDir();
