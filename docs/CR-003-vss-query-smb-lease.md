@@ -1,6 +1,6 @@
 # CR-003 — VSS: eszközútvonal `Query`-vel; SMB: minden hálózati elérés lease-ben
 
-**Állapot: NYITOTT (2026-11-27)**
+**Állapot: KÉSZ (2026-11-27)** — részletek: CLAUDE.md „CR-003 — KÉSZ” és „Eltérések a CR-003-tól”; a tesztgépes ellenőrzés a chaté.
 
 Forrás: `docs/TEST-FINDINGS.md`, T3 (a CR-002 újratesztje a chat tesztgépén, tiszta Windows Server 2022 VM). A CR-002 két fontos pontja (A1 VSS, A2 SMB) a valós gépen továbbra sem működik, de mindkettőnek megvan az oka. A CR-002 többi pontja rendben van.
 
