@@ -172,6 +172,61 @@ public class WindowsPlatformTests
         }
     }
 
+    [WindowsAdminFact]
+    public async Task Smb_parallel_probes_and_a_run_share_one_connection()
+    {
+        // CR-002 A2.: 20 probes + a run on the same server at the same time → no 1219, nothing left connected afterwards
+        var user = "bfit" + Guid.NewGuid().ToString("N")[..6];
+        const string password = "Test-password-123!";
+        var share = "bfit" + Guid.NewGuid().ToString("N")[..6];
+        using var d = new TempDir();
+        try
+        {
+            Assert.Equal(0, Run("net", "user", user, password, "/add", "/y").Code);
+            var shareDir = d.Sub("share");
+            Directory.CreateDirectory(Path.Combine(shareDir, "backup"));
+            Run("icacls", shareDir, "/grant", $"{Environment.MachineName}\\{user}:(OI)(CI)M");
+            Assert.Equal(0, Run("powershell", "-NoProfile", "-Command", $"New-SmbShare -Name {share} -Path '{shareDir}' -FullAccess '{Environment.MachineName}\\{user}' | Out-Null").Code);
+            var unc = $@"\\localhost\{share}";
+            var src = d.Sub("src");
+            Directory.CreateDirectory(src);
+            for (var i = 0; i < 50; i++) File.WriteAllText(Path.Combine(src, $"f{i}.txt"), "data " + i);
+            var secrets = new InMemorySecretStore([new("target:t", password)]);
+            var target = new TargetConfig { Id = "t", Type = TargetTypes.Smb, Path = unc + @"\backup", Username = $"{Environment.MachineName}\\{user}", PasswordRef = "target:t" };
+            var connector = new WNetConnector();
+            var cfg = new BackupConfig
+            {
+                InstanceName = "IT", Language = "en", Targets = [target],
+                Jobs = [new JobConfig { Id = "docs", Name = "Docs", Type = JobTypes.Files, Sources = [new SourceConfig { Path = src }],
+                    Target = new JobTargetRef { TargetId = "t", Subdir = "Docs" }, Files = new FilesOptions { Vss = VssModes.Never } }],
+            };
+            var ctx = new JobRunContext
+            {
+                Config = cfg, Job = cfg.Jobs[0], Request = new WorkRequest { JobId = "docs", Trigger = RunTriggers.Manual }, RunId = 1,
+                Log = new MemoryRunLog(), Progress = new Progress<RunProgress>(), Clock = new ManualClock(DateTimeOffset.UtcNow, TimeZoneInfo.Local),
+                Secrets = secrets, Paths = new DataPaths(d.Sub("data")),
+            };
+            var engine = new FileJobEngine(PhysicalFileSystem.Instance, connector, NoSnapshotProvider.Instance, new FileEngineOptions { RetryDelays = [TimeSpan.Zero] });
+            var run = engine.RunAsync(ctx, CancellationToken.None);
+            var probes = Enumerable.Range(0, 20).Select(_ => Task.Run(() =>
+            {
+                using (connector.Connect(target, secrets)) return Directory.Exists(unc);
+            })).ToList();
+            Assert.All(await Task.WhenAll(probes), Assert.True);
+            var o = await run.WaitAsync(TimeSpan.FromMinutes(3));
+            Assert.True(o.Result == RunResults.Ok, o.Summary + " | " + string.Join(" | ", o.Items.Select(i => i.Message)));
+            Assert.Equal(50, o.FilesCopied);
+            Assert.Equal(0, connector.Manager.OpenOwnConnections);
+            var netUse = Run("net", "use").Output;
+            Assert.DoesNotContain(share, netUse, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Run("powershell", "-NoProfile", "-Command", $"Remove-SmbShare -Name {share} -Force -ErrorAction SilentlyContinue");
+            Run("net", "user", user, "/delete");
+        }
+    }
+
     private static (int Code, string Output) Run(string exe, params string[] args)
     {
         var psi = new ProcessStartInfo(exe) { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
