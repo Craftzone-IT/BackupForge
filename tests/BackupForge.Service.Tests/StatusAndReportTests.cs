@@ -106,7 +106,12 @@ public class StatusAndReportTests
         await h.Runtime.Coordinator.Enqueue(new WorkRequest { JobId = "sql-main", Trigger = RunTriggers.Manual }).Completion;
         await h.FlushMailAsync();
         var before = h.Mail.Sent.Count;
-        // 2026-11-24 is a Tuesday; the report is due on Sunday 06:30
+        // 2026-11-24 is a Tuesday; the report is due on Sunday 06:30. First the jump to 06:29 (the scheduled run that is due
+        // then must be finished before the report is built — in the same tick it would be a race), then the report time.
+        h.Clock.Set(new DateTimeOffset(2026, 11, 29, 6, 29, 0, TimeSpan.Zero));
+        h.Runtime.Tick();
+        for (var i = 0; i < 500 && (h.Runtime.Coordinator.Running.Count > 0 || h.Runtime.Coordinator.Queued.Count > 0 || h.Runtime.History.LastRun("company-mirror")?.Trigger != RunTriggers.Schedule); i++)
+            await Task.Delay(10);
         h.Clock.Set(new DateTimeOffset(2026, 11, 29, 6, 31, 0, TimeSpan.Zero));
         await h.FlushMailAsync();
         var reports = h.Mail.Sent.Skip(before).Where(m => m.Subject.Contains("Heti mentési riport", StringComparison.Ordinal)).ToList();
