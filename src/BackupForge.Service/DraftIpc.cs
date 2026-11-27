@@ -14,7 +14,15 @@ public static class DraftIpc
 {
     public static void Register(ServiceIpcHandler h)
     {
-        h.Register(IpcOps.PathCheck, (req, _, _) => Task.FromResult<JsonNode?>(PathCheck(req.Required("path"))));
+        h.Register(IpcOps.PathCheck, (req, _, _) =>
+        {
+            var path = req.Required("path");
+            // a UNC path on a credentialed SMB target's server: only inside its lease (CR-003 2.)
+            IDisposable lease;
+            try { lease = h.Runtime.LeaseFor(path); }
+            catch (TargetConnectException ex) { return Task.FromResult<JsonNode?>(new JsonObject { ["path"] = path, ["exists"] = false, ["listable"] = false, ["is_network_drive_letter"] = false, ["error"] = h.Runtime.Masker.Apply(ex.Message) }); }
+            using (lease) return Task.FromResult<JsonNode?>(PathCheck(path));
+        });
     }
 
     /// <summary>Seen with the service's eyes (LocalSystem): a user's mapped drive letter does not exist there.</summary>

@@ -42,6 +42,16 @@ public sealed class SmbConnectionManager(INativeWNet net)
 
     private readonly Dictionary<string, Server> _servers = new(StringComparer.Ordinal);
 
+    /// <summary>A lease (own or foreign) is live for this server (lower case) right now — for the LeaseGuardFileSystem.</summary>
+    public bool HasLease(string server)
+    {
+        lock (_servers)
+        {
+            if (!_servers.TryGetValue(server.ToLowerInvariant(), out var s)) return false;
+            lock (s) return s.Own.Count > 0 || s.Foreign.Count > 0;
+        }
+    }
+
     /// <summary>Number of shares BackupForge itself holds open (tests / diagnostics).</summary>
     public int OpenOwnConnections { get { lock (_servers) return _servers.Values.Sum(s => s.Own.Count); } }
 

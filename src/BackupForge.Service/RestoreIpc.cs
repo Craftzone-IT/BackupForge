@@ -22,7 +22,8 @@ public static class RestoreIpc
             var arr = new JsonArray();
             if (job.Type == JobTypes.Files)
             {
-                foreach (var p in Engine.Files.FileRestoreEngine.Points(Core.Abstractions.PhysicalFileSystem.Instance, rt.ConfigStore.Current, job))
+                using var lease = TargetLease(rt, job); // CR-003 2.: the mirror / Versions on an SMB target only inside a lease
+                foreach (var p in Engine.Files.FileRestoreEngine.Points(rt.FileSystem, rt.ConfigStore.Current, job))
                     arr.Add(new JsonObject { ["point"] = p.Id, ["time"] = p.LocalTime?.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture), ["path"] = p.Path });
             }
             else if (job.Type == JobTypes.Restic && rt.Restic is not null)
@@ -41,7 +42,8 @@ public static class RestoreIpc
             var arr = new JsonArray();
             if (job.Type == JobTypes.Files)
             {
-                var fs = Core.Abstractions.PhysicalFileSystem.Instance;
+                var fs = rt.FileSystem;
+                using var lease = TargetLease(rt, job);
                 string dir;
                 try { dir = Engine.Files.FileRestoreEngine.Resolve(fs, rt.ConfigStore.Current, job, point, path); }
                 catch (InvalidOperationException ex) { throw new IpcException(IpcErrorCodes.BadRequest, ex.Message); }
@@ -77,7 +79,7 @@ public static class RestoreIpc
             {
                 var to = req.Str("to") ?? throw new IpcException(IpcErrorCodes.BadRequest, "missing argument 'to'");
                 if (!Path.IsPathFullyQualified(to)) throw new IpcException(IpcErrorCodes.BadRequest, "'to' must be an absolute path");
-                parameters["target"] = RestoreTargets.NewRestoreFolder(to, rt.Clock.LocalNow(), Directory.Exists);
+                using (rt.LeaseFor(to)) parameters["target"] = RestoreTargets.NewRestoreFolder(to, rt.Clock.LocalNow(), Directory.Exists);
             }
             var r = rt.Coordinator.Enqueue(new WorkRequest { JobId = jobId, Kind = RunKinds.Restore, Trigger = RunTriggers.Manual, Parameters = parameters });
             if (!r.Accepted) throw new IpcException(IpcErrorCodes.Rejected, r.Reason ?? "rejected");
@@ -85,6 +87,13 @@ public static class RestoreIpc
             var rec = await r.Completion.WaitAsync(ct).ConfigureAwait(false);
             return new JsonObject { ["run_id"] = rec?.Id, ["result"] = rec?.Result, ["summary"] = rec?.Summary, ["target"] = parameters.GetValueOrDefault("target") };
         });
+    }
+
+    private static IDisposable TargetLease(ServiceRuntime rt, JobConfig job)
+    {
+        if (job.Target is null || rt.ConfigStore.Current.FindTarget(job.Target.TargetId) is not { } target) return NullDisposable.Instance;
+        try { return rt.Connector.Connect(target, rt.Secrets); }
+        catch (TargetConnectException ex) { throw new IpcException(IpcErrorCodes.Rejected, rt.Masker.Apply(ex.Message)); }
     }
 
     private static JobConfig Job(ServiceRuntime rt, IpcRequest req)

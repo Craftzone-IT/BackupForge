@@ -30,9 +30,20 @@ public sealed class Platform
     public static Platform Current()
     {
         if (!OperatingSystem.IsWindows()) return new Platform();
+        var connector = new Windows.WNetConnector();
         return new Platform
         {
-            Connector = new Windows.WNetConnector(),
+            // CR-003 2.: every UNC access to a credentialed SMB server must happen inside a lease of this connector
+            FileSystem = new LeaseGuardFileSystem(PhysicalFileSystem.Instance)
+            {
+                HasLease = connector.Manager.HasLease,
+#if DEBUG
+                ThrowOnViolation = true,
+#else
+                ThrowOnViolation = Environment.GetEnvironmentVariable("BF_LEASE_GUARD_THROW") == "1",
+#endif
+            },
+            Connector = connector,
             Vss = new Windows.VssSnapshotProvider(),
             Events = new Windows.WindowsEventSink(),
             StagingPermissions = new Windows.StagingAcl(),
@@ -75,6 +86,14 @@ public static class ServiceComposition
     /// <summary>Adds the standard components and status providers to a runtime.</summary>
     public static void Attach(ServiceRuntime rt, Platform platform, IReadOnlyList<IJobEngine> engines)
     {
+        rt.FileSystem = platform.FileSystem;
+        rt.Connector = platform.Connector;
+        if (platform.FileSystem is LeaseGuardFileSystem guard)
+        {
+            var log = rt.Loggers.CreateLogger("BackupForge.Targets");
+            guard.NeedsLease = rt.NeedsLease;
+            guard.Warn = m => log.LogWarning("{Message}", m);
+        }
         var notifier = new Notifier(platform.Mail, platform.Events);
         var probe = new TargetProbe(platform.FileSystem, platform.Connector);
         rt.AddComponent(new LifecycleEvents(platform.Events, platform.Vss));
@@ -95,11 +114,10 @@ public static class ServiceComposition
         rt.Reporter = reporter;
         rt.StatusWriter = status;
         rt.TargetProbe = probe;
-        var files = engines.OfType<FileJobEngine>().FirstOrDefault();
         rt.StatusProviders = new StatusProviders
         {
             Target = probe.Get,
-            Versions = job => files?.VersionsInfo(rt.ConfigStore.Current, job),
+            Versions = job => VersionsState.Read(rt.History, rt.ConfigStore.Current, job), // never touches the target (CR-003 2.)
             Notifications = notifier.Status,
             ResticJob = job => new BackupForge.Core.Status.ResticJobStatus
             {

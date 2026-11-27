@@ -78,7 +78,9 @@ public sealed class SqlSupport(ISqlSessionFactory sessions) : IServiceComponent
         }
         var staging = StagingPaths.For(_rt.ConfigStore.Current, _rt.Paths, job.Id);
         st.Staging = new StagingStatus { Path = staging };
-        if (Directory.Exists(staging) && Core.Abstractions.PhysicalFileSystem.Instance.GetSpace(staging) is var (free, _)) st.Staging.FreeGb = Math.Round(free / 1073741824.0, 1);
+        // a staging folder on a credentialed SMB server is not measured by the minutely status (no lease there, CR-003 2.)
+        if (Core.Abstractions.LeaseGuardFileSystem.ServerOf(staging) is not { } server || !_rt.NeedsLease(server))
+            if (Directory.Exists(staging) && Core.Abstractions.PhysicalFileSystem.Instance.GetSpace(staging) is var (free, _)) st.Staging.FreeGb = Math.Round(free / 1073741824.0, 1);
         return st;
     }
 

@@ -155,6 +155,22 @@ public sealed class ServiceRuntime : IAsyncDisposable
     public Components.Notifier? Notifier { get; set; }
     public Components.TargetProbe? TargetProbe { get; set; }
     public IReadOnlyList<IJobEngine> Engines => _engines;
+    public IFileSystem FileSystem { get; set; } = PhysicalFileSystem.Instance;
+    public ITargetConnector Connector { get; set; } = NoOpTargetConnector.Instance;
+
+    /// <summary>The credentialed SMB target (with its own user name) on this server (lower case), if any.</summary>
+    public TargetConfig? CredentialedTargetOn(string server) =>
+        ConfigStore.Current.Targets.FirstOrDefault(t => t.Type == TargetTypes.Smb && !string.IsNullOrEmpty(t.Username) &&
+                                                         string.Equals(LeaseGuardFileSystem.ServerOf(t.Path), server, StringComparison.OrdinalIgnoreCase));
+
+    public bool NeedsLease(string server) => CredentialedTargetOn(server) is not null;
+
+    /// <summary>
+    /// CR-003 2.: outside a run, a UNC path on a credentialed SMB server is only touched inside this lease (otherwise the
+    /// LocalSystem connects with the computer account and the next run gets error 1219). A no-op for other paths.
+    /// </summary>
+    public IDisposable LeaseFor(string path) =>
+        LeaseGuardFileSystem.ServerOf(path) is { } server && CredentialedTargetOn(server) is { } t ? Connector.Connect(t, Secrets) : NullDisposable.Instance;
     public Components.WeeklyReporter? Reporter { get; set; }
     public Components.StatusWriter? StatusWriter { get; set; }
     public Components.ResticComponent? Restic { get; set; }
@@ -176,8 +192,12 @@ public sealed class ServiceRuntime : IAsyncDisposable
         Providers = StatusProviders,
     });
 
+    private int _stopped;
+
+    /// <summary>Stops once: the host's Worker and the DI container's dispose both call it (the log said "stopping" twice).</summary>
     public async Task StopAsync()
     {
+        if (Interlocked.Exchange(ref _stopped, 1) == 1) return;
         _log.LogInformation("BackupForge stopping");
         if (_ipc is not null) await _ipc.DisposeAsync().ConfigureAwait(false);
         _ipc = null;

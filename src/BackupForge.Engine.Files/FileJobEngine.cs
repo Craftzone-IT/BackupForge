@@ -231,6 +231,16 @@ public sealed class FileJobEngine : IJobEngine
                 if (ret.FoldersDeleted + ret.FilesDeleted > 0) log.Info($"versions retention: {ret.FoldersDeleted} folder(s), {ret.FilesDeleted} file version(s) deleted");
                 foreach (var e in ret.Errors) { log.Warning("versions retention: " + e); outcome.AddWarning(null, "versions retention: " + e); }
             }
+            if (versionsRoot is not null && !dry)
+            {
+                // CR-003 2.: measured here, inside the run's own SMB lease — the status writer only reads the kv
+                try
+                {
+                    var (count, oldest) = VersionsRetention.Info(_fs, versionsRoot);
+                    VersionsState.Write(ctx.State, job.Id, versionsRoot, count, oldest);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { log.Warning("versions info: " + ex.Message); }
+            }
 
             var summary = Texts.Format(culture, "files.summary", stats.Copied, stats.Versioned, stats.Deleted, SizeText.Format(stats.Bytes, culture));
             if (outcome.FilesSkipped > 0) summary += Texts.Format(culture, "files.summary_skipped", outcome.FilesSkipped);
@@ -479,17 +489,5 @@ public sealed class FileJobEngine : IJobEngine
         var i = trimmed.LastIndexOfAny(['\\', '/']);
         var leaf = i >= 0 ? trimmed[(i + 1)..] : trimmed;
         return leaf.Replace(":", "", StringComparison.Ordinal);
-    }
-
-    /// <summary>Folder count / oldest stamp of the Versions folder (for status.json).</summary>
-    public VersionsStatus? VersionsInfo(BackupConfig config, JobConfig job)
-    {
-        if (job.Files is not { Versioning.Enabled: true } || job.Target is null) return null;
-        var target = config.FindTarget(job.Target.TargetId);
-        if (target is null) return null;
-        var path = JobPaths.VersionsPath(target, job.Target, job.Files.Versioning);
-        if (path is null) return null;
-        var (count, oldest) = VersionsRetention.Info(_fs, path);
-        return new VersionsStatus { Path = path, Folders = count, Oldest = oldest is null ? null : new DateTimeOffset(oldest.Value, TimeZoneInfo.Local.GetUtcOffset(oldest.Value)) };
     }
 }

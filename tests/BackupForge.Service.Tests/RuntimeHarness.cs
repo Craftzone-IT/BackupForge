@@ -31,13 +31,18 @@ public sealed class RuntimeHarness : IAsyncDisposable
     public MemoryEventSink Events { get; } = new();
     public SecretMasker Masker { get; } = new();
 
-    public async Task<RuntimeHarness> StartAsync(IEnumerable<IJobEngine>? engines = null, bool components = true)
+    public async Task<RuntimeHarness> StartAsync(IEnumerable<IJobEngine>? engines = null, bool components = true, IFileSystem? fileSystem = null, ITargetConnector? connector = null)
     {
         var list = (engines ?? [Engine]).ToList();
         Runtime = new ServiceRuntime(Paths, NullLoggerFactory.Instance, Clock, list, Secrets, Masker,
             new ServiceOptions { PipeName = Pipe, CatchUpDelay = TimeSpan.FromMinutes(2) });
         if (components)
-            ServiceComposition.Attach(Runtime, new Platform { Mail = Mail, Events = Events }, list);
+            ServiceComposition.Attach(Runtime, new Platform
+            {
+                Mail = Mail, Events = Events,
+                FileSystem = fileSystem ?? PhysicalFileSystem.Instance,
+                Connector = connector ?? NoOpTargetConnector.Instance,
+            }, list);
         await Runtime.StartAsync(CancellationToken.None);
         return this;
     }
