@@ -43,7 +43,8 @@ public static class SetupHelper
         }
         finally
         {
-            if (logFile is not null) try { File.AppendAllText(logFile, log.ToString()); } catch (IOException) { }
+            // UTF-8 with BOM for a new setup.log (PS 5.1 Get-Content), appended runs add none (CR-002 A7.)
+            if (logFile is not null) try { File.AppendAllText(logFile, log.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)); } catch (IOException) { }
         }
     }
 

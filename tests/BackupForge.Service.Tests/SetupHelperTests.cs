@@ -73,4 +73,19 @@ public class SetupHelperTests
         }
         finally { Environment.SetEnvironmentVariable(DataPaths.DataDirEnvVar, old); }
     }
+
+    [Fact]
+    public void Setup_log_is_utf8_with_a_single_bom()
+    {
+        using var d = new TempDir();
+        var paths = new DataPaths(d.Sub("data"));
+        var log = d.Sub("setup.log");
+        Assert.Equal(0, SetupHelper.Run(["--setup-install", "--log", log], paths, new StringWriter()));
+        Assert.Equal(0, SetupHelper.Run(["--setup-uninstall", "--log", log], paths, new StringWriter()));
+        var bytes = File.ReadAllBytes(log);
+        Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, bytes[..3]);
+        var boms = 0;
+        for (var i = 0; i + 2 < bytes.Length; i++) if (bytes[i] == 0xEF && bytes[i + 1] == 0xBB && bytes[i + 2] == 0xBF) boms++;
+        Assert.Equal(1, boms);
+    }
 }

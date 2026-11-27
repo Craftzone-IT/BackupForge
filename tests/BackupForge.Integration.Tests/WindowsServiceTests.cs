@@ -29,6 +29,7 @@ public class WindowsServiceTests
     private async Task RunInstalled(bool testEngine)
     {
         var name = "BackupForgeIT" + Guid.NewGuid().ToString("N")[..6];
+        var started = DateTime.UtcNow;
         using var dir = new TempDir();
         var paths = new DataPaths(Path.Combine(dir.Path, "data"));
         paths.EnsureCreated();
@@ -63,6 +64,8 @@ public class WindowsServiceTests
             var deadline = DateTime.UtcNow.AddSeconds(60);
             while (!Sc("query", name).Contains("STOPPED", StringComparison.OrdinalIgnoreCase) && DateTime.UtcNow < deadline) await Task.Delay(500);
             Assert.Contains("STOPPED", Sc("query", name), StringComparison.OrdinalIgnoreCase);
+            // CR-002 A7.: no ServiceBase.AutoLog entries ("Service started successfully", event id 0) in the Application log
+            if (OperatingSystem.IsWindows()) Assert.Equal(0, EventId0Since(started));
             Assert.Contains("stopped", string.Concat(Directory.EnumerateFiles(paths.LogsDir, "service-*.log").Select(f =>
             {
                 using var fs = new FileStream(f, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
@@ -74,5 +77,17 @@ public class WindowsServiceTests
             Sc("stop", name);
             Sc("delete", name);
         }
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static int EventId0Since(DateTime utc)
+    {
+        var ms = (long)(DateTime.UtcNow - utc).TotalMilliseconds + 1000;
+        var q = new System.Diagnostics.Eventing.Reader.EventLogQuery("Application", System.Diagnostics.Eventing.Reader.PathType.LogName,
+            $"*[System[Provider[@Name='BackupForge'] and (EventID=0) and TimeCreated[timediff(@SystemTime) <= {ms}]]]");
+        using var reader = new System.Diagnostics.Eventing.Reader.EventLogReader(q);
+        var n = 0;
+        for (var e = reader.ReadEvent(); e is not null; e = reader.ReadEvent()) { n++; e.Dispose(); }
+        return n;
     }
 }

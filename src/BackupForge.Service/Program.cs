@@ -21,6 +21,8 @@ var clock = SystemClock.Instance;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddWindowsService(o => o.ServiceName = "BackupForge");
+if (OperatingSystem.IsWindows() && Microsoft.Extensions.Hosting.WindowsServices.WindowsServiceHelpers.IsWindowsService())
+    builder.Services.AddSingleton<IHostLifetime, BackupForge.Service.QuietWindowsServiceLifetime>(); // no event-id-0 entries (CR-002 A7.)
 builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = TimeSpan.FromSeconds(75));
 builder.Logging.ClearProviders();
 builder.Logging.SetMinimumLevel(LogLevel.Information);

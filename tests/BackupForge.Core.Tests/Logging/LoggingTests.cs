@@ -75,4 +75,26 @@ public class FileLoggerTests
         Assert.True(File.Exists(dir.Sub("service-keep.log")));
         Assert.True(File.Exists(dir.Sub("other-20260901.log")));
     }
+
+    [Fact]
+    public void Log_file_starts_with_one_bom_also_after_a_restart()
+    {
+        // CR-002 A7.: PS 5.1 Get-Content reads the file correctly only with a BOM; appending must not add a second one
+        using var dir = new TempDir();
+        var clock = new ManualClock(new DateTimeOffset(2026, 11, 1, 10, 0, 0, TimeSpan.Zero));
+        for (var i = 0; i < 2; i++)
+            using (var p = new FileLoggerProvider(dir.Path, "service", 30, clock, new SecretMasker()))
+                p.CreateLogger("BackupForge.Service.Worker").LogInformation("indulás — próba");
+        var bytes = File.ReadAllBytes(dir.Sub("service-20261101.log"));
+        Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, bytes[..3]);
+        Assert.Equal(1, CountBoms(bytes));
+        Assert.Equal(2, System.Text.Encoding.UTF8.GetString(bytes).Split("indulás — próba").Length - 1);
+    }
+
+    public static int CountBoms(byte[] b)
+    {
+        var n = 0;
+        for (var i = 0; i + 2 < b.Length; i++) if (b[i] == 0xEF && b[i + 1] == 0xBB && b[i + 2] == 0xBF) n++;
+        return n;
+    }
 }

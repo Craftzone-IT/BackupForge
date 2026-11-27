@@ -72,7 +72,8 @@ public sealed class FileLoggerProvider : ILoggerProvider
         Directory.CreateDirectory(_directory);
         _currentDay = day;
         var path = Path.Combine(_directory, $"{_prefix}-{day:yyyyMMdd}.log");
-        _writer = new StreamWriter(new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete), new UTF8Encoding(false));
+        _writer = new StreamWriter(new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete),
+            new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)); // BOM only at position 0 = a new file (PS 5.1 Get-Content, CR-002 A7.)
         CleanupOld(day);
     }
 

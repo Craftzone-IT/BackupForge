@@ -14,6 +14,30 @@ public class ServiceProcessTests
     });
 
     [Fact]
+    public async Task Bf_redirected_output_is_utf8_without_bom()
+    {
+        // CR-002 A7.: offline 'config validate' of a Hungarian config prints "Kötelező mező" to a redirected stderr
+        using var d = new TempDir();
+        var cfg = TestConfigs.Jobs(1);
+        cfg.Language = "hu";
+        cfg.Jobs[0].Name = "";
+        var file = d.Sub("cfg.json");
+        File.WriteAllText(file, ConfigJson.Serialize(cfg));
+        var psi = ServiceProcess.Dotnet("bf.dll", "config", "validate", file);
+        psi.Environment[BackupForge.Ipc.IpcProtocol.PipeEnvVar] = "bf-missing-" + Guid.NewGuid().ToString("N")[..8]; // no service → offline path
+        using var p = System.Diagnostics.Process.Start(psi)!;
+        using var err = new MemoryStream();
+        var copy = p.StandardError.BaseStream.CopyToAsync(err);
+        _ = p.StandardOutput.ReadToEndAsync();
+        await p.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(60));
+        await copy;
+        var bytes = err.ToArray();
+        Assert.NotEqual(0, p.ExitCode);
+        Assert.False(bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF, "no BOM");
+        Assert.Contains("Kötelező mező", System.Text.Encoding.UTF8.GetString(bytes), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Service_process_runs_job_via_bf_and_records_chain()
     {
         await using var svc = new ServiceProcess(Cfg());
