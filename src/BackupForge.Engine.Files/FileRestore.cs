@@ -58,7 +58,8 @@ public sealed class FileRestoreEngine(IFileSystem fs, ITargetConnector connector
             var (srcRoot, innerRel) = OriginalFor(job, rel);
             var inner = innerRel.Replace('\\', System.IO.Path.DirectorySeparatorChar);
             destRoot = inner.Length == 0 ? srcRoot : System.IO.Path.Combine(srcRoot, inner);
-            backupRoot = srcRoot.TrimEnd('\\', '/') + "_RestoreBackup_" + stamp.Replace(' ', '_');
+            var parent = System.IO.Path.GetDirectoryName(srcRoot.TrimEnd('\\', '/')) ?? srcRoot;
+            backupRoot = RestoreTargets.Unique(parent, System.IO.Path.GetFileName(srcRoot.TrimEnd('\\', '/')) + "_RestoreBackup_" + stamp.Replace(' ', '_'), fs.DirectoryExists);
             backupRoot = inner.Length == 0 ? backupRoot : System.IO.Path.Combine(backupRoot, inner);
         }
         else

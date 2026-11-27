@@ -77,7 +77,7 @@ public static class RestoreIpc
             {
                 var to = req.Str("to") ?? throw new IpcException(IpcErrorCodes.BadRequest, "missing argument 'to'");
                 if (!Path.IsPathFullyQualified(to)) throw new IpcException(IpcErrorCodes.BadRequest, "'to' must be an absolute path");
-                parameters["target"] = Path.Combine(to, "Restore_" + rt.Clock.LocalNow().ToString("yyyy-MM-dd HHmmss", CultureInfo.InvariantCulture));
+                parameters["target"] = RestoreTargets.NewRestoreFolder(to, rt.Clock.LocalNow(), Directory.Exists);
             }
             var r = rt.Coordinator.Enqueue(new WorkRequest { JobId = jobId, Kind = RunKinds.Restore, Trigger = RunTriggers.Manual, Parameters = parameters });
             if (!r.Accepted) throw new IpcException(IpcErrorCodes.Rejected, r.Reason ?? "rejected");
