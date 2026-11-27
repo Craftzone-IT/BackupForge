@@ -83,7 +83,7 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
                 string? device = null;
                 for (var attempt = 1; attempt <= 5 && device is null; attempt++)
                 {
-                    device = DeviceObject(bc, sid, trace, raw);
+                    device = DeviceObject(bc, sid, setId, trace, raw);
                     if (device is null && attempt < 5) Thread.Sleep(500);
                 }
                 if (device is null)
@@ -178,8 +178,73 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
 
     private const int VSS_SS_CREATED = 12;
 
+    private const int VSS_OBJECT_NONE = 1;
+
+    /// <summary>
+    /// CR-003 1.: the device path comes from <c>Query</c> (on real servers <c>GetSnapshotProperties</c> returns S_OK with an
+    /// all-zero struct). <c>GetSnapshotProperties</c> is still called and traced (for <c>bf diag vss</c>) and is the fallback only
+    /// if <c>Query</c> does not list the snapshot.
+    /// </summary>
+    private static string? DeviceObject(IVssBackupComponents bc, Guid snapshotId, Guid setId, List<string> trace, Action<string>? raw)
+    {
+        var viaProperties = PropertiesDevice(bc, snapshotId, trace, raw); // traced for bf diag vss (both paths are shown)
+        return QueryDevice(bc, snapshotId, setId, trace, raw) ?? viaProperties;
+    }
+
+    /// <summary>Query(GUID_NULL, VSS_OBJECT_NONE, VSS_OBJECT_SNAPSHOT) → IVssEnumObject → the VSS_OBJECT_PROP of our snapshot.</summary>
+    private static string? QueryDevice(IVssBackupComponents bc, Guid snapshotId, Guid setId, List<string> trace, Action<string>? raw)
+    {
+        var hr = bc.Query(Guid.Empty, VSS_OBJECT_NONE, VSS_OBJECT_SNAPSHOT, out var en);
+        trace.Add($"Query(snapshots): {VssAsyncWait.Hex(hr)} {VssException.Describe(hr)}".TrimEnd());
+        if (hr < 0 || en is null) return null;
+        // VSS_OBJECT_PROP = VSS_OBJECT_TYPE (4 bytes) + 4 bytes padding + the union (VSS_SNAPSHOT_PROP) at offset 8
+        const int UnionOffset = 8;
+        var size = UnionOffset + Marshal.SizeOf<VssSnapshotProp>();
+        var buf = Marshal.AllocHGlobal(size);
+        var seen = 0;
+        string? device = null;
+        try
+        {
+            while (device is null)
+            {
+                unsafe { new Span<byte>((void*)buf, size).Clear(); }
+                hr = en.Next(1, buf, out var fetched);
+                if (hr < 0) { trace.Add($"  IVssEnumObject.Next: {VssAsyncWait.Hex(hr)}"); break; }
+                if (fetched == 0) break;
+                seen++;
+                var item = buf + UnionOffset;
+                try
+                {
+                    var prop = Marshal.PtrToStructure<VssSnapshotProp>(item);
+                    if (prop.SnapshotId != snapshotId) continue;
+                    if (raw is not null)
+                    {
+                        var bytes = new byte[size];
+                        Marshal.Copy(buf, bytes, 0, size);
+                        raw($"  VSS_OBJECT_PROP via Query ({size} bytes): {Convert.ToHexString(bytes)}");
+                    }
+                    var d = Marshal.PtrToStringUni(prop.SnapshotDeviceObject);
+                    trace.Add($"  Query: snapshot {prop.SnapshotId} (set {(prop.SnapshotSetId == setId ? "matches" : "DIFFERS: " + prop.SnapshotSetId)}), " +
+                              $"type {Marshal.ReadInt32(buf)}, status {prop.Status}{(prop.Status == VSS_SS_CREATED ? " (CREATED)" : "")}, device {d ?? "NONE"}");
+                    if (prop.SnapshotSetId == setId && !string.IsNullOrEmpty(d)) device = d;
+                }
+                finally
+                {
+                    VssFreeSnapshotPropertiesInternal(item);
+                }
+            }
+            trace.Add($"  Query: {seen} snapshot(s) listed, ours {(device is null ? "NOT found" : "found")}");
+            return device;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buf);
+            Marshal.ReleaseComObject(en);
+        }
+    }
+
     /// <summary>GetSnapshotProperties → the device path, or null (everything that was seen goes to the trace).</summary>
-    private static string? DeviceObject(IVssBackupComponents bc, Guid snapshotId, List<string> trace, Action<string>? raw)
+    private static string? PropertiesDevice(IVssBackupComponents bc, Guid snapshotId, List<string> trace, Action<string>? raw)
     {
         var size = Marshal.SizeOf<VssSnapshotProp>();
         var buf = Marshal.AllocHGlobal(size);
@@ -406,6 +471,17 @@ public sealed partial class VssSnapshotProvider : ISnapshotProvider
         [PreserveSig] int ImportSnapshots();
         [PreserveSig] int BreakSnapshotSet();
         [PreserveSig] int GetSnapshotProperties(Guid snapshotId, IntPtr prop);
+        [PreserveSig] int Query(Guid queriedObjectId, int queriedObjectType, int returnedObjectsType, [MarshalAs(UnmanagedType.Interface)] out IVssEnumObject? enumObject);
+    }
+
+    /// <summary>vss.h IVssEnumObject (Next, Skip, Reset, Clone).</summary>
+    [ComImport, Guid("AE1C7110-2F60-11d3-8A39-00C04F72D8E3"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IVssEnumObject
+    {
+        [PreserveSig] int Next(uint celt, IntPtr rgelt, out uint fetched);
+        [PreserveSig] int Skip(uint celt);
+        [PreserveSig] int Reset();
+        [PreserveSig] int Clone(out IntPtr enumObject);
     }
 }
 

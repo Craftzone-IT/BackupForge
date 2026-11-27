@@ -85,6 +85,8 @@ public class WindowsPlatformTests
         Assert.Contains("read 16 byte(s)", text, StringComparison.Ordinal);
         Assert.Contains("(FINISHED)", text, StringComparison.Ordinal);
         Assert.Contains("RESULT: ok", text, StringComparison.Ordinal);
+        Assert.Matches(@"Query: \d+ snapshot\(s\) listed, ours found", text);           // CR-003 1.: the device path via Query
+        Assert.Contains(@"\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy", text, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(Environment.MachineName, text, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -104,6 +106,14 @@ public class WindowsPlatformTests
         var fellBack = withVss.Items.Any(i => i.Message.Contains("writers did not respond", StringComparison.Ordinal));
         Assert.True(withVss.Result == (fellBack ? RunResults.Warning : RunResults.Ok), detail);
         if (withVss.Result == RunResults.Warning) Assert.True(fellBack, detail);
+        Assert.Equal("db", File.ReadAllText(d.Sub("target", "Docs", "locked.db")));
+
+        // CR-003 1.: with when_available a "saved without VSS" end is a FAILED test on the runner, not an accepted result
+        Directory.Delete(d.Sub("target"), true);
+        var available = await RunFilesJob(d, src, VssModes.WhenAvailable, new VssSnapshotProvider());
+        var detail2 = available.Summary + " | " + string.Join(" | ", available.Items.Select(i => i.Path + ": " + i.Message));
+        Assert.DoesNotContain(available.Items, i => i.Message.Contains("snapshot was not created", StringComparison.OrdinalIgnoreCase) || i.Message.Contains("without VSS", StringComparison.OrdinalIgnoreCase));
+        Assert.True(available.Result == RunResults.Ok || available.Items.All(i => i.Message.Contains("writers did not respond", StringComparison.Ordinal)), detail2);
         Assert.Equal("db", File.ReadAllText(d.Sub("target", "Docs", "locked.db")));
 
         Directory.Delete(d.Sub("target"), true);
