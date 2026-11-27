@@ -8,6 +8,8 @@ namespace BackupForge.Engine.Files;
 public sealed class FileCopier
 {
     public const string PartSuffix = ".bfpart";
+    public const int ChunkBytes = 4 << 20;
+    public const long FlushEveryBytes = 64L << 20;
     private const FileAttributes Preserved = FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System | FileAttributes.Archive;
 
     private readonly IFileSystem _fs;
@@ -29,7 +31,10 @@ public sealed class FileCopier
             using (var input = _fs.OpenRead(source.FullPath))
             using (var output = _fs.Create(part))
             {
-                var buffer = new byte[1 << 20];
+                // CR-002 A3.: 4 MB chunks, cancellation checked after every chunk, and a flush to disk every 64 MB so the
+                // (non-cancellable) final flush of a multi-GB file stays short — a service stop then takes seconds, not minutes
+                var buffer = new byte[ChunkBytes];
+                long sinceFlush = 0;
                 int n;
                 while ((n = input.Read(buffer, 0, buffer.Length)) > 0)
                 {
@@ -37,8 +42,16 @@ public sealed class FileCopier
                     _throttle?.Wait(n, ct);
                     output.Write(buffer, 0, n);
                     copied += n;
+                    sinceFlush += n;
                     progress?.Invoke(n);
+                    if (sinceFlush >= FlushEveryBytes)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        _fs.Flush(output);
+                        sinceFlush = 0;
+                    }
                 }
+                ct.ThrowIfCancellationRequested();
                 _fs.Flush(output);
             }
 
