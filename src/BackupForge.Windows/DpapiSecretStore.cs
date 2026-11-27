@@ -100,6 +100,8 @@ public sealed class DpapiSecretStore : ISecretStore
         try
         {
             var blob = ProtectedData.Protect(plain, Entropy, DataProtectionScope.LocalMachine);
+            // the installer (an administrator, owner of the file) cannot replace a SYSTEM-only file: let itself in first
+            if (_systemOnly && File.Exists(_path) && !IsLocalSystem()) RestrictAcl(_path, systemOnly: false);
             AtomicFile.Write(_path, blob);
             RestrictAcl(_path, _systemOnly);
         }
