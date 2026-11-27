@@ -179,6 +179,8 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
 - 2: a Versions-információ helyi célnál is a kv-ből jön (egy kódút); az első futás előtt a `folders` / `oldest` `null`.
 - 2: egy hitelesítéses SMB-szerveren lévő **SQL staging** (`staging_path`) nem kap lease-t: a `.bak`-ot az SQL Server a saját fiókjával írja, a BackupForge a futásban csak takarít ott; a percenkénti státusz ilyenkor nem méri a szabad helyet. Ilyen elrendezésnél a védőháló WARN-t ír (szándékosan).
 - 2: a `LeaseGuardFileSystem` a futó konfig hitelesítéses SMB-céljainak szervereit figyeli; egy piszkozat (varázsló) még nem mentett célja nem számít bele.
+- 2: a `Get-SmbConnection` `UserName` oszlopa a kapcsolatot birtokló bejelentkezési munkamenet (LocalSystemnél MINDIG `WORKGROUP\<GÉPNÉV>$`), a ténylegesen használt hitelesítés a `Credential` oszlop — a teszt ezt (és a szerveroldali `Get-SmbSession` `ClientUserName`-jét) vizsgálja. A T3-ban látott `<GÉPNÉV>$` ezért a `Credential` oszlopban kell, hogy szerepeljen ahhoz, hogy valódi lease nélküli elérés legyen; a chat ellenőrzésénél erre kell figyelni.
+- 1: a hosztolt runneren (CI, 2026-11-27) a writerek ezúttal válaszoltak (13 writer, `GatherWriterMetadata` 0,9 mp), és a `GetSnapshotProperties` is kitöltötte a struktúrát — a T3-hibát (üres struktúra) a runner nem reprodukálja, a `Query` út ott is ugyanazt az eszközútvonalat adta.
 - 2: a Windows-CI teszt a munkamenetek mellett a szerveroldali `Get-SmbSession`-t is figyeli (a loopback-megosztáson ez is látszik), és a saját felhasználós kapcsolat meglétét is ellenőrzi (hogy a lekérdezés nem üresen ment át).
 
 ## Következő lépés
@@ -214,6 +216,7 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
 - A 10 000 fájlos teszt a Windows-runneren ~2 perc (a felső korlát 10 perc).
 - Közös publikálási mappa (A8): a projektek tranzitív csomagverziói eltérhetnek (pl. a `bf` / GUI Microsoft.Extensions.Options 9.0-t kapott a SqlClienten át, a szolgáltatás 10.0-t) → az utoljára publikált felülírná; ezért van a `CentralPackageTransitivePinningEnabled` + a `publish.ps1` deps.json-ellenőrzése. Új csomagnál, ha a `publish.ps1` „is X, needs Y”-t ír: a csomagot a `Directory.Packages.props`-ba kell tenni.
 - GUI-szövegek: `python3 tools/resx.py --base UiStrings src/BackupForge.Gui.Core/Resources --batch <tsv>` (a TSV-ben a `\n` sortörés).
+- `Get-SmbConnection`: a `UserName` a munkamenet (LocalSystemnél a gépfiók), a `Credential` a kapcsolat hitelesítése — gépfiókos kapcsolatot a `Credential`-ben (vagy a szerveroldali `Get-SmbSession`-ben) kell keresni.
 - SMB-célhoz (saját felhasználóval) a szolgáltatás CSAK lease-ben nyúlhat (`ITargetConnector.Connect` / `ServiceRuntime.LeaseFor`): egy lease nélküli UNC-elérés a LocalSystem gépfiókjával kapcsolódik, és a következő futás 1219-et kap (CR-003). Új kódútnál a `LeaseGuardFileSystem` Debug-buildben kivételt dob.
 - Időzítésérzékeny tesztek párhuzamos terhelés alatt (új tesztosztályok) elcsúszhatnak — az órát lépésekben kell léptetni és a koordinátor kiürülését megvárni (lásd a heti riport tesztjét).
 

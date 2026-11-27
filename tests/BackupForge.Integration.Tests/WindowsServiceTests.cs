@@ -148,7 +148,7 @@ public class WindowsServiceTests
                 while (!stopPolling.IsCancellationRequested)
                 {
                     var o = Run("powershell", "-NoProfile", "-Command",
-                        "Get-SmbConnection -ErrorAction SilentlyContinue | ForEach-Object { 'C ' + $_.ServerName + '\\' + $_.ShareName + ' ' + $_.UserName + ' ' + $_.Credential }; " +
+                        "Get-SmbConnection -ErrorAction SilentlyContinue | ForEach-Object { 'C ' + $_.ServerName + '\\' + $_.ShareName + ' cred=' + $_.Credential + ' session=' + $_.UserName }; " +
                         $"Get-SmbSession -ErrorAction SilentlyContinue | ForEach-Object {{ 'S ' + $_.ClientUserName }}").Output;
                     lock (seen) seen.AddRange(o.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
                     try { await Task.Delay(TimeSpan.FromSeconds(10), stopPolling.Token); } catch (OperationCanceledException) { }
@@ -178,8 +178,15 @@ public class WindowsServiceTests
             string[] snapshot;
             lock (seen) snapshot = [.. seen];
             var machine = Environment.MachineName + "$";
-            Assert.DoesNotContain(snapshot, l => l.Contains(machine, StringComparison.OrdinalIgnoreCase));
-            Assert.Contains(snapshot, l => l.Contains(user, StringComparison.OrdinalIgnoreCase)); // the polling did see the service's own connection
+            // Get-SmbConnection: "session=" is the logon session that owns the connection (always <machine>$ for LocalSystem);
+            // "cred=" is the credential the connection was made with — that must be the target's user, never the computer account.
+            // Get-SmbSession (server side) shows the client user of every session.
+            static string Cred(string l) => l.Contains(" cred=", StringComparison.Ordinal) ? l[(l.IndexOf(" cred=", StringComparison.Ordinal) + 6)..].Split(" session=")[0] : "";
+            var ours = snapshot.Where(l => l.StartsWith("C ", StringComparison.Ordinal) && l.Contains(share, StringComparison.OrdinalIgnoreCase)).ToList();
+            Assert.True(ours.Count > 0, "the polling never saw the service's connection: " + string.Join(" / ", snapshot.Take(10)));
+            Assert.All(ours, l => Assert.Contains(user, Cred(l), StringComparison.OrdinalIgnoreCase));
+            Assert.DoesNotContain(snapshot, l => l.StartsWith("S ", StringComparison.Ordinal) && l.Contains(machine, StringComparison.OrdinalIgnoreCase));
+            Assert.DoesNotContain(snapshot, l => l.StartsWith("C ", StringComparison.Ordinal) && Cred(l).Contains(machine, StringComparison.OrdinalIgnoreCase));
             var leftover = Run("powershell", "-NoProfile", "-Command", $"Get-SmbConnection -ErrorAction SilentlyContinue | Where-Object ShareName -eq '{share}' | Measure-Object | ForEach-Object Count").Output.Trim();
             Assert.True(leftover == "0", "connections left: " + leftover + " | " + string.Join(" / ", snapshot.TakeLast(10)));
             Sc("stop", name);
