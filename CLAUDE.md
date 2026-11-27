@@ -184,6 +184,7 @@ Ingyenes, Windows-szolgáltatásként futó mentőalkalmazás KKV-szerverekre: F
 - 2: a Windows-CI teszt a munkamenetek mellett a szerveroldali `Get-SmbSession`-t is figyeli (a loopback-megosztáson ez is látszik), és a saját felhasználós kapcsolat meglétét is ellenőrzi (hogy a lekérdezés nem üresen ment át).
 
 ## Következő lépés
+- **2026-11-27 este: a CR-003 a tesztgépen ellenőrizve (T4, `docs/TEST-FINDINGS.md`)** — VSS writerekkel és zárolt fájllal `ok`, SMB 30 perc / 8 futás 1219 nélkül. Hátra: a GUI-varázsló kézi tesztje (user), a PR beolvasztása a `main`-be (user), utána `v0.1.0` tag (user) és F8.
 - **CR-003 kész (2026-11-27)** — ellenőrzésre vár (chat, a T2/T3 VM-en, a CI `installer` artifactjával): (1) `bf diag vss C:\…` → 0 és egy `when_available` fájlfeladat `FileShare.None`-nal zárolt fájllal → `ok`, a fájl a célon; (2) a T3 SMB-forgatókönyve (5 percenként, 30 percig, `Get-SmbConnection` percenként) → minden futás `ok`, nincs `<GÉPNÉV>$` kapcsolat. Az eredmény a `docs/TEST-FINDINGS.md`-be.
 - **F0–F7, CR-001, CR-002 és CR-003 kész, a CI zöld** (Linux + Windows, telepítő-füstteszt régi elrendezésről frissítéssel, 0 nem engedélyezett kihagyás). Hátra:
   1. a `claude/blissful-goldberg-vlt55t` ág beolvasztása a `main`-be (PR, user);

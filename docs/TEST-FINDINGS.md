@@ -16,13 +16,13 @@ Teszt-környezetek:
 - **Javítás**: a három ViewModel iratkozzon fel a `ConfigReloaded`-re, és hívjon `OnPropertyChanged(nameof(JobIds))`-t (mentés után is — a mentés `RefreshAsync`-et hív); a combóknak `MinWidth` (most összecsukott, üresnek látszik). Teszt: a meglévő hamis IPC-kliensű Gui-tesztek mintájára — `RefreshAsync` után a `JobIds` tartalmazza a feladatokat, és a `PropertyChanged` kiváltódik.
 - **Kerülőút addig**: `bf restore <jobId> --list` / `--browse` / `--from … --path … --to …` (rendszergazdai PowerShell).
 
-### H2 — A VSS-pillanatkép valós szerveren sem készül el: „snapshot has no device object” (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 után is hibás (T3) → CR-003 1.** — **→ CR-003 kész (ellenőrzésre vár (chat))**
+### H2 — A VSS-pillanatkép valós szerveren sem készül el: „snapshot has no device object” (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 után is hibás (T3) → CR-003 1.** — **→ CR-003 kész, T4-ben ellenőrizve ✓**
 - **Lépés**: `vss: when_available` fájlfeladat (`docs-local`, C:\ forrás) futtatása.
 - **Tényleges**: minden futás `warning` „a VSS-pillanatkép nem készült el (snapshot has no device object) — VSS nélkül mentve”. A writerek mind `Stable / No error` (`vssadmin list writers`), és `vssadmin create shadow /for=C:` ugyanezen a gépen hibátlanul működik. A BackupForge tehát **gyakorlatilag soha nem használ VSS-t** — zárolt fájlok (PST, nyitott adatbázisfájl) mentése így nem működik. A tartalék helyesen `warning`-ot ad (a CR-001 2. pontja működik), és árva pillanatkép nem maradt.
 - **Gyanú (kódból)**: `src/BackupForge.Windows/Vss.cs` 113–115. sor: a `GetSnapshotProperties` után a `VssSnapshotProp.SnapshotDeviceObject` `IntPtr` üres. Valószínűleg a `IVssBackupComponents` vtable-sorrendje csúszik el (egy másik metódus hívódik meg S_OK-val), vagy a `VSS_SNAPSHOT_PROP` marshalingja hibás. Elképzelhető, hogy a CI-runner „writerek nem válaszolnak” jelensége is ugyanez a hiba.
 - **Javítás**: vtable-sorrend ellenőrzése a `vsbackup.h` alapján (a `GetSnapshotProperties` pontos indexe), a struktúra-elrendezés ellenőrzése, és egy Windows-integrációs teszt, ami **megköveteli**, hogy egy egészséges gépen a pillanatkép elkészüljön (eszközútvonal nem üres, egy zárolt fájl a pillanatképből olvasható). A CI-n, ha a runner writerei tényleg nem válaszolnak, a writerek nélküli ágat külön teszt fedje.
 
-### H3 — SMB-cél: időnként 1219-es hiba („már van kapcsolat más hitelesítéssel”) (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 után is hibás, más okkal (T3) → CR-003 2.** — **→ CR-003 kész (ellenőrzésre vár (chat))**
+### H3 — SMB-cél: időnként 1219-es hiba („már van kapcsolat más hitelesítéssel”) (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 után is hibás, más okkal (T3) → CR-003 2.** — **→ CR-003 kész, T4-ben ellenőrizve ✓**
 - **Lépés**: SMB-cél saját felhasználóval (`\\localhost\nas`, `BF-TEST\bfnas`), az első futás `ok`; néhány perc múlva újabb futás.
 - **Tényleges**: a futás `failed` „a cél nem elérhető: … (error 1219)”, **ugyanabban a másodpercben**, amikor a `TargetProbe` (5 percenkénti célellenőrzés) is 1219-et kapott (`22:33:40`). Később, külön időpontban a futás ismét `ok`. A futás után a kapcsolat megmarad (`Get-SmbConnection`: `localhost\nas`, credential `bfnas`) — a SPEC 14. szerint a futás végén `WNetCancelConnection2` kellene.
 - **Gyanú**: a cél-ellenőrzés és a futás egyszerre hív `WNetAddConnection2`/`WNetCancelConnection2`-t ugyanarra a szerverre; az egyik bontja vagy átmenetileg más állapotban hagyja a kapcsolatot, a másik 1219-et kap.
@@ -53,6 +53,18 @@ Teszt-környezetek:
 
 ## Egyéb
 - E1 (→ CR-002 A8): a telepítő > 100 MB: a CI három self-contained single-file exe-t publikál (szolgáltatás, `bf`, GUI), mindegyikben a teljes .NET runtime (a GUI-ban a WPF is). Javaslat: egy közös programmappa, self-contained, de nem single-file (a runtime egyszer). Nem sürgős. **→ CR-002 kész (A8: 114,3 → 57,5 MB)**
+
+## T4 — CR-003 újrateszt (2026-11-27 19:09–19:46, a T2 VM-en)
+CI-telepítő: `BackupForge-Setup-0.1.0.37.exe` (`ecc30f1`, run 46036539890, SHA-256 `1bdc9598…0fde93f`). **Frissítés** a T3-ban telepített `0.1.0.33` fölé, csendesen, konfig nélkül: exit 0, a szolgáltatás fut, a 4 feladat és a beállítások megmaradtak.
+
+- **H2 (VSS) ✓.** `bf diag vss C:\data\docs` (writerekkel): a `GetSnapshotProperties` ezen a gépen továbbra is `S_OK` + üres struktúra. A `Query` viszont listázza a pillanatképet (a halmaz egyezik, `status 12 (CREATED)`, `\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy19`), és a `file1.txt` 502 bájtja olvasható belőle → `RESULT: ok`, kilépés 0.
+  - **Zárolt fájl:** `C:\data\docs\locked.txt` egy másik folyamatban `FileShare.None`-nal nyitva (a `Get-Content` hibát ad) → `docs-local` (`vss: when_available`) **`ok`** (nem `warning`), „1 másolva”. A célon a fájl tartalma egyezik. Árva pillanatkép nem maradt (`vssadmin list shadows`: 0).
+- **H3 (SMB 1219) ✓.** A `docs-nas` (hitelesítéses SMB-cél, `\\localhost\nas`, `BF-TEST\bfnas`) 5 percenként futott 19:11–19:46 között: **8/8 futás `ok`**, egy 1219 sem.
+  - Percenkénti `Get-SmbConnection` / `Get-SmbSession` 19:09:51–19:43:52 között: az egyetlen látott kapcsolat `Credential = BF-TEST\bfnas`, a munkamenet `BF-TEST\bfnas`. A `UserName` oszlop a LocalSystem miatt `WORKGROUP\BF-TEST$`, ahogy a `CLAUDE.md` buktatója írja. **Gépfiókos credentialű kapcsolat nem volt**, és a futások között nem maradt kapcsolat.
+  - A T3-ban a `Credential` oszlopban is `WORKGROUP\BF-TEST$` állt, az tehát valódi gépfiókos kapcsolat volt.
+  - A szolgáltatásnaplóban a frissítés (19:09) után nincs 1219 és nincs lease-guard figyelmeztetés. A naplóban lévő 1219-es WRN-sorok mind a régi verzió idejéből valók (16:04–17:40).
+- **Leállítási apróság:** nem ellenőrizve külön (a CI-teszt fedi).
+- Nem tesztelt (T4): a GUI-varázsló (a user saját gépén), e-mail, CHECKDB-ütemezés, valódi NAS (nem loopback) SMB-cél.
 
 ## T3 — CR-002 újrateszt (2026-11-27, a T2 VM-en)
 CI-telepítő: `BackupForge-Setup-0.1.0.33.exe` (`92f56ad`, run 45983073037, SHA-256 `acaaecb2…f94f5a`), csendes friss telepítés (előtte `/PURGE`-dzsel eltávolított példány).
