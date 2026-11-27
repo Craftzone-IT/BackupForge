@@ -66,6 +66,10 @@ public sealed partial class MainViewModel : ObservableObject
             ValidationErrors.Clear();
             ConfigReloaded?.Invoke();
         }
+        catch (IpcException ex) when (ex.Code == IpcErrorCodes.ProtocolMismatch)
+        {
+            ConnectionError = Ui.T("protocol_mismatch"); // CR-002 B4.: an older service after a GUI update
+        }
         catch (Exception ex) when (ex is IpcUnavailableException or IpcException)
         {
             ConnectionError = ex.Message;
@@ -102,36 +106,59 @@ public sealed partial class MainViewModel : ObservableObject
 
     public void MarkDirty() => IsDirty = true;
 
-    /// <summary>Collects every page into <see cref="EditConfig"/> and saves it; validation errors are shown field by field.</summary>
-    [RelayCommand]
-    public async Task<bool> SaveAsync()
+    /// <summary>
+    /// The configuration as it would be saved: <see cref="EditConfig"/> with the edits of the pages (targets, notifications,
+    /// settings). Jobs are changed by the wizard / the job table and are already in <see cref="EditConfig"/>.
+    /// </summary>
+    public BackupConfig BuildConfig()
     {
-        Jobs.ApplyTo(EditConfig);
-        Targets.ApplyTo(EditConfig);
-        Notifications.ApplyTo(EditConfig);
-        Settings.ApplyTo(EditConfig);
-        ValidationErrors.Clear();
+        var cfg = ConfigJson.Clone(EditConfig);
+        Targets.ApplyTo(cfg);
+        Notifications.ApplyTo(cfg);
+        Settings.ApplyTo(cfg);
+        return cfg;
+    }
+
+    /// <summary>Saves <paramref name="cfg"/> through the service (which validates); no dialogs — the caller shows the result.</summary>
+    public async Task<(bool Ok, JsonArray? Errors, JsonArray? Warnings)> SaveConfigAsync(BackupConfig cfg)
+    {
         try
         {
-            var saved = await _client.CallAsync(IpcOps.ConfigSave, new JsonObject { ["config"] = ConfigJson.Serialize(EditConfig) }).ConfigureAwait(true);
+            var saved = await _client.CallAsync(IpcOps.ConfigSave, new JsonObject { ["config"] = ConfigJson.Serialize(cfg) }).ConfigureAwait(true);
             await RefreshAsync().ConfigureAwait(true);
-            var warnings = saved?["warnings"]?.AsArray().Select(w => $"{w?["path"]}: {w?["message"]}").ToList() ?? [];
-            Dialogs.Info(warnings.Count == 0 ? Ui.T("saved") : Ui.T("saved") + Environment.NewLine + string.Join(Environment.NewLine, warnings));
-            return true;
+            return (true, null, saved?["warnings"]?.AsArray());
         }
         catch (IpcException ex)
         {
-            foreach (var d in ex.Details?.AsArray() ?? [])
-                ValidationErrors.Add(new ValidationMessage(d!["path"]?.ToString() ?? "", d["message"]?.ToString() ?? ""));
-            if (ValidationErrors.Count == 0) ValidationErrors.Add(new ValidationMessage("", ex.Message));
-            Dialogs.Error(Ui.T("save_failed") + Environment.NewLine + string.Join(Environment.NewLine, ValidationErrors.Select(v => $"{v.Path}: {v.Message}")));
-            return false;
+            return (false, ex.Details?.AsArray() is { Count: > 0 } d ? d : new JsonArray(new JsonObject { ["path"] = "", ["message"] = ex.Message }), null);
         }
         catch (IpcUnavailableException ex)
         {
-            Dialogs.Error(ex.Message);
-            return false;
+            return (false, new JsonArray(new JsonObject { ["path"] = "", ["message"] = ex.Message }), null);
         }
+    }
+
+    /// <summary>Collects every page and saves; validation errors are shown in words (CR-002 B5.), never as internal paths.</summary>
+    [RelayCommand]
+    public async Task<bool> SaveAsync()
+    {
+        var cfg = BuildConfig();
+        ValidationErrors.Clear();
+        var (ok, errors, warnings) = await SaveConfigAsync(cfg).ConfigureAwait(true);
+        if (ok)
+        {
+            var w = warnings?.Select(x => Wizard.ErrorMap.Humanize(cfg, x?["path"]?.ToString() ?? "", x?["message"]?.ToString() ?? "", true).Text).ToList() ?? [];
+            Dialogs.Info(w.Count == 0 ? Ui.T("saved") : Ui.T("saved") + Environment.NewLine + string.Join(Environment.NewLine, w));
+            return true;
+        }
+        foreach (var d in errors ?? [])
+        {
+            var path = d?["path"]?.ToString() ?? "";
+            var message = d?["message"]?.ToString() ?? "";
+            ValidationErrors.Add(new ValidationMessage(path, message, Wizard.ErrorMap.Humanize(cfg, path, message).Text));
+        }
+        Dialogs.Error(Ui.T("save_failed") + Environment.NewLine + string.Join(Environment.NewLine, ValidationErrors.Select(v => v.Text)));
+        return false;
     }
 
     public async Task<bool> SetSecretAsync(string reference, string value)
@@ -160,9 +187,17 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    /// <summary>Errors of one config path prefix (e.g. "jobs[2]") for the field-level display.</summary>
+    /// <summary>Like <see cref="TryCallAsync"/> but without a message box (wizard checks: a failure just shows nothing).</summary>
+    public async Task<JsonNode?> TryCallQuietAsync(string op, JsonObject? args = null)
+    {
+        try { return await _client.CallAsync(op, args).ConfigureAwait(true) ?? new JsonObject(); }
+        catch (Exception ex) when (ex is IpcException or IpcUnavailableException) { return null; }
+    }
+
+    /// <summary>Errors of one config path prefix (e.g. "jobs[2]"), in words.</summary>
     public string ErrorsFor(string prefix) =>
-        string.Join(Environment.NewLine, ValidationErrors.Where(v => v.Path.StartsWith(prefix, StringComparison.Ordinal)).Select(v => $"{v.Path[prefix.Length..].TrimStart('.')}: {v.Message}"));
+        string.Join(Environment.NewLine, ValidationErrors.Where(v => v.Path.StartsWith(prefix, StringComparison.Ordinal)).Select(v => v.Text));
 }
 
-public sealed record ValidationMessage(string Path, string Message);
+/// <summary>A validation error: the internal path (for the mapping) and the text the user sees.</summary>
+public sealed record ValidationMessage(string Path, string Message, string Text);

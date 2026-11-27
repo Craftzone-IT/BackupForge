@@ -55,7 +55,13 @@ public sealed partial class SqlViewModel : ObservableObject
     private async Task GrantAsync()
     {
         var job = main.EditConfig.FindJob(GrantJobId ?? SqlJobIds.FirstOrDefault() ?? "");
-        if (job?.Sql is null) return;
+        if (job is not null) await GrantForAsync(job).ConfigureAwait(true);
+    }
+
+    /// <summary>Also from the wizard's SQL instance step (for a job that is not saved yet).</summary>
+    public async Task GrantForAsync(JobConfig job)
+    {
+        if (job.Sql is null) return;
         try
         {
             await using var s = await new SqlClientSessionFactory().OpenAsync(job.Sql.Instance, null, null, CancellationToken.None).ConfigureAwait(true);

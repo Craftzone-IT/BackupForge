@@ -55,95 +55,26 @@
                 </DockPanel>
             </TabItem>
 
-            <!-- 2. Jobs -->
+            <!-- 2. Jobs: a table; New / Edit / Copy open the wizard (CR-002 B2.) -->
             <TabItem Header="{l:Loc l_tab_jobs}" DataContext="{Binding Jobs}">
                 <DockPanel>
-                    <StackPanel DockPanel.Dock="Left" Width="230">
-                        <ListBox ItemsSource="{Binding Jobs}" SelectedItem="{Binding Selected}" DisplayMemberPath="Name" Height="420"/>
-                        <WrapPanel>
-                            <Button Content="+ files" Command="{Binding AddCommand}" CommandParameter="files"/>
-                            <Button Content="+ restic" Command="{Binding AddCommand}" CommandParameter="restic"/>
-                            <Button Content="+ sql" Command="{Binding AddCommand}" CommandParameter="sql"/>
-                            <Button Content="{l:Loc l_remove}" Command="{Binding RemoveCommand}"/>
-                        </WrapPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4">
+                        <Button Content="{l:Loc j_new}" Command="{Binding NewCommand}" FontWeight="Bold"/>
+                        <Button Content="{l:Loc j_edit}" Command="{Binding EditCommand}"/>
+                        <Button Content="{l:Loc j_copy}" Command="{Binding CopyCommand}"/>
+                        <Button Content="{l:Loc j_toggle}" Command="{Binding ToggleEnabledCommand}"/>
+                        <Button Content="{l:Loc j_delete}" Command="{Binding DeleteCommand}"/>
                     </StackPanel>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" DataContext="{Binding Selected}">
-                        <StackPanel Margin="6">
-                            <TextBlock Text="{Binding Errors}" Foreground="#b00020" TextWrapping="Wrap"/>
-                            <GroupBox Header="{l:Loc l_job_basic}">
-                                <UniformGrid Columns="4">
-                                    <Label Content="id"/><TextBox Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Label Content="{l:Loc l_name}"/><TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Label Content="{l:Loc l_type}"/><ComboBox ItemsSource="{x:Static l:Lists.JobTypes}" SelectedItem="{Binding Type}"/>
-                                    <CheckBox Content="{l:Loc l_enabled}" IsChecked="{Binding Enabled}"/><CheckBox Content="catch_up" IsChecked="{Binding CatchUp}"/>
-                                </UniformGrid>
-                            </GroupBox>
-                            <GroupBox Header="{l:Loc l_schedule}">
-                                <StackPanel>
-                                    <UniformGrid Columns="4">
-                                        <Label Content="kind"/><ComboBox ItemsSource="{x:Static l:Lists.ScheduleKinds}" SelectedItem="{Binding ScheduleKind}"/>
-                                        <Label Content="every_min"/><TextBox Text="{Binding EveryMin, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="start (HH:mm)"/><TextBox Text="{Binding Start, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="window from / to"/><StackPanel Orientation="Horizontal"><TextBox Width="60" Text="{Binding WindowFrom, UpdateSourceTrigger=PropertyChanged}" MinWidth="50"/><TextBox Width="60" Text="{Binding WindowTo, UpdateSourceTrigger=PropertyChanged}" MinWidth="50"/></StackPanel>
-                                        <Label Content="times (daily)"/><TextBox Text="{Binding Times, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="days (Mon, Tue…)"/><TextBox Text="{Binding Days, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="day (weekly)"/><TextBox Text="{Binding Day, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="time"/><TextBox Text="{Binding Time, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="day_of_month"/><TextBox Text="{Binding DayOfMonth, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="expected_interval_h"/><TextBox Text="{Binding ExpectedIntervalH, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="on_success"/><TextBox Text="{Binding OnSuccess, UpdateSourceTrigger=PropertyChanged}"/>
-                                    </UniformGrid>
-                                    <TextBlock Text="{Binding SchedulePreview}" FontStyle="Italic" Margin="4"/>
-                                </StackPanel>
-                            </GroupBox>
-                            <GroupBox Header="{l:Loc l_sources}" Visibility="{Binding IsSql, Converter={x:Static l:Converters.InverseBoolToVis}}">
-                                <StackPanel>
-                                    <TextBlock Text="{l:Loc l_sources_hint}" Foreground="Gray" TextWrapping="Wrap"/>
-                                    <TextBox Text="{Binding Sources, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="70" VerticalScrollBarVisibility="Auto"/>
-                                    <Button Content="{l:Loc l_browse}" Command="{Binding BrowseSourceCommand}" HorizontalAlignment="Left"/>
-                                </StackPanel>
-                            </GroupBox>
-                            <GroupBox Header="files" Visibility="{Binding IsFiles, Converter={StaticResource BoolToVis}}">
-                                <UniformGrid Columns="4">
-                                    <Label Content="target_id"/><TextBox Text="{Binding TargetId, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Label Content="subdir"/><TextBox Text="{Binding Subdir, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Label Content="mode"/><ComboBox ItemsSource="{x:Static l:Lists.Modes}" SelectedItem="{Binding Mode}"/>
-                                    <Label Content="vss"/><ComboBox ItemsSource="{x:Static l:Lists.Vss}" SelectedItem="{Binding FilesVss}"/>
-                                    <CheckBox Content="versioning" IsChecked="{Binding Versioning}"/><TextBox Text="{Binding VersionsFolder, UpdateSourceTrigger=PropertyChanged}" ToolTip="versioning.folder"/>
-                                    <Label Content="keep_days"/><TextBox Text="{Binding KeepDays, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Label Content="delete_guard_pct"/><TextBox Text="{Binding GuardPct, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Label Content="delete_guard_min_files"/><TextBox Text="{Binding GuardMin, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <CheckBox Content="compare: content" IsChecked="{Binding ContentCompare}"/>
-                                </UniformGrid>
-                            </GroupBox>
-                            <GroupBox Header="restic" Visibility="{Binding IsRestic, Converter={StaticResource BoolToVis}}">
-                                <UniformGrid Columns="4">
-                                    <Label Content="repo_id"/><TextBox Text="{Binding RepoId, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Label Content="vss"/><ComboBox ItemsSource="{x:Static l:Lists.Vss}" SelectedItem="{Binding ResticVss}"/>
-                                    <Label Content="tags"/><TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"/>
-                                </UniformGrid>
-                            </GroupBox>
-                            <GroupBox Header="sql" Visibility="{Binding IsSql, Converter={StaticResource BoolToVis}}">
-                                <UniformGrid Columns="4">
-                                    <Label Content="instance"/><TextBox Text="{Binding SqlInstance, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <CheckBox Content="SQL login" IsChecked="{Binding SqlAuthSql}"/><TextBox Text="{Binding SqlUsername, UpdateSourceTrigger=PropertyChanged}" ToolTip="username"/>
-                                    <Label Content="{l:Loc l_password}"/><StackPanel Orientation="Horizontal"><PasswordBox x:Name="SqlPw" Width="110"/><Button Content="{l:Loc l_set}" Click="SetSqlPassword"/></StackPanel>
-                                    <Label Content="databases.mode"/><ComboBox ItemsSource="{x:Static l:Lists.SqlModes}" SelectedItem="{Binding SqlMode}"/>
-                                    <Label Content="include"/><TextBox Text="{Binding SqlInclude, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Label Content="exclude"/><TextBox Text="{Binding SqlExclude, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <CheckBox Content="include_system" IsChecked="{Binding IncludeSystem}"/><CheckBox Content="verify" IsChecked="{Binding Verify}"/>
-                                    <CheckBox Content="copy_only" IsChecked="{Binding CopyOnly}"/><Label/>
-                                    <Label Content="compression"/><ComboBox ItemsSource="{x:Static l:Lists.Compression}" SelectedItem="{Binding Compression}"/>
-                                    <Label Content="keep_local"/><TextBox Text="{Binding KeepLocal, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <Label Content="checkdb"/><TextBox Text="{Binding Checkdb, UpdateSourceTrigger=PropertyChanged}"/>
-                                </UniformGrid>
-                            </GroupBox>
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="{l:Loc l_dryrun}" Command="{Binding DataContext.DryRunCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
-                            </StackPanel>
-                            <TextBox Text="{Binding DataContext.DryRunOutput, RelativeSource={RelativeSource AncestorType=TabItem}, Mode=OneWay}" IsReadOnly="True" Height="160" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
-                        </StackPanel>
-                    </ScrollViewer>
+                    <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding Selected}" AutoGenerateColumns="False" IsReadOnly="True" MouseDoubleClick="EditJob" Margin="4">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{l:Loc j_col_name}" Binding="{Binding Name}" Width="2*"/>
+                            <DataGridTextColumn Header="{l:Loc j_col_type}" Binding="{Binding TypeText}"/>
+                            <DataGridTextColumn Header="{l:Loc j_col_schedule}" Binding="{Binding Schedule}" Width="2*"/>
+                            <DataGridTextColumn Header="{l:Loc j_col_where}" Binding="{Binding Where}" Width="*"/>
+                            <DataGridTextColumn Header="{l:Loc j_col_last}" Binding="{Binding LastResult}"/>
+                            <DataGridTextColumn Header="" Binding="{Binding EnabledText}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </DockPanel>
             </TabItem>
 
@@ -154,19 +85,28 @@
                         <GroupBox Header="{l:Loc l_targets}">
                             <DockPanel>
                                 <StackPanel DockPanel.Dock="Left" Width="200">
-                                    <ListBox ItemsSource="{Binding Targets}" SelectedItem="{Binding SelectedTarget}" DisplayMemberPath="Id" Height="140"/>
+                                    <ListBox ItemsSource="{Binding Targets}" SelectedItem="{Binding SelectedTarget}" DisplayMemberPath="Id" Height="160"/>
                                     <StackPanel Orientation="Horizontal"><Button Content="+" Command="{Binding AddTargetCommand}"/><Button Content="{l:Loc l_remove}" Command="{Binding RemoveTargetCommand}"/></StackPanel>
                                 </StackPanel>
                                 <StackPanel DataContext="{Binding SelectedTarget}">
-                                    <UniformGrid Columns="4">
-                                        <Label Content="id"/><TextBox Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="type"/><ComboBox ItemsSource="{x:Static l:Lists.TargetTypes}" SelectedItem="{Binding Type}"/>
-                                        <Label Content="path"/><TextBox Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="username"/><TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="min_free_gb"/><TextBox Text="{Binding MinFreeGb, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Label Content="{l:Loc l_password}"/><StackPanel Orientation="Horizontal"><PasswordBox x:Name="TargetPw" Width="110"/><Button Content="{l:Loc l_set}" Click="SetTargetPassword"/></StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton Content="{l:Loc w_target_local}" IsChecked="{Binding IsLocal}" Margin="2,4,12,4"/>
+                                        <RadioButton Content="{l:Loc w_target_smb}" IsChecked="{Binding IsSmb}" Margin="2,4"/>
+                                    </StackPanel>
+                                    <UniformGrid Columns="2">
+                                        <Label Content="{l:Loc w_target_id}"/><TextBox Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <Label Content="{l:Loc w_target_path}"/>
+                                        <Grid>
+                                            <TextBox Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Hint}" Tag="\\server\share\folder" Visibility="{Binding IsSmb, Converter={StaticResource BoolToVis}}"/>
+                                            <TextBox Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Hint}" Tag="D:\Backup" Visibility="{Binding IsLocal, Converter={StaticResource BoolToVis}}"/>
+                                        </Grid>
+                                        <Label Content="{l:Loc t_min_free}"/><TextBox Text="{Binding MinFreeGb, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Hint}" Tag="50"/>
                                     </UniformGrid>
-                                    <CheckBox Content="{l:Loc l_password_is_set}" IsChecked="{Binding PasswordIsSet, Mode=OneWay}" IsEnabled="False"/>
+                                    <UniformGrid Columns="2" Visibility="{Binding IsSmb, Converter={StaticResource BoolToVis}}">
+                                        <Label Content="{l:Loc w_target_user}"/><TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Hint}" Tag="NAS01\backup"/>
+                                        <Label Content="{l:Loc l_password}"/><StackPanel Orientation="Horizontal"><PasswordBox x:Name="TargetPw" Width="150"/><Button Content="{l:Loc l_set}" Click="SetTargetPassword"/></StackPanel>
+                                    </UniformGrid>
+                                    <CheckBox Content="{l:Loc l_password_is_set}" IsChecked="{Binding PasswordIsSet, Mode=OneWay}" IsEnabled="False" Visibility="{Binding IsSmb, Converter={StaticResource BoolToVis}}"/>
                                     <StackPanel Orientation="Horizontal">
                                         <Button Content="{l:Loc l_test_connection}" Command="{Binding DataContext.TestTargetCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
                                         <TextBlock Text="{Binding DataContext.TestResult, RelativeSource={RelativeSource AncestorType=TabItem}}" VerticalAlignment="Center" TextWrapping="Wrap"/>
@@ -181,6 +121,12 @@
                                     <StackPanel Orientation="Horizontal"><Button Content="+" Command="{Binding AddRepoCommand}"/><Button Content="{l:Loc l_remove}" Command="{Binding RemoveRepoCommand}"/></StackPanel>
                                 </StackPanel>
                                 <StackPanel DataContext="{Binding SelectedRepo}">
+                                    <Border Background="#fff4d6" Padding="6" Margin="2" Visibility="{Binding NotInitialized, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{l:Loc t_not_initialized}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                            <Button Content="{l:Loc t_create}" Command="{Binding DataContext.CreateRepoCommand, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+                                        </StackPanel>
+                                    </Border>
                                     <UniformGrid Columns="4">
                                         <Label Content="id"/><TextBox Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}"/>
                                         <Label Content="location"/><TextBox Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"/>

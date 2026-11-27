@@ -66,6 +66,10 @@ public interface IUserDialogs
     string? SaveFile(string defaultName, string filter);
     string? OpenFile(string filter);
     void ShowText(string title, string text, bool printable);
+    /// <summary>Shows the window of a dialog ViewModel (job wizard, new target …); true = finished with OK.</summary>
+    bool ShowDialog(object viewModel);
+    /// <summary>The UNC path behind a mapped drive letter of the logged-on user (Z:\a → \\server\share\a), or null.</summary>
+    string? NetworkPathFor(string path);
 }
 
 public sealed class NullDialogs : IUserDialogs
@@ -79,6 +83,12 @@ public sealed class NullDialogs : IUserDialogs
     public string? SaveFile(string defaultName, string filter) => PickedFile;
     public string? OpenFile(string filter) => PickedFile;
     public void ShowText(string title, string text, bool printable) => Messages.Add($"T {title}: {text}");
+    /// <summary>Tests drive the dialog ViewModel here (fill it in, press OK) and return whether it finished.</summary>
+    public Func<object, bool>? OnDialog { get; set; }
+    public List<object> Dialogs { get; } = [];
+    public bool ShowDialog(object viewModel) { Dialogs.Add(viewModel); return OnDialog?.Invoke(viewModel) ?? false; }
+    public Dictionary<string, string> NetworkPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public string? NetworkPathFor(string path) => NetworkPaths.FirstOrDefault(p => path.StartsWith(p.Key, StringComparison.OrdinalIgnoreCase)) is { Key: not null } m ? m.Value + path[m.Key.Length..] : null;
     public string? PickedFolder { get; set; }
     public string? PickedFile { get; set; }
 }

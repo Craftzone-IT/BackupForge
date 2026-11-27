@@ -1,0 +1,29 @@
+<Window x:Class="BackupForge.Gui.NewTargetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:BackupForge.Gui"
+        Title="{l:Loc w_new_target}" Width="560" SizeToContent="Height" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <StackPanel Margin="12">
+        <RadioButton Content="{l:Loc w_target_local}" IsChecked="{Binding IsLocal}" Margin="2,3"/>
+        <RadioButton Content="{l:Loc w_target_smb}" IsChecked="{Binding IsSmb}" Margin="2,3"/>
+        <Label Content="{l:Loc w_target_id}"/><TextBox Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}" Width="200" HorizontalAlignment="Left"/>
+        <Label Content="{l:Loc w_target_path}"/>
+        <Grid>
+            <TextBox Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Hint}" Tag="\\server\share\folder" Visibility="{Binding IsSmb, Converter={StaticResource BoolToVis}}"/>
+            <TextBox Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Hint}" Tag="D:\Backup" Visibility="{Binding IsLocal, Converter={StaticResource BoolToVis}}"/>
+        </Grid>
+        <StackPanel Visibility="{Binding IsSmb, Converter={StaticResource BoolToVis}}">
+            <Label Content="{l:Loc w_target_user}"/><TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Hint}" Tag="NAS01\backup" Width="260" HorizontalAlignment="Left"/>
+            <Label Content="{l:Loc l_password}"/><PasswordBox x:Name="Pw" Width="260" HorizontalAlignment="Left" Margin="2"/>
+            <TextBlock Text="{l:Loc w_target_user_help}" Style="{StaticResource Help}"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <Button Content="{l:Loc l_test_connection}" Click="Test"/>
+            <TextBlock Text="{Binding TestResult}" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="360"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="OK" Click="Ok" IsDefault="True"/>
+            <Button Content="{l:Loc w_cancel}" IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

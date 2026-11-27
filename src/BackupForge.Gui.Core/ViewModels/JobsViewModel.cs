@@ -9,6 +9,16 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BackupForge.Gui.Core.ViewModels;
 
+/// <summary>One row of the Feladatok table.</summary>
+public sealed record JobRow(string Id, string Name, string TypeText, string Schedule, string Where, string LastResult, bool Enabled)
+{
+    public string EnabledText => Enabled ? "" : Ui.T("disabled");
+}
+
+/// <summary>
+/// Feladatok (CR-002 B2.): a table with New / Edit / Copy / Enable-Disable / Delete. Creating and editing go through the
+/// <see cref="Wizard.JobWizardViewModel"/>; the table commands save at once (the old field editor is gone).
+/// </summary>
 public sealed partial class JobsViewModel : ObservableObject
 {
     private readonly MainViewModel _main;
@@ -19,67 +29,79 @@ public sealed partial class JobsViewModel : ObservableObject
         main.ConfigReloaded += Load;
     }
 
-    public ObservableCollection<JobEditViewModel> Jobs { get; } = [];
-    [ObservableProperty] public partial JobEditViewModel? Selected { get; set; }
-    [ObservableProperty] public partial string DryRunOutput { get; set; } = "";
-    public static string[] Types => JobTypes.All;
-    public static string[] ScheduleKindsList => ScheduleKinds.All;
-    public static string[] Modes => FilesModes.All;
-    public static string[] VssList => VssModes.All;
-    public static string[] SqlModes => SqlDbModes.All;
-    public static string[] CompressionList => SqlCompressionModes.All;
+    public ObservableCollection<JobRow> Rows { get; } = [];
+    [ObservableProperty] public partial JobRow? Selected { get; set; }
 
     public void Load()
     {
         var sel = Selected?.Id;
-        Jobs.Clear();
-        foreach (var j in _main.EditConfig.Jobs) Jobs.Add(new JobEditViewModel(ConfigJson.Clone(new BackupConfig { InstanceName = "x", Jobs = [j] }).Jobs[0], _main));
-        Selected = Jobs.FirstOrDefault(j => j.Id == sel) ?? Jobs.FirstOrDefault();
-    }
-
-    public void ApplyTo(BackupConfig cfg) => cfg.Jobs = [.. Jobs.Select(j => j.ToJob())];
-
-    [RelayCommand]
-    private void Add(string? type)
-    {
-        type ??= JobTypes.Files;
-        var n = 1;
-        while (Jobs.Any(j => j.Id == $"{type}-{n}")) n++;
-        var job = new JobConfig
+        Rows.Clear();
+        var cfg = _main.EditConfig;
+        foreach (var j in cfg.Jobs)
         {
-            Id = $"{type}-{n}", Name = $"{type} {n}", Type = type,
-            Schedule = new ScheduleConfig { Kind = ScheduleKinds.Daily, Times = ["22:00"] },
-            Files = type == JobTypes.Files ? new FilesOptions() : null,
-            Target = type == JobTypes.Files ? new JobTargetRef { TargetId = _main.EditConfig.Targets.FirstOrDefault()?.Id ?? "", Subdir = $"{type}-{n}" } : null,
-            Restic = type == JobTypes.Restic ? new ResticJobOptions { RepoId = _main.EditConfig.ResticRepos.FirstOrDefault()?.Id ?? "" } : null,
-            Sql = type == JobTypes.Sql ? new SqlJobOptions { Instance = @".\SQLEXPRESS" } : null,
-        };
-        var vm = new JobEditViewModel(job, _main);
-        Jobs.Add(vm);
-        Selected = vm;
-        _main.MarkDirty();
+            string schedule;
+            try { schedule = ScheduleText.Describe(cfg, j, Ui.Culture); }
+            catch (FormatException) { schedule = "?"; }
+            var where = j.Type switch
+            {
+                JobTypes.Files => j.Target is { } t ? $"{t.TargetId.ToUpperInvariant()}{(t.Subdir.Length > 0 ? "\\" + t.Subdir : "")}" : "",
+                JobTypes.Restic => j.Restic?.RepoId.ToUpperInvariant() ?? "",
+                _ => j.Sql?.Instance ?? "",
+            };
+            var status = _main.Status?["jobs"]?.AsArray().FirstOrDefault(x => x?["id"]?.ToString() == j.Id);
+            Rows.Add(new JobRow(j.Id, j.Name, Ui.T("type_" + j.Type), schedule, where, status?["last_result"]?.ToString() ?? "", j.Enabled));
+        }
+        Selected = Rows.FirstOrDefault(r => r.Id == sel) ?? Rows.FirstOrDefault();
     }
 
+    /// <summary>Jobs are saved by the wizard and the table commands; the page has nothing pending.</summary>
+    public void ApplyTo(BackupConfig cfg) { }
+
+    public Wizard.JobWizardViewModel CreateWizard(string? jobId = null, bool copy = false) =>
+        new(_main, jobId is null ? null : _main.EditConfig.FindJob(jobId), copy);
+
     [RelayCommand]
-    private void Remove()
+    private void New() => _main.Dialogs.ShowDialog(CreateWizard());
+
+    [RelayCommand]
+    private void Edit()
     {
-        if (Selected is null || !_main.Dialogs.Confirm(Ui.F("confirm_remove_job", Selected.Name))) return;
-        Jobs.Remove(Selected);
-        Selected = Jobs.FirstOrDefault();
-        _main.MarkDirty();
+        if (Selected is not null) _main.Dialogs.ShowDialog(CreateWizard(Selected.Id));
     }
 
-    /// <summary>"Próbafuttatás": the saved configuration's plan, nothing is changed.</summary>
     [RelayCommand]
-    private async Task DryRunAsync()
+    private void Copy()
+    {
+        if (Selected is not null) _main.Dialogs.ShowDialog(CreateWizard(Selected.Id, copy: true));
+    }
+
+    [RelayCommand]
+    public async Task ToggleEnabledAsync()
     {
         if (Selected is null) return;
-        if (_main.IsDirty && !_main.Dialogs.Confirm(Ui.T("dryrun_uses_saved"))) return;
-        DryRunOutput = Ui.T("dryrun_running");
-        var r = await _main.TryCallAsync(IpcOps.JobDryRun, new JsonObject { ["job_id"] = Selected.Id }).ConfigureAwait(true);
-        if (r is null) { DryRunOutput = ""; return; }
-        var lines = r["log"]?.AsArray().Select(l => l?.ToString()).Where(l => l is not null && l.Contains("plan:", StringComparison.Ordinal)).Take(2000) ?? [];
-        DryRunOutput = $"{r["result"]}: {r["summary"]}{Environment.NewLine}{string.Join(Environment.NewLine, lines)}";
+        var cfg = _main.BuildConfig();
+        if (cfg.FindJob(Selected.Id) is not { } job) return;
+        job.Enabled = !job.Enabled;
+        await SaveOrShowAsync(cfg).ConfigureAwait(true);
+    }
+
+    /// <summary>Deletes the job from the configuration — the history stays and nothing on the target is touched (the confirmation says so).</summary>
+    [RelayCommand]
+    public async Task DeleteAsync()
+    {
+        if (Selected is null || !_main.Dialogs.Confirm(Ui.F("confirm_delete_job", Selected.Name))) return;
+        var cfg = _main.BuildConfig();
+        cfg.Jobs.RemoveAll(j => j.Id == Selected.Id);
+        foreach (var j in cfg.Jobs) j.OnSuccess.Remove(Selected.Id); // nothing runs "after" a deleted job
+        await SaveOrShowAsync(cfg).ConfigureAwait(true);
+    }
+
+    private async Task SaveOrShowAsync(BackupConfig cfg)
+    {
+        var (ok, errors, _) = await _main.SaveConfigAsync(cfg).ConfigureAwait(true);
+        if (!ok)
+            _main.Dialogs.Error(Ui.T("save_failed") + Environment.NewLine + string.Join(Environment.NewLine,
+                (errors ?? []).Select(e => Wizard.ErrorMap.Humanize(cfg, e?["path"]?.ToString() ?? "", e?["message"]?.ToString() ?? "").Text)));
     }
 }
 
@@ -89,7 +111,7 @@ public sealed partial class JobEditViewModel : ObservableObject
     private readonly JobConfig _original;
     private readonly MainViewModel _main;
 
-    public JobEditViewModel(JobConfig job, MainViewModel main)
+    public JobEditViewModel(JobConfig job, MainViewModel main, bool markDirty = true)
     {
         _original = job;
         _main = main;
@@ -139,7 +161,12 @@ public sealed partial class JobEditViewModel : ObservableObject
         Compression = q.Compression;
         KeepLocal = q.KeepLocal.ToString(CultureInfo.InvariantCulture);
         Checkdb = q.Checkdb ?? "";
-        PropertyChanged += (_, e) => { if (e.PropertyName is not nameof(SchedulePreview) and not nameof(Errors)) { main.MarkDirty(); OnPropertyChanged(nameof(SchedulePreview)); } };
+        PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(SchedulePreview) or nameof(Errors)) return;
+            if (markDirty) main.MarkDirty();
+            OnPropertyChanged(nameof(SchedulePreview));
+        };
     }
 
     [ObservableProperty] public partial string Id { get; set; }
@@ -208,6 +235,12 @@ public sealed partial class JobEditViewModel : ObservableObject
     }
 
     public string Errors => _main.ErrorsFor($"jobs[{_main.EditConfig.Jobs.FindIndex(j => j.Id == Id)}]");
+
+    public static string[] ScheduleKindsList => ScheduleKinds.All;
+    public static string[] Modes => FilesModes.All;
+    public static string[] VssList => VssModes.All;
+    public static string[] SqlModes => SqlDbModes.All;
+    public static string[] CompressionList => SqlCompressionModes.All;
 
     private static List<string> SplitList(string s) => [.. s.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
     private static int? Int(string s) => int.TryParse(s.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var v) ? v : null;

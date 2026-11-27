@@ -9,5 +9,26 @@
         <Style TargetType="Label"><Setter Property="Padding" Value="2,4"/></Style>
         <Style TargetType="GroupBox"><Setter Property="Margin" Value="4"/><Setter Property="Padding" Value="6"/></Style>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <!-- G3: the example path is a real watermark (grey, gone while typing), set with Tag="…" -->
+        <Style x:Key="Hint" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                            <Grid>
+                                <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                                <TextBlock x:Name="hint" Text="{TemplateBinding Tag}" Foreground="#999" Margin="4,1,0,0" IsHitTestVisible="False" Visibility="Collapsed"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Text" Value=""><Setter TargetName="hint" Property="Visibility" Value="Visible"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="Help" TargetType="TextBlock"><Setter Property="Foreground" Value="#666"/><Setter Property="TextWrapping" Value="Wrap"/><Setter Property="Margin" Value="2,0,2,6"/></Style>
+        <Style x:Key="Error" TargetType="TextBlock"><Setter Property="Foreground" Value="#b00020"/><Setter Property="TextWrapping" Value="Wrap"/><Setter Property="Margin" Value="2,4"/></Style>
+        <Style x:Key="WarningText" TargetType="TextBlock"><Setter Property="Foreground" Value="#8a6100"/><Setter Property="TextWrapping" Value="Wrap"/><Setter Property="Margin" Value="2,4"/></Style>
     </Application.Resources>
 </Application>

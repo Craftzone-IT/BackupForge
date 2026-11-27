@@ -115,7 +115,7 @@ E jelszó nélkül a mentés NEM állítható vissza. Tárold jelszókezelőben 
     <value>{0}: {1} GB szabad / {2} GB</value>
   </data>
   <data name="target_offline" xml:space="preserve">
-    <value>{0}: NEM ELÉRHETŐ ({1})</value>
+    <value>nem elérhető</value>
   </data>
   <data name="test_failed" xml:space="preserve">
     <value>{0}: nem elérhető — {1} (a teszt fiókja: {2})</value>
@@ -281,5 +281,658 @@ E jelszó nélkül a mentés NEM állítható vissza. Tárold jelszókezelőben 
   </data>
   <data name="l_unsaved_close" xml:space="preserve">
     <value>Nem mentett változások vannak. Bezárod mégis?</value>
+  </data>
+  <data name="step_type" xml:space="preserve">
+    <value>Típus</value>
+  </data>
+  <data name="step_source" xml:space="preserve">
+    <value>Forrás</value>
+  </data>
+  <data name="step_target" xml:space="preserve">
+    <value>Cél</value>
+  </data>
+  <data name="step_mode" xml:space="preserve">
+    <value>Mód és megőrzés</value>
+  </data>
+  <data name="step_repo" xml:space="preserve">
+    <value>Tároló</value>
+  </data>
+  <data name="step_instance" xml:space="preserve">
+    <value>Példány</value>
+  </data>
+  <data name="step_databases" xml:space="preserve">
+    <value>Adatbázisok</value>
+  </data>
+  <data name="step_sqloptions" xml:space="preserve">
+    <value>Beállítások</value>
+  </data>
+  <data name="step_schedule" xml:space="preserve">
+    <value>Ütemezés</value>
+  </data>
+  <data name="step_name" xml:space="preserve">
+    <value>Név</value>
+  </data>
+  <data name="step_summary" xml:space="preserve">
+    <value>Összegzés</value>
+  </data>
+  <data name="type_files" xml:space="preserve">
+    <value>Fájlmentés</value>
+  </data>
+  <data name="type_restic" xml:space="preserve">
+    <value>Tárolós mentés</value>
+  </data>
+  <data name="type_sql" xml:space="preserve">
+    <value>SQL Server-mentés</value>
+  </data>
+  <data name="page_jobs" xml:space="preserve">
+    <value>Feladatok</value>
+  </data>
+  <data name="page_targets" xml:space="preserve">
+    <value>Célok és tárolók</value>
+  </data>
+  <data name="page_notifications" xml:space="preserve">
+    <value>Értesítések</value>
+  </data>
+  <data name="page_settings" xml:space="preserve">
+    <value>Beállítások</value>
+  </data>
+  <data name="f_id" xml:space="preserve">
+    <value>Azonosító</value>
+  </data>
+  <data name="f_name" xml:space="preserve">
+    <value>Megnevezés</value>
+  </data>
+  <data name="f_type" xml:space="preserve">
+    <value>Típus</value>
+  </data>
+  <data name="f_job" xml:space="preserve">
+    <value>Feladat</value>
+  </data>
+  <data name="f_schedule" xml:space="preserve">
+    <value>Ütemezés</value>
+  </data>
+  <data name="f_expected_interval" xml:space="preserve">
+    <value>Várható gyakoriság</value>
+  </data>
+  <data name="f_timeout" xml:space="preserve">
+    <value>Időkorlát</value>
+  </data>
+  <data name="f_chain" xml:space="preserve">
+    <value>Futás egy másik feladat után</value>
+  </data>
+  <data name="f_sources" xml:space="preserve">
+    <value>Forrás</value>
+  </data>
+  <data name="f_target" xml:space="preserve">
+    <value>Cél</value>
+  </data>
+  <data name="f_versions_folder" xml:space="preserve">
+    <value>Régi változatok mappája</value>
+  </data>
+  <data name="f_mode" xml:space="preserve">
+    <value>Mód és megőrzés</value>
+  </data>
+  <data name="f_advanced" xml:space="preserve">
+    <value>Speciális</value>
+  </data>
+  <data name="f_repo" xml:space="preserve">
+    <value>Tároló</value>
+  </data>
+  <data name="f_vss" xml:space="preserve">
+    <value>Nyitott fájlok (VSS)</value>
+  </data>
+  <data name="f_instance" xml:space="preserve">
+    <value>SQL Server-példány</value>
+  </data>
+  <data name="f_databases" xml:space="preserve">
+    <value>Adatbázisok</value>
+  </data>
+  <data name="f_sql_options" xml:space="preserve">
+    <value>SQL-beállítások</value>
+  </data>
+  <data name="f_targets" xml:space="preserve">
+    <value>Cél</value>
+  </data>
+  <data name="f_repos" xml:space="preserve">
+    <value>Tároló</value>
+  </data>
+  <data name="f_jobs" xml:space="preserve">
+    <value>Feladatok</value>
+  </data>
+  <data name="f_notifications" xml:space="preserve">
+    <value>Értesítések</value>
+  </data>
+  <data name="f_settings" xml:space="preserve">
+    <value>Beállítások</value>
+  </data>
+  <data name="chain_preview" xml:space="preserve">
+    <value>a(z) „{0}” minden sikeres futása után</value>
+  </data>
+  <data name="confirm_delete_job" xml:space="preserve">
+    <value>Törlöd a(z) „{0}” feladatot?
+
+Az előzményei megmaradnak, és a célon semmi nem törlődik (a mentett adatok a helyükön maradnak).</value>
+  </data>
+  <data name="confirm_untested_target" xml:space="preserve">
+    <value>A kapcsolatteszt nem sikerült. Mégis felveszed ezt a célt?</value>
+  </data>
+  <data name="copy_of" xml:space="preserve">
+    <value>{0} (másolat)</value>
+  </data>
+  <data name="disabled" xml:space="preserve">
+    <value>letiltva</value>
+  </data>
+  <data name="dryrun_invalid" xml:space="preserve">
+    <value>A piszkozat még nem érvényes — lásd a fenti hibákat.</value>
+  </data>
+  <data name="err_bad_id" xml:space="preserve">
+    <value>Az azonosítóban csak kisbetű, számjegy, „-” és „_” lehet.</value>
+  </data>
+  <data name="err_day" xml:space="preserve">
+    <value>Válassz érvényes napot.</value>
+  </data>
+  <data name="err_day_of_month" xml:space="preserve">
+    <value>A hónap napja: 1–28 vagy „utolsó”.</value>
+  </data>
+  <data name="err_guard_pct" xml:space="preserve">
+    <value>A biztonsági küszöb 1 és 100 % között lehet.</value>
+  </data>
+  <data name="err_id_taken" xml:space="preserve">
+    <value>Már van ilyen azonosítójú feladat.</value>
+  </data>
+  <data name="err_interval" xml:space="preserve">
+    <value>Add meg a gyakoriságot egész órában.</value>
+  </data>
+  <data name="err_keep_days" xml:space="preserve">
+    <value>A régi változatokat legalább 1 napig meg kell őrizni.</value>
+  </data>
+  <data name="err_new_target" xml:space="preserve">
+    <value>Adj meg egy szabad azonosítót és a cél útvonalát.</value>
+  </data>
+  <data name="err_no_chain_parent" xml:space="preserve">
+    <value>Válaszd ki, melyik feladat után fusson.</value>
+  </data>
+  <data name="err_no_databases" xml:space="preserve">
+    <value>Válassz legalább egy adatbázist.</value>
+  </data>
+  <data name="err_no_instance" xml:space="preserve">
+    <value>Add meg az SQL Server-példányt.</value>
+  </data>
+  <data name="err_no_name" xml:space="preserve">
+    <value>Adj nevet a feladatnak.</value>
+  </data>
+  <data name="err_no_repo" xml:space="preserve">
+    <value>Válassz tárolót (vagy hozz létre egyet).</value>
+  </data>
+  <data name="err_no_source" xml:space="preserve">
+    <value>Adj hozzá legalább egy mappát.</value>
+  </data>
+  <data name="err_no_sql_user" xml:space="preserve">
+    <value>Add meg az SQL-loginnevet.</value>
+  </data>
+  <data name="err_no_target" xml:space="preserve">
+    <value>Válassz célt (vagy hozz létre egyet).</value>
+  </data>
+  <data name="err_pick_sql_job" xml:space="preserve">
+    <value>Válaszd ki, melyik SQL-feladat mentéseit küldje.</value>
+  </data>
+  <data name="err_time" xml:space="preserve">
+    <value>Az időpont ÓÓ:PP formában (pl. 22:30).</value>
+  </data>
+  <data name="expected_interval" xml:space="preserve">
+    <value>várhatóan kb. {0} óránként fut (ezt figyeli a felügyelet)</value>
+  </data>
+  <data name="guard_sentence" xml:space="preserve">
+    <value>Ha egy futás a fájlok több mint {0} %-át (legalább {1} fájlt) törölné, a futás megáll, és jóváhagyásra vár.</value>
+  </data>
+  <data name="keep_daily_n" xml:space="preserve">
+    <value>{0} napi</value>
+  </data>
+  <data name="keep_last_n" xml:space="preserve">
+    <value>utolsó {0}</value>
+  </data>
+  <data name="keep_monthly_n" xml:space="preserve">
+    <value>{0} havi</value>
+  </data>
+  <data name="keep_weekly_n" xml:space="preserve">
+    <value>{0} heti</value>
+  </data>
+  <data name="keep_yearly_n" xml:space="preserve">
+    <value>{0} éves</value>
+  </data>
+  <data name="protocol_mismatch" xml:space="preserve">
+    <value>A szolgáltatás régebbi, mint ez a konfigurátor — futtasd újra a telepítőt.</value>
+  </data>
+  <data name="sum_all_user_dbs" xml:space="preserve">
+    <value>minden felhasználói adatbázisát (az újakat is)</value>
+  </data>
+  <data name="sum_disabled" xml:space="preserve">
+    <value>A feladat le van tiltva: csak kézzel indítva fut.</value>
+  </data>
+  <data name="sum_files_mirror" xml:space="preserve">
+    <value>A(z) {0} mappát pontos tükörként menti ide: {1} ({2}); a forrásból törölt fájl a célból is törlődik.</value>
+  </data>
+  <data name="sum_files_update" xml:space="preserve">
+    <value>A(z) {0} új és módosult fájljait ide menti: {1} ({2}); a célból soha nem töröl.</value>
+  </data>
+  <data name="sum_versions" xml:space="preserve">
+    <value>A törölt és felülírt fájlokat {0} napig őrzi itt: {1}.</value>
+  </data>
+  <data name="sum_restic" xml:space="preserve">
+    <value>A(z) {0} mappát a(z) {1} tárolóba menti (tömörítve, titkosítva, deduplikálva).</value>
+  </data>
+  <data name="sum_restic_staging" xml:space="preserve">
+    <value>Az „{0}” SQL-feladat mentéseit a(z) {1} tárolóba küldi.</value>
+  </data>
+  <data name="sum_retention" xml:space="preserve">
+    <value>A tároló megőrzése: {0}.</value>
+  </data>
+  <data name="sum_sql" xml:space="preserve">
+    <value>A(z) {0} példány {1} menti.</value>
+  </data>
+  <data name="sum_sql_system" xml:space="preserve">
+    <value>A rendszer-adatbázisokat is.</value>
+  </data>
+  <data name="sum_sql_verify" xml:space="preserve">
+    <value>Minden mentést ellenőriz (RESTORE VERIFYONLY).</value>
+  </data>
+  <data name="sum_sql_keep" xml:space="preserve">
+    <value>Adatbázisonként {0} helyi mentést tart meg.</value>
+  </data>
+  <data name="sum_sql_chain" xml:space="preserve">
+    <value>Utána a mentéseket a(z) {0} tárolóba is elküldi.</value>
+  </data>
+  <data name="target_free" xml:space="preserve">
+    <value>, {0} GB szabad</value>
+  </data>
+  <data name="test_no_service" xml:space="preserve">
+    <value>A szolgáltatás nem érhető el.</value>
+  </data>
+  <data name="test_not_writable" xml:space="preserve">
+    <value>{0} elérhető, de nem írható: {1} (fiók: {2})</value>
+  </data>
+  <data name="test_ok_writable" xml:space="preserve">
+    <value>{0} elérhető és írható, {1} GB szabad (fiók: {2})</value>
+  </data>
+  <data name="testing" xml:space="preserve">
+    <value>Tesztelés…</value>
+  </data>
+  <data name="vss_never" xml:space="preserve">
+    <value>soha</value>
+  </data>
+  <data name="vss_required" xml:space="preserve">
+    <value>kötelező (nélküle a futás hibás)</value>
+  </data>
+  <data name="vss_when_available" xml:space="preserve">
+    <value>ajánlott (ha elérhető)</value>
+  </data>
+  <data name="warn_network_drive" xml:space="preserve">
+    <value>Ez a saját munkameneted hálózati meghajtóbetűje — a szolgáltatás (LocalSystem) nem látja. Add meg helyette a \\szerver\megosztás útvonalat.</value>
+  </data>
+  <data name="warn_network_drive_unc" xml:space="preserve">
+    <value>A szolgáltatás nem látja ezt a csatolt meghajtóbetűt. Legyen helyette: {0}?</value>
+  </data>
+  <data name="warn_source_missing" xml:space="preserve">
+    <value>A szolgáltatás nem találja ezt a mappát: {0}</value>
+  </data>
+  <data name="warn_source_unreadable" xml:space="preserve">
+    <value>A szolgáltatás nem tudja olvasni ezt a mappát: {0}</value>
+  </data>
+  <data name="d_mon" xml:space="preserve">
+    <value>H</value>
+  </data>
+  <data name="d_tue" xml:space="preserve">
+    <value>K</value>
+  </data>
+  <data name="d_wed" xml:space="preserve">
+    <value>Sze</value>
+  </data>
+  <data name="d_thu" xml:space="preserve">
+    <value>Cs</value>
+  </data>
+  <data name="d_fri" xml:space="preserve">
+    <value>P</value>
+  </data>
+  <data name="d_sat" xml:space="preserve">
+    <value>Szo</value>
+  </data>
+  <data name="d_sun" xml:space="preserve">
+    <value>V</value>
+  </data>
+  <data name="c_auto" xml:space="preserve">
+    <value>automatikus (tároló előtt nincs)</value>
+  </data>
+  <data name="c_on" xml:space="preserve">
+    <value>be</value>
+  </data>
+  <data name="c_off" xml:space="preserve">
+    <value>ki</value>
+  </data>
+  <data name="j_col_name" xml:space="preserve">
+    <value>Megnevezés</value>
+  </data>
+  <data name="j_col_type" xml:space="preserve">
+    <value>Típus</value>
+  </data>
+  <data name="j_col_schedule" xml:space="preserve">
+    <value>Ütemezés</value>
+  </data>
+  <data name="j_col_where" xml:space="preserve">
+    <value>Cél / tároló</value>
+  </data>
+  <data name="j_col_last" xml:space="preserve">
+    <value>Utolsó eredmény</value>
+  </data>
+  <data name="j_new" xml:space="preserve">
+    <value>Új feladat…</value>
+  </data>
+  <data name="j_edit" xml:space="preserve">
+    <value>Szerkesztés…</value>
+  </data>
+  <data name="j_copy" xml:space="preserve">
+    <value>Másolás…</value>
+  </data>
+  <data name="j_toggle" xml:space="preserve">
+    <value>Letiltás / engedélyezés</value>
+  </data>
+  <data name="j_delete" xml:space="preserve">
+    <value>Törlés</value>
+  </data>
+  <data name="t_create" xml:space="preserve">
+    <value>Létrehozás…</value>
+  </data>
+  <data name="t_min_free" xml:space="preserve">
+    <value>Figyelmeztetés ez alatt (GB szabad)</value>
+  </data>
+  <data name="t_not_initialized" xml:space="preserve">
+    <value>nincs inicializálva — a restic nem talál tárolót ezen a helyen</value>
+  </data>
+  <data name="w_title" xml:space="preserve">
+    <value>Feladat</value>
+  </data>
+  <data name="w_next" xml:space="preserve">
+    <value>Tovább &gt;</value>
+  </data>
+  <data name="w_back" xml:space="preserve">
+    <value>&lt; Vissza</value>
+  </data>
+  <data name="w_finish" xml:space="preserve">
+    <value>Befejezés</value>
+  </data>
+  <data name="w_finish_run" xml:space="preserve">
+    <value>Befejezés és futtatás most</value>
+  </data>
+  <data name="w_cancel" xml:space="preserve">
+    <value>Mégse</value>
+  </data>
+  <data name="w_confirm_cancel" xml:space="preserve">
+    <value>Bezárod mentés nélkül? A beállítások nem változnak.</value>
+  </data>
+  <data name="w_advanced" xml:space="preserve">
+    <value>Speciális…</value>
+  </data>
+  <data name="w_advanced_help" xml:space="preserve">
+    <value>A feladat minden beállítása. A szokásosak a lépésekben vannak; ezeket csak akkor módosítsd, ha kell.</value>
+  </data>
+  <data name="w_adv_general" xml:space="preserve">
+    <value>Általános</value>
+  </data>
+  <data name="w_id" xml:space="preserve">
+    <value>Azonosító</value>
+  </data>
+  <data name="w_id_help" xml:space="preserve">
+    <value>a névből képzett; az előzmények és a mappanevek ehhez kötődnek</value>
+  </data>
+  <data name="w_id_change_warning" xml:space="preserve">
+    <value>Az azonosító megváltozik: a régi azonosító előzményei a régi néven maradnak.</value>
+  </data>
+  <data name="w_expected_interval" xml:space="preserve">
+    <value>Várható gyakoriság (óra)</value>
+  </data>
+  <data name="w_expected_interval_help" xml:space="preserve">
+    <value>A felügyelet figyelmeztet, ha ennél tovább nincs sikeres futás (üres = az ütemezésből számolva).</value>
+  </data>
+  <data name="w_catch_up" xml:space="preserve">
+    <value>Kimaradt időpont után egyszer pótolja</value>
+  </data>
+  <data name="w_catch_up_help" xml:space="preserve">
+    <value>Ha a gép az ütemezett időpontban ki volt kapcsolva, a szolgáltatás indulása után 2 perccel egyszer lefut.</value>
+  </data>
+  <data name="w_compare_content" xml:space="preserve">
+    <value>Fájltartalom összehasonlítása (lassabb)</value>
+  </data>
+  <data name="w_compare_help" xml:space="preserve">
+    <value>Alapesetben a méret és a módosítás ideje dönti el, hogy változott-e a fájl.</value>
+  </data>
+  <data name="w_versions_folder" xml:space="preserve">
+    <value>Régi változatok mappája</value>
+  </data>
+  <data name="w_versions_folder_hint" xml:space="preserve">
+    <value>üres = a tükör mellett (&lt;mappa&gt;_Versions)</value>
+  </data>
+  <data name="w_guard_pct" xml:space="preserve">
+    <value>Biztonsági küszöb (%)</value>
+  </data>
+  <data name="w_guard_min" xml:space="preserve">
+    <value>legalább (fájl)</value>
+  </data>
+  <data name="w_vss" xml:space="preserve">
+    <value>Nyitott fájlok (VSS)</value>
+  </data>
+  <data name="w_vss_question" xml:space="preserve">
+    <value>Nyitott fájlok mentése pillanatképpel (VSS)?</value>
+  </data>
+  <data name="w_tags" xml:space="preserve">
+    <value>További címkék</value>
+  </data>
+  <data name="w_tags_help" xml:space="preserve">
+    <value>Vesszővel elválasztott restic-címkék (a feladat saját címkéje mindig rákerül).</value>
+  </data>
+  <data name="w_copy_only" xml:space="preserve">
+    <value>Csak másolat (copy-only) mentés</value>
+  </data>
+  <data name="w_copy_only_help" xml:space="preserve">
+    <value>Nem módosítja egy másik SQL-mentőprogram mentési láncát.</value>
+  </data>
+  <data name="w_compression" xml:space="preserve">
+    <value>Tömörítés</value>
+  </data>
+  <data name="w_exclude_dbs" xml:space="preserve">
+    <value>Kihagyott adatbázisok</value>
+  </data>
+  <data name="w_type_files_help" xml:space="preserve">
+    <value>pontos tükör vagy frissítés egy mappába, régi változatokkal</value>
+  </data>
+  <data name="w_type_restic_help" xml:space="preserve">
+    <value>restic: tömörített, titkosított, deduplikált pillanatképek</value>
+  </data>
+  <data name="w_type_sql_help" xml:space="preserve">
+    <value>adatbázisok mentése és ellenőrzése</value>
+  </data>
+  <data name="w_source_folders" xml:space="preserve">
+    <value>Mappák</value>
+  </data>
+  <data name="w_source_sql" xml:space="preserve">
+    <value>Egy SQL-feladat mentései:</value>
+  </data>
+  <data name="w_source_help" xml:space="preserve">
+    <value>A mentendő mappák úgy, ahogy a szolgáltatás (LocalSystem) látja őket — hálózati megosztásnál \\szerver\megosztás útvonallal, ne meghajtóbetűvel.</value>
+  </data>
+  <data name="w_excludes" xml:space="preserve">
+    <value>Kizárva (minták, ;-vel elválasztva)</value>
+  </data>
+  <data name="w_default_excludes" xml:space="preserve">
+    <value>Mindig kimarad: ideiglenes fájlok (~$*, *.tmp), $RECYCLE.BIN, System Volume Information, pagefile / hiberfil.</value>
+  </data>
+  <data name="w_add_folder" xml:space="preserve">
+    <value>Mappa hozzáadása…</value>
+  </data>
+  <data name="w_check_sources" xml:space="preserve">
+    <value>Ellenőrzés a szolgáltatás nevében</value>
+  </data>
+  <data name="w_use_unc" xml:space="preserve">
+    <value>Legyen ez</value>
+  </data>
+  <data name="w_target" xml:space="preserve">
+    <value>Hová?</value>
+  </data>
+  <data name="w_new_target" xml:space="preserve">
+    <value>Új cél…</value>
+  </data>
+  <data name="w_subdir" xml:space="preserve">
+    <value>Mappa a célon</value>
+  </data>
+  <data name="w_mirror_path" xml:space="preserve">
+    <value>Tükör:</value>
+  </data>
+  <data name="w_versions_path" xml:space="preserve">
+    <value>Régi változatok:</value>
+  </data>
+  <data name="w_mode_mirror" xml:space="preserve">
+    <value>Pontos tükör — a forrásból törölt fájl a célból is törlődik (a régi változatok közé kerül)</value>
+  </data>
+  <data name="w_mode_update" xml:space="preserve">
+    <value>Csak frissítés — a célból soha nem töröl</value>
+  </data>
+  <data name="w_keep_versions" xml:space="preserve">
+    <value>Régi változatok megőrzése</value>
+  </data>
+  <data name="w_days" xml:space="preserve">
+    <value>napig</value>
+  </data>
+  <data name="w_new_repo" xml:space="preserve">
+    <value>Új tároló…</value>
+  </data>
+  <data name="w_check_repo" xml:space="preserve">
+    <value>Ellenőrzés</value>
+  </data>
+  <data name="w_retention" xml:space="preserve">
+    <value>A tároló megőrzése:</value>
+  </data>
+  <data name="w_retention_help" xml:space="preserve">
+    <value>A megőrzés a tárolóhoz tartozik; a Célok és tárolók fülön módosítható.</value>
+  </data>
+  <data name="w_repo_not_initialized" xml:space="preserve">
+    <value>A tároló még nem létezik a megadott helyen.</value>
+  </data>
+  <data name="w_create_repo_now" xml:space="preserve">
+    <value>Tároló létrehozása most…</value>
+  </data>
+  <data name="w_repo_id" xml:space="preserve">
+    <value>A tároló azonosítója</value>
+  </data>
+  <data name="w_repo_location" xml:space="preserve">
+    <value>Helye</value>
+  </data>
+  <data name="w_repo_location_help" xml:space="preserve">
+    <value>Egy mappa (helyi vagy \\szerver\megosztás) vagy egy sftp: / s3: / rest: cím. A jelszót a következő lépés generálja.</value>
+  </data>
+  <data name="w_auth_windows" xml:space="preserve">
+    <value>Windows-hitelesítés — a szolgáltatás fiókjával (ajánlott)</value>
+  </data>
+  <data name="w_auth_sql" xml:space="preserve">
+    <value>SQL-login</value>
+  </data>
+  <data name="w_sql_user" xml:space="preserve">
+    <value>Loginnév</value>
+  </data>
+  <data name="w_grant_help" xml:space="preserve">
+    <value>Ha a szolgáltatás még nem menthet: a jogosultságot a saját rendszergazdai loginoddal állíthatod be (a T-SQL előbb megjelenik).</value>
+  </data>
+  <data name="w_grant" xml:space="preserve">
+    <value>Jogosultságok beállítása…</value>
+  </data>
+  <data name="w_all_user_dbs" xml:space="preserve">
+    <value>Minden felhasználói adatbázis (az újak is automatikusan) — ajánlott</value>
+  </data>
+  <data name="w_selected_dbs" xml:space="preserve">
+    <value>Kiválasztott adatbázisok</value>
+  </data>
+  <data name="w_include_system" xml:space="preserve">
+    <value>Rendszer-adatbázisok is (master, model, msdb)</value>
+  </data>
+  <data name="w_db_name" xml:space="preserve">
+    <value>Adatbázis</value>
+  </data>
+  <data name="w_db_recovery" xml:space="preserve">
+    <value>Helyreállítási modell</value>
+  </data>
+  <data name="w_db_size" xml:space="preserve">
+    <value>Méret</value>
+  </data>
+  <data name="w_keep_local" xml:space="preserve">
+    <value>Megtartott helyi mentések adatbázisonként</value>
+  </data>
+  <data name="w_verify" xml:space="preserve">
+    <value>Ellenőrzés a mentés után (RESTORE VERIFYONLY)</value>
+  </data>
+  <data name="w_checkdb_weekly" xml:space="preserve">
+    <value>Hetente integritás-ellenőrzés (DBCC CHECKDB, vasárnap 02:00)</value>
+  </data>
+  <data name="w_also_to_repo" xml:space="preserve">
+    <value>A mentéseket utána tárolóba is küldöm:</value>
+  </data>
+  <data name="w_also_to_repo_help" xml:space="preserve">
+    <value>Létrehoz egy második, láncolt tárolós feladatot („…-restic”), ami minden sikeres SQL-futás után eltárolja a mentéseket.</value>
+  </data>
+  <data name="w_sched_interval" xml:space="preserve">
+    <value>N óránként</value>
+  </data>
+  <data name="w_every_hours" xml:space="preserve">
+    <value>minden</value>
+  </data>
+  <data name="w_start" xml:space="preserve">
+    <value>órában, kezdés</value>
+  </data>
+  <data name="w_window" xml:space="preserve">
+    <value>csak</value>
+  </data>
+  <data name="w_sched_daily" xml:space="preserve">
+    <value>Naponta</value>
+  </data>
+  <data name="w_times" xml:space="preserve">
+    <value>időpont(ok)</value>
+  </data>
+  <data name="w_sched_weekly" xml:space="preserve">
+    <value>Hetente</value>
+  </data>
+  <data name="w_sched_monthly" xml:space="preserve">
+    <value>Havonta</value>
+  </data>
+  <data name="w_last_day" xml:space="preserve">
+    <value>utolsó nap</value>
+  </data>
+  <data name="w_sched_chained" xml:space="preserve">
+    <value>Egy másik feladat után</value>
+  </data>
+  <data name="w_sched_manual" xml:space="preserve">
+    <value>Csak kézzel</value>
+  </data>
+  <data name="w_next_runs" xml:space="preserve">
+    <value>A következő 5 futás:</value>
+  </data>
+  <data name="w_name" xml:space="preserve">
+    <value>Megnevezés</value>
+  </data>
+  <data name="w_target_local" xml:space="preserve">
+    <value>Helyi mappa</value>
+  </data>
+  <data name="w_target_smb" xml:space="preserve">
+    <value>Hálózati megosztás</value>
+  </data>
+  <data name="w_target_id" xml:space="preserve">
+    <value>Azonosító</value>
+  </data>
+  <data name="w_target_path" xml:space="preserve">
+    <value>Útvonal</value>
+  </data>
+  <data name="w_target_user" xml:space="preserve">
+    <value>Felhasználó (nem kötelező)</value>
+  </data>
+  <data name="w_target_user_help" xml:space="preserve">
+    <value>Felhasználó nélkül a szolgáltatás a számítógépfiókkal kapcsolódik. Felhasználóval meghajtóbetű nélkül kapcsolódik, és a futás után bont.</value>
+  </data>
+  <data name="f_general" xml:space="preserve">
+    <value>Általános</value>
   </data>
 </root>

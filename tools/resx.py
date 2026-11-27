@@ -3,6 +3,7 @@
 
 usage: tools/resx.py <dir-with-Strings.resx> <key> <english> <hungarian>
        tools/resx.py <dir> --batch <tsv-file>   (key<TAB>en<TAB>hu per line)
+       --base <Name> before the other arguments: <Name>.resx / <Name>.hu.resx (default Strings; the GUI uses UiStrings)
 """
 import sys, os
 import xml.etree.ElementTree as ET
@@ -35,15 +36,19 @@ def save(tree, path):
     tree.write(path, encoding='utf-8', xml_declaration=True)
 
 def main():
+    base = 'Strings'
+    if len(sys.argv) > 2 and sys.argv[1] == '--base':
+        base = sys.argv[2]
+        del sys.argv[1:3]
     d = sys.argv[1]
-    en_p, hu_p = os.path.join(d, 'Strings.resx'), os.path.join(d, 'Strings.hu.resx')
+    en_p, hu_p = os.path.join(d, base + '.resx'), os.path.join(d, base + '.hu.resx')
     en, hu = load(en_p), load(hu_p)
     if sys.argv[2] == '--batch':
         rows = [l.rstrip('\n').split('\t') for l in open(sys.argv[3], encoding='utf-8') if l.strip() and not l.startswith('#')]
     else:
         rows = [sys.argv[2:5]]
     for k, e, h in rows:
-        put(en, k, e); put(hu, k, h)
+        put(en, k, e.replace('\\n', '\n')); put(hu, k, h.replace('\\n', '\n'))  # "\n" in a TSV = a line break
     save(en, en_p); save(hu, hu_p)
 
 main()

@@ -26,28 +26,42 @@ public sealed class FakeClient : IServiceClient
             IpcOps.SecretsList => new JsonArray(new JsonObject { ["ref"] = "target:nas1", ["is_set"] = true }),
             IpcOps.StatusGet => JsonNode.Parse(File.ReadAllText(TestPaths.Example("status.example.json"))),
             IpcOps.ConfigSave => SaveConfig(args!),
+            IpcOps.ConfigValidate => ValidateConfig(args!),
             _ => new JsonObject(),
         });
+    }
+
+    public const string DataRoot = @"C:\ProgramData\BackupForge";
+
+    private static JsonArray Nodes(IEnumerable<ValidationError> errors)
+    {
+        var arr = new JsonArray();
+        foreach (var e in errors) arr.Add(new JsonObject { ["path"] = e.Path, ["code"] = e.Code, ["message"] = e.Message(BackupForge.Core.Resources.Texts.Hungarian) });
+        return arr;
+    }
+
+    private static JsonNode ValidateConfig(JsonObject args)
+    {
+        var v = ConfigValidator.Validate(ConfigJson.Parse(args["config"]!.GetValue<string>()), null, DataRoot);
+        return new JsonObject { ["valid"] = v.IsValid, ["errors"] = Nodes(v.Errors), ["warnings"] = Nodes(v.Warnings) };
     }
 
     private JsonNode SaveConfig(JsonObject args)
     {
         var cfg = ConfigJson.Parse(args["config"]!.GetValue<string>());
-        var v = ConfigValidator.Validate(cfg);
+        var v = ConfigValidator.Validate(cfg, null, DataRoot);
         if (!v.IsValid)
         {
-            var arr = new JsonArray();
-            foreach (var e in v.Errors) arr.Add(new JsonObject { ["path"] = e.Path, ["message"] = e.Message(BackupForge.Core.Resources.Texts.English) });
-            throw new IpcException(IpcErrorCodes.Invalid, "invalid configuration", arr);
+            throw new IpcException(IpcErrorCodes.Invalid, "invalid configuration", Nodes(v.Errors));
         }
         Config = cfg;
-        return new JsonObject { ["saved"] = true };
+        return new JsonObject { ["saved"] = true, ["warnings"] = Nodes(v.Warnings) };
     }
 }
 
 public class ViewModelTests
 {
-    private static async Task<(MainViewModel Vm, FakeClient Client, NullDialogs Dialogs)> Create()
+    public static async Task<(MainViewModel Vm, FakeClient Client, NullDialogs Dialogs)> Create()
     {
         var c = new FakeClient();
         var d = new NullDialogs();
@@ -67,61 +81,9 @@ public class ViewModelTests
         Assert.Contains("312 másolva", card.Summary, StringComparison.Ordinal);
         Assert.True(vm.Overview.Cards.Single(c => c.Id == "sql-to-offsite").IsRunning);
         Assert.Contains("target:nas1", vm.SetSecrets);
-        Assert.Equal(3, vm.Jobs.Jobs.Count);
+        Assert.Equal(3, vm.Jobs.Rows.Count);
         Assert.Equal(2, vm.Targets.Targets.Count);
         Assert.True(vm.Notifications.Enabled);
-    }
-
-    [Fact]
-    public async Task Job_editor_round_trip_is_lossless()
-    {
-        var (vm, c, _) = await Create();
-        foreach (var j in vm.Jobs.Jobs)
-        {
-            var original = ConfigJson.Serialize(new BackupConfig { InstanceName = "x", Jobs = [c.Config.FindJob(j.Id)!] });
-            Assert.Equal(original, ConfigJson.Serialize(new BackupConfig { InstanceName = "x", Jobs = [j.ToJob()] }));
-        }
-    }
-
-    [Fact]
-    public async Task Editing_and_saving_sends_the_change()
-    {
-        var (vm, c, d) = await Create();
-        var job = vm.Jobs.Jobs.Single(j => j.Id == "company-mirror");
-        job.Name = "Renamed";
-        job.Enabled = false;
-        Assert.True(vm.IsDirty);
-        Assert.True(await vm.SaveAsync());
-        Assert.Equal("Renamed", c.Config.FindJob("company-mirror")!.Name);
-        Assert.False(c.Config.FindJob("company-mirror")!.Enabled);
-        Assert.Contains(d.Messages, m => m.StartsWith("i ", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public async Task Validation_errors_are_shown_per_field()
-    {
-        var (vm, c, d) = await Create();
-        var job = vm.Jobs.Jobs.Single(j => j.Id == "company-mirror");
-        job.GuardPct = "0";
-        Assert.False(await vm.SaveAsync());
-        Assert.Contains(vm.ValidationErrors, e => e.Path == "jobs[0].files.delete_guard_pct");
-        Assert.Contains("delete_guard_pct", job.Errors, StringComparison.Ordinal);
-        Assert.Equal(20, c.Config.FindJob("company-mirror")!.Files!.DeleteGuardPct); // not saved
-    }
-
-    [Fact]
-    public async Task Schedule_preview_and_new_job()
-    {
-        var (vm, _, _) = await Create();
-        var job = vm.Jobs.Jobs.Single(j => j.Id == "company-mirror");
-        Assert.Equal("4 óránként 06:15-től", job.SchedulePreview);
-        job.ScheduleKind = ScheduleKinds.Daily;
-        job.Times = "12:30, 22:30";
-        Assert.Equal("naponta 12:30, 22:30", job.SchedulePreview);
-        vm.Jobs.AddCommand.Execute(JobTypes.Restic);
-        Assert.Equal("restic-1", vm.Jobs.Selected!.Id);
-        Assert.True(vm.Jobs.Selected.IsRestic);
-        Assert.Equal("offsite", vm.Jobs.Selected.RepoId);
     }
 
     [Fact]
