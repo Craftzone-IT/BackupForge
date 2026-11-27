@@ -1,6 +1,6 @@
 # CR-002 — A kézi tesztek javításai + GUI-varázsló
 
-**Állapot: NYITOTT (2026-11-27)**
+**Állapot: KÉSZ (2026-11-27)** — részletek: CLAUDE.md „CR-002 — KÉSZ” és „Eltérések a CR-002-től”; a tesztgépes pontok „ellenőrzésre vár (chat)”.
 
 Forrás: `docs/TEST-FINDINGS.md`, a T1 (Windows 11, GUI) és a T2 (tiszta Windows Server 2022 VM, SQL Server 2025 Express, SMB-cél, CLI) kézi tesztjei. A telepítés, a fájl-, a restic- és az SQL-motor nagyrészt rendben van. Két hiba viszont a mentés helyességét érinti: a **VSS gyakorlatilag soha nem működik (H2)**, és **az SMB-cél versenyhelyzetben 1219-cel elszáll (H3)**. A GUI teszteléshez elég, de felhasználónak nem: nyers kulcsneveket mutat, és a célt kézzel kell beírni.
 

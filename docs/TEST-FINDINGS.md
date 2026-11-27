@@ -8,7 +8,7 @@ Teszt-környezetek:
 
 ## Hibák
 
-### H1 — A Visszaállítás fül „Feladat” listája üres (2026-11-25) — a CR-002 GUI-körrel együtt javítandó (user-döntés) → CR-002
+### H1 — A Visszaállítás fül „Feladat” listája üres (2026-11-25) — a CR-002 GUI-körrel együtt javítandó (user-döntés) → CR-002 — **→ CR-002 kész (B1)**
 - **Lépés**: két feladat elmentve (`files-1` fájlmentés, `restic-1` restic), mindkettő lefutott `ok`-kal → Visszaállítás fül.
 - **Elvárt**: a „Feladat” legördülőben `files-1` és `restic-1`.
 - **Tényleges**: a lista üres, így visszaállítási pont sem választható; a fül használhatatlan.
@@ -16,43 +16,43 @@ Teszt-környezetek:
 - **Javítás**: a három ViewModel iratkozzon fel a `ConfigReloaded`-re, és hívjon `OnPropertyChanged(nameof(JobIds))`-t (mentés után is — a mentés `RefreshAsync`-et hív); a combóknak `MinWidth` (most összecsukott, üresnek látszik). Teszt: a meglévő hamis IPC-kliensű Gui-tesztek mintájára — `RefreshAsync` után a `JobIds` tartalmazza a feladatokat, és a `PropertyChanged` kiváltódik.
 - **Kerülőút addig**: `bf restore <jobId> --list` / `--browse` / `--from … --path … --to …` (rendszergazdai PowerShell).
 
-### H2 — A VSS-pillanatkép valós szerveren sem készül el: „snapshot has no device object” (T2, 2026-11-25) — FONTOS → CR-002
+### H2 — A VSS-pillanatkép valós szerveren sem készül el: „snapshot has no device object” (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 kész (A1; ellenőrzésre vár (chat): `bf diag vss` a tesztgépen)**
 - **Lépés**: `vss: when_available` fájlfeladat (`docs-local`, C:\ forrás) futtatása.
 - **Tényleges**: minden futás `warning` „a VSS-pillanatkép nem készült el (snapshot has no device object) — VSS nélkül mentve”. A writerek mind `Stable / No error` (`vssadmin list writers`), és `vssadmin create shadow /for=C:` ugyanezen a gépen hibátlanul működik. A BackupForge tehát **gyakorlatilag soha nem használ VSS-t** — zárolt fájlok (PST, nyitott adatbázisfájl) mentése így nem működik. A tartalék helyesen `warning`-ot ad (a CR-001 2. pontja működik), és árva pillanatkép nem maradt.
 - **Gyanú (kódból)**: `src/BackupForge.Windows/Vss.cs` 113–115. sor: a `GetSnapshotProperties` után a `VssSnapshotProp.SnapshotDeviceObject` `IntPtr` üres. Valószínűleg a `IVssBackupComponents` vtable-sorrendje csúszik el (egy másik metódus hívódik meg S_OK-val), vagy a `VSS_SNAPSHOT_PROP` marshalingja hibás. Elképzelhető, hogy a CI-runner „writerek nem válaszolnak” jelensége is ugyanez a hiba.
 - **Javítás**: vtable-sorrend ellenőrzése a `vsbackup.h` alapján (a `GetSnapshotProperties` pontos indexe), a struktúra-elrendezés ellenőrzése, és egy Windows-integrációs teszt, ami **megköveteli**, hogy egy egészséges gépen a pillanatkép elkészüljön (eszközútvonal nem üres, egy zárolt fájl a pillanatképből olvasható). A CI-n, ha a runner writerei tényleg nem válaszolnak, a writerek nélküli ágat külön teszt fedje.
 
-### H3 — SMB-cél: időnként 1219-es hiba („már van kapcsolat más hitelesítéssel”) (T2, 2026-11-25) — FONTOS → CR-002
+### H3 — SMB-cél: időnként 1219-es hiba („már van kapcsolat más hitelesítéssel”) (T2, 2026-11-25) — FONTOS → CR-002 — **→ CR-002 kész (A2; ellenőrzésre vár (chat): 30 perces SMB-forgatókönyv)**
 - **Lépés**: SMB-cél saját felhasználóval (`\\localhost\nas`, `BF-TEST\bfnas`), az első futás `ok`; néhány perc múlva újabb futás.
 - **Tényleges**: a futás `failed` „a cél nem elérhető: … (error 1219)”, **ugyanabban a másodpercben**, amikor a `TargetProbe` (5 percenkénti célellenőrzés) is 1219-et kapott (`22:33:40`). Később, külön időpontban a futás ismét `ok`. A futás után a kapcsolat megmarad (`Get-SmbConnection`: `localhost\nas`, credential `bfnas`) — a SPEC 14. szerint a futás végén `WNetCancelConnection2` kellene.
 - **Gyanú**: a cél-ellenőrzés és a futás egyszerre hív `WNetAddConnection2`/`WNetCancelConnection2`-t ugyanarra a szerverre; az egyik bontja vagy átmenetileg más állapotban hagyja a kapcsolatot, a másik 1219-et kap.
 - **Javítás**: egyetlen, szerverenként zárolt, referenciaszámlált kapcsolatkezelő (a próba és a futás ugyanazt használja); ha már van kapcsolat **ugyanazzal a felhasználóval**, azt használja újra (nem 1219); bontás csak az utolsó használó után. Teszt: párhuzamos próba + futás ugyanarra a szerverre.
 
-### H4 — Restic-visszaállítás nem létező útvonalra „ok, 0 fájl” (T2) — közepes → CR-002
+### H4 — Restic-visszaállítás nem létező útvonalra „ok, 0 fájl” (T2) — közepes → CR-002 — **→ CR-002 kész (A4)**
 - `bf restore docs-restic --from <snap> --path "C:/data/docs/file1.txt"` → `ok`, „0 fájl visszaállítva”. A helyes forma a snapshoton belül `/C/data/docs/file1.txt` (azzal működik). Ha a megadott útvonal nem létezik a snapshotban, a visszaállítás legyen `failed` („nincs ilyen útvonal a pillanatképben”), és a CLI fogadja el a Windows-formát is (`C:\data\…` → `/C/data/…`). Apróság: egy fájl visszaállítása „4 fájl”-t ír (a mappákat is számolja) — csak a fájlokat számolja.
 
-### H5 — Két visszaállítás ugyanabba a célmappába ugyanabban a másodpercben ütközik (T2) — kicsi → CR-002
+### H5 — Két visszaállítás ugyanabba a célmappába ugyanabban a másodpercben ütközik (T2) — kicsi → CR-002 — **→ CR-002 kész (A5)**
 - A `Restore_<yyyy-MM-dd HHmmss>` név másodperc-pontosságú; két egymás utáni `bf restore … --to C:\restore-test` ugyanabban a másodpercben → a második `failed` „restore target is not empty”. Ütközéskor kapjon utótagot (`… (2)`).
 
-### H6 — Szolgáltatás leállítása nagy fájl másolása közben ~70 mp (T2) — kicsi → CR-002
+### H6 — Szolgáltatás leállítása nagy fájl másolása közben ~70 mp (T2) — kicsi → CR-002 — **→ CR-002 kész (A3; ellenőrzésre vár (chat))**
 - 3 GB-os (768 MB-os fájlokból álló) másolás közben `Restart-Service` → a futás helyesen `interrupted`, a `.bfpart` eltűnt, árva VSS nincs, a következő futás befejezi — **de** a leállás kivárta a teljes 60 mp-es türelmi időt („1 run(s) did not stop within 00:01:00”). A másolás fájlon belül is figyelje a megszakítást (darabos másolás `CancellationToken`-nel), hogy a leállás néhány mp legyen.
 
-### H7 — `secrets.dat` ACL-jében a telepítő felhasználó is szerepel (T2) — kicsi → CR-002
+### H7 — `secrets.dat` ACL-jében a telepítő felhasználó is szerepel (T2) — kicsi → CR-002 — **→ CR-002 kész (A6)**
 - `icacls secrets.dat` → `NT AUTHORITY\SYSTEM:(F)` **és** `BF-TEST\Administrator:(F)` (a csendes telepítést futtató admin). A SPEC 14. szerint csak SYSTEM. Ok: a `DpapiSecretStore` a futtató felhasználót is hozzáadja, ha nem SYSTEM — a telepítő-segéd így adja meg. Telepítéskor (`--setup-install`) az ACL legyen csak SYSTEM.
 
-### H8 — Kódolás (T2) — kicsi → CR-002
+### H8 — Kódolás (T2) — kicsi → CR-002 — **→ CR-002 kész (A7)**
 - `bf.exe` kimenete átirányítva (SSH, `| Out-File`, ütemezett feladat) ékezethibás (`m�solva`), mert a konzol kódlapján ír; `[Console]::OutputEncoding = UTF8` mellett helyes. A `bf` állítsa UTF-8-ra a kimenetét, ha átirányított.
 - `setup.log` UTF-8 BOM nélkül, PS 5.1 `Get-Content`-tel a „—” jel `�?"`-ként jelenik meg. A setup.log (és a szolgáltatásnapló) kapjon BOM-ot, vagy csak ASCII-t írjon.
 
 ## GUI-észrevételek (→ CR-002 B rész)
-- G1: a feladatnál a cél (`targetid`) és a restic-tároló (`repoid`) kézzel beírt azonosító — legördülő lista kell a meglévőkből + „Új…”.
-- G2: mentési hibaüzenet belső útvonallal (`jobs[0].target.target_id: Kötelező mező`) — emberi szöveg kell („files 1 feladat: nincs kiválasztva cél”), kattintásra a mezőhöz ugrás.
-- G3: az új SMB-cél útvonalmezőjében a mintaszöveg (`\\server\share\Z790`) kitöltött értéknek látszik.
-- G4: a restic próbafuttatás „a tároló nem létezik … `bf repo init repo1`” üzenete mellé „Tároló létrehozása most…” gomb (a meglévő új-tároló varázslót indítja); GUI-ban ne CLI-parancsra hivatkozzunk.
-- G5: a mezőcímkék nyers kulcsnevek (`kind`, `everymin`, `dayof_month`, `onsuccess`, `deleteguard_pct`, …).
+- G1: a feladatnál a cél (`targetid`) és a restic-tároló (`repoid`) kézzel beírt azonosító — legördülő lista kell a meglévőkből + „Új…”. **→ CR-002 kész (B2/B3)**
+- G2: mentési hibaüzenet belső útvonallal (`jobs[0].target.target_id: Kötelező mező`) — emberi szöveg kell („files 1 feladat: nincs kiválasztva cél”), kattintásra a mezőhöz ugrás. **→ CR-002 kész (B5)**
+- G3: az új SMB-cél útvonalmezőjében a mintaszöveg (`\\server\share\Z790`) kitöltött értéknek látszik. **→ CR-002 kész (B3)**
+- G4: a restic próbafuttatás „a tároló nem létezik … `bf repo init repo1`” üzenete mellé „Tároló létrehozása most…” gomb (a meglévő új-tároló varázslót indítja); GUI-ban ne CLI-parancsra hivatkozzunk. **→ CR-002 kész (B2/B3)**
+- G5: a mezőcímkék nyers kulcsnevek (`kind`, `everymin`, `dayof_month`, `onsuccess`, `deleteguard_pct`, …). **→ CR-002 kész (B2 Speciális lap)**
 
 ## Egyéb
-- E1 (→ CR-002 A8): a telepítő > 100 MB: a CI három self-contained single-file exe-t publikál (szolgáltatás, `bf`, GUI), mindegyikben a teljes .NET runtime (a GUI-ban a WPF is). Javaslat: egy közös programmappa, self-contained, de nem single-file (a runtime egyszer). Nem sürgős.
+- E1 (→ CR-002 A8): a telepítő > 100 MB: a CI három self-contained single-file exe-t publikál (szolgáltatás, `bf`, GUI), mindegyikben a teljes .NET runtime (a GUI-ban a WPF is). Javaslat: egy közös programmappa, self-contained, de nem single-file (a runtime egyszer). Nem sürgős. **→ CR-002 kész (A8: 114,3 → 57,5 MB)**
 
 ## Rendben (T2 — Windows Server 2022, tiszta VM)
 - **A — telepítés**: csendes telepítés `/CONFIG` + `/SECRETS`-szel (exit 0; a setup.log figyelmeztet a secrets-fájl törlésére), szolgáltatás `Running`, LocalSystem, `SERVICE_SID_TYPE: UNRESTRICTED`, helyreállítás 3× restart 60 s / reset 86400; ProgramData ACL öröklés nélkül SYSTEM + Administrators; eseménynapló 1000. **Frissítés** ugyanazzal a telepítővel: konfig (hash) és előzmények változatlanok, a titkok működnek. **Eltávolítás** megtartással: szolgáltatás, programmappa, eseményforrás eltűnik, `config.json` + `history.db` marad; újratelepítés után ugyanazok a feladatok. **`/PURGE`**: az adatmappa is törlődik. A mentési célok (helyi, SMB, restic) **mindhárom esetben bájtra azonos fájlszámmal megmaradtak**; árva VSS nincs.
