@@ -8,7 +8,7 @@ namespace BackupForge.Ipc;
 public static class IpcProtocol
 {
     /// <summary>Bump on incompatible changes; both sides send it and the service rejects a mismatch.</summary>
-    public const int Version = 1;
+    public const int Version = 2; // 2: path.check, draft job.dryrun, target.test with a "target" object (CR-002 B4.)
     public const string DefaultPipeName = "BackupForge";
     public const string PipeEnvVar = "BACKUPFORGE_PIPE";
     public const int MaxMessageBytes = 16 * 1024 * 1024;
@@ -47,6 +47,7 @@ public static class IpcOps
     public const string EventsSubscribe = "events.subscribe";
     public const string NotifyTest = "notify.test";
     public const string TargetTest = "target.test";
+    public const string PathCheck = "path.check";
     public const string RepoInit = "repo.init";
     public const string RepoSnapshots = "repo.snapshots";
     public const string RepoLs = "repo.ls";

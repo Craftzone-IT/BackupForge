@@ -82,15 +82,33 @@ public sealed class SqlEngine(ISqlSessionFactory sessions, IFileSystem fs, IStag
 
         // staging (SPEC 8.3)
         var staging = StagingPaths.For(ctx.Config, ctx.Paths, job.Id);
-        fs.CreateDirectory(staging);
-        var account = info.ServiceAccount ?? SqlPlanning.DefaultServiceAccount(o.Instance);
-        try { permissions.AllowWrite(staging, account); }
-        catch (Exception ex) when (ex is not OutOfMemoryException) { log.Warning($"staging ACL for {account}: {ex.Message}"); }
+        var dry = ctx.Options.DryRun;
+        if (!dry)
+        {
+            fs.CreateDirectory(staging);
+            var account = info.ServiceAccount ?? SqlPlanning.DefaultServiceAccount(o.Instance);
+            try { permissions.AllowWrite(staging, account); }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { log.Warning($"staging ACL for {account}: {ex.Message}"); }
+        }
 
-        // free space check before any BACKUP
+        // free space check before any BACKUP (a dry-run measures the nearest existing parent of the staging folder)
         var needed = (long)(dbs.Sum(d => d.EstimatedBackupBytes ?? 0) * 1.1);
-        if (fs.GetSpace(staging) is var (free, _) && needed > free)
+        var spaceAt = staging;
+        while (dry && !fs.DirectoryExists(spaceAt) && Path.GetDirectoryName(spaceAt) is { Length: > 0 } up) spaceAt = up;
+        if (fs.GetSpace(spaceAt) is var (free, _) && needed > free)
             return RunOutcome.Failed(Texts.Format(culture, "sql.no_space", SizeText.Format(needed, culture), SizeText.Format(free, culture), staging));
+
+        if (dry)
+        {
+            // CR-002 B4.: the dry-run never writes a .bak — discovery, permission and free-space check only
+            var denied = await session.NoBackupPermissionAsync(dbs.Select(d => d.Name), ct).ConfigureAwait(false);
+            foreach (var d in dbs) log.Info($"plan: BACKUP {d.Name} ({d.RecoveryModel}, ~{SizeText.Format(d.EstimatedBackupBytes ?? 0, culture)})" + (denied.Contains(d.Name) ? " — NO PERMISSION" : ""));
+            foreach (var d in denied) outcome.AddError(d, Texts.Get("sql.no_permission_dry", culture));
+            outcome.Summary = Texts.Format(culture, "sql.dryrun_summary", dbs.Count, SizeText.Format(needed, culture), staging);
+            if (denied.Count > 0) outcome.Result = RunResults.Failed;
+            else if (outcome.Items.Count > 0) outcome.Result = RunResults.Warning;
+            return outcome;
+        }
 
         var compression = SqlPlanning.UseCompression(ctx.Config, job, info, out var note);
         if (note == "express") log.Info(Texts.Get("sql.express_no_compression", culture));

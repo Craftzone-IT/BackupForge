@@ -450,4 +450,10 @@
   <data name="restic.restore_no_path" xml:space="preserve">
     <value>no such path in the snapshot: {0}</value>
   </data>
+  <data name="sql.no_permission_dry" xml:space="preserve">
+    <value>the service has no BACKUP DATABASE permission (use 'Set up permissions')</value>
+  </data>
+  <data name="sql.dryrun_summary" xml:space="preserve">
+    <value>dry-run: {0} database(s) would be backed up, about {1}, into {2}</value>
+  </data>
 </root>

@@ -62,6 +62,7 @@ public sealed class ServiceIpcHandler
         Register(IpcOps.JobRun, RunAsync);
         Register(IpcOps.JobDryRun, (req, c, ct) =>
         {
+            if (req.Args?["job"] is JsonObject) return DraftIpc.DryRunAsync(this, req, ct); // a draft (wizard): plan only, never saved
             req.Args ??= [];
             req.Args["dry_run"] = true;
             req.Args["wait"] = true;
@@ -121,13 +122,23 @@ public sealed class ServiceIpcHandler
         });
         Register(IpcOps.TargetTest, (req, _, _) =>
         {
-            var id = req.Required("target_id");
-            var t = _rt.ConfigStore.Current.FindTarget(id) ?? throw new IpcException(IpcErrorCodes.NotFound, $"unknown target '{id}'");
+            // a saved target by id, or an unsaved one (the wizard's "Új cél…", CR-002 B3./B4.) as a "target" object
+            TargetConfig t;
+            if (req.Args?["target"] is JsonObject draft)
+            {
+                try { t = ConfigJson.Parse(new JsonObject { ["schema"] = BackupConfig.CurrentSchema, ["instance_name"] = "draft", ["targets"] = new JsonArray(draft.DeepClone()) }.ToJsonString()).Targets[0]; }
+                catch (ConfigFormatException ex) { throw new IpcException(IpcErrorCodes.BadRequest, ex.Message); }
+            }
+            else
+            {
+                var id = req.Required("target_id");
+                t = _rt.ConfigStore.Current.FindTarget(id) ?? throw new IpcException(IpcErrorCodes.NotFound, $"unknown target '{id}'");
+            }
             if (_rt.TargetProbe is null) throw new IpcException(IpcErrorCodes.Rejected, "not available");
-            var st = _rt.TargetProbe.Probe(t);
+            var (st, writable) = _rt.TargetProbe.Test(t, cache: req.Args?["target"] is null);
             return Task.FromResult<JsonNode?>(new JsonObject
             {
-                ["target_id"] = id, ["path"] = st.Path, ["online"] = st.Online, ["free_gb"] = st.FreeGb, ["size_gb"] = st.SizeGb, ["error"] = st.Error,
+                ["target_id"] = t.Id, ["path"] = st.Path, ["online"] = st.Online, ["writable"] = writable, ["free_gb"] = st.FreeGb, ["size_gb"] = st.SizeGb, ["error"] = st.Error,
                 ["account"] = Environment.UserName,
             });
         });
@@ -242,7 +253,7 @@ public sealed class ServiceIpcHandler
         return arr;
     }
 
-    private JsonArray ValidationNode(ValidationResult? v)
+    internal JsonArray ValidationNode(ValidationResult? v)
     {
         var arr = new JsonArray();
         if (v is null) return arr;

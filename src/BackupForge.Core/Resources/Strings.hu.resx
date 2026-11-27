@@ -450,4 +450,10 @@
   <data name="restic.restore_no_path" xml:space="preserve">
     <value>nincs ilyen útvonal a pillanatképben: {0}</value>
   </data>
+  <data name="sql.no_permission_dry" xml:space="preserve">
+    <value>a szolgáltatásnak nincs BACKUP DATABASE joga (Jogosultságok beállítása)</value>
+  </data>
+  <data name="sql.dryrun_summary" xml:space="preserve">
+    <value>próbafuttatás: {0} adatbázis mentése, kb. {1}, ide: {2}</value>
+  </data>
 </root>

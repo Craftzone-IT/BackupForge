@@ -32,6 +32,8 @@ public interface ISqlSession : IAsyncDisposable
     /// <summary>DBCC CHECKDB; returns the error messages (empty = ok).</summary>
     Task<List<string>> CheckDbAsync(string database, CancellationToken ct);
     Task ExecuteAsync(string sql, CancellationToken ct);
+    /// <summary>The databases the current login may NOT back up (HAS_PERMS_BY_NAME … 'BACKUP DATABASE'); for the dry-run (CR-002 B4.).</summary>
+    Task<List<string>> NoBackupPermissionAsync(IEnumerable<string> databases, CancellationToken ct) => Task.FromResult(new List<string>());
 }
 
 public interface ISqlSessionFactory

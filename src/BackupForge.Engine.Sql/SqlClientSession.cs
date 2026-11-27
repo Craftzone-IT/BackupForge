@@ -58,6 +58,18 @@ internal sealed partial class SqlClientSession(SqlConnection connection) : ISqlS
         catch (SqlException ex) { throw new SqlCommandException($"Msg {ex.Number}: {ex.Message}", ex.Number); }
     }
 
+    public Task<List<string>> NoBackupPermissionAsync(IEnumerable<string> databases, CancellationToken ct) => Wrap(async () =>
+    {
+        var missing = new List<string>();
+        foreach (var db in databases)
+        {
+            await using var cmd = Cmd("SELECT HAS_PERMS_BY_NAME(@db, 'DATABASE', 'BACKUP DATABASE')", 30);
+            cmd.Parameters.AddWithValue("@db", db);
+            if (await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false) is not int ok || ok != 1) missing.Add(db);
+        }
+        return missing;
+    });
+
     public Task<SqlServerInfo> GetInfoAsync(CancellationToken ct) => Wrap(async () =>
     {
         await using var cmd = Cmd("SELECT CAST(SERVERPROPERTY('Edition') AS nvarchar(200)), CAST(SERVERPROPERTY('ProductVersion') AS nvarchar(50)), CAST(SERVERPROPERTY('EngineEdition') AS int)", 60);

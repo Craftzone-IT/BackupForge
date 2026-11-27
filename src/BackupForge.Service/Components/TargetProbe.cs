@@ -34,7 +34,34 @@ public sealed class TargetProbe(IFileSystem fs, ITargetConnector connector) : IS
 
     public TargetStatus? Get(TargetConfig t) => _cache.TryGetValue(t.Id, out var s) && s.Path == t.Path ? Clone(s) : null;
 
-    public TargetStatus Probe(TargetConfig t)
+    /// <summary>
+    /// "Kapcsolat tesztelése": reachable, free space and writable (a uniquely named probe file is created and deleted again —
+    /// nothing else on the target is touched). <paramref name="cache"/> false for an unsaved draft target.
+    /// </summary>
+    public (TargetStatus Status, bool? Writable) Test(TargetConfig t, bool cache)
+    {
+        var st = Probe(t, cache);
+        if (!st.Online) return (st, null);
+        try
+        {
+            using (connector.Connect(t, _rt.Secrets))
+            {
+                var probe = Path.Combine(t.Path, $".bf-write-test-{Guid.NewGuid():N}.tmp");
+                using (var f = fs.Create(probe)) f.WriteByte(0);
+                fs.DeleteFile(probe);
+                return (st, true);
+            }
+        }
+        catch (Exception ex) when (ex is TargetConnectException or IOException or UnauthorizedAccessException)
+        {
+            st.Error = _rt.Masker.Apply(ex.Message);
+            return (st, false);
+        }
+    }
+
+    public TargetStatus Probe(TargetConfig t) => Probe(t, cache: true);
+
+    private TargetStatus Probe(TargetConfig t, bool cache)
     {
         var st = new TargetStatus { Id = t.Id, Type = t.Type, Path = t.Path, MinFreeGb = t.MinFreeGb, Checked = _rt.Clock.UtcNow };
         try
@@ -56,7 +83,7 @@ public sealed class TargetProbe(IFileSystem fs, ITargetConnector connector) : IS
             st.Error = _rt.Masker.Apply(ex.Message);
             _rt.Loggers.CreateLogger("BackupForge.Targets").LogWarning("target {Id}: {Error}", t.Id, st.Error);
         }
-        _cache[t.Id] = st;
+        if (cache) _cache[t.Id] = st;
         return st;
     }
 

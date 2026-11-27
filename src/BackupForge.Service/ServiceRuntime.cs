@@ -88,6 +88,7 @@ public sealed class ServiceRuntime : IAsyncDisposable
             Restic?.RegisterIpc(handler);
             Sql?.RegisterIpc(handler);
             RegisterRestore(handler);
+            DraftIpc.Register(handler);
             _ipc = new IpcServer(_options.PipeName, handler.HandleAsync, _loggers.CreateLogger("BackupForge.Ipc"));
             Coordinator.Changed += e => _ = handler.BroadcastAsync(e);
             _ipc.Start();
@@ -153,6 +154,7 @@ public sealed class ServiceRuntime : IAsyncDisposable
     public Action<ServiceIpcHandler> RegisterRestore { get; set; } = RestoreIpc.Register;
     public Components.Notifier? Notifier { get; set; }
     public Components.TargetProbe? TargetProbe { get; set; }
+    public IReadOnlyList<IJobEngine> Engines => _engines;
     public Components.WeeklyReporter? Reporter { get; set; }
     public Components.StatusWriter? StatusWriter { get; set; }
     public Components.ResticComponent? Restic { get; set; }
